@@ -70,7 +70,7 @@ const quizSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
-    totalQuestion: {
+    totalQuestions: {
       type: Number,
       required: true,
     },
