@@ -70,8 +70,62 @@ export const register = async (req, res, next) => {
 // @desc login
 // @route POST api/auth/login
 // @access public
-export const login = (req, res, next) => {
+export const login = async (req, res, next) => {
   try {
+    const { email, password } = req.body;
+    // if no input
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        error: "Please provide email and password",
+        statusCode: 400,
+      });
+    }
+
+    // find user
+    const user = await User.findOne({ email }).select("+password");
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        error: "Invalid credentials",
+        statusCode: 401,
+      });
+    }
+
+    // check password
+    const isMatch = await user.matchPassword(password);
+    if (!isMatch) {
+      return res.status(401).json({
+        success: false,
+        error: "Invalid credentials",
+        statusCode: 401,
+      });
+    }
+
+    // token and cookie
+    const token = generateToken(user._id);
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    res.status(201).json({
+      status: true,
+      data: {
+        user: {
+          id: user._id,
+          username: user.username,
+          email: user.email,
+          profileImage: user.profileImage,
+          createdAt: user.createdAt,
+        },
+        token,
+      },
+      message: "User logged in successfully",
+    });
+
   } catch (error) {
     next(error);
   }
