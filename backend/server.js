@@ -5,6 +5,7 @@ import express from "express";
 import cors from "cors";
 import path from "path";
 import { fileURLToPath } from "url";
+import cookieParser from "cookie-parser";
 
 import errorHandler from "./middleware/errorHandler.js";
 import connectDB from "./config/db.js";
@@ -33,6 +34,9 @@ app.use(
 
 // Parse JSON body
 app.use(express.json());
+// Parse cookie
+app.use(cookieParser());
+
 
 // Parse URL encoded data
 app.use(express.urlencoded({ extended: true }));
