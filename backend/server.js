@@ -11,6 +11,7 @@ import errorHandler from "./middleware/errorHandler.js";
 import connectDB from "./config/db.js";
 
 import authRoutes from "./routes/authRoutes.js";
+import documentRoutes from "./routes/documentRoutes.js";
 
 // Fix __dirname for ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -37,7 +38,6 @@ app.use(express.json());
 // Parse cookie
 app.use(cookieParser());
 
-
 // Parse URL encoded data
 app.use(express.urlencoded({ extended: true }));
 
@@ -46,7 +46,7 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // Example routes
 app.use("/api/auth", authRoutes);
-// app.use("/api/users", userRoutes);
+app.use("/api/documents", documentRoutes);
 
 // 404 handler for unknown routes
 app.use((req, res) => {
