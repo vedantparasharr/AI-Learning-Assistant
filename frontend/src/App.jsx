@@ -20,7 +20,7 @@ import QuizTakePage from "./pages/Quizzes/QuizTakePage";
 import QuizResultPage from "./pages/Quizzes/QuizResultPage";
 import ProfilePage from "./pages/Profile/ProfilePage";
 import { useAuth } from "./context/AuthContext";
-
+import { Analytics } from "@vercel/analytics/react";
 const App = () => {
   const { isAuthenticated, loading } = useAuth();
 
@@ -33,6 +33,7 @@ const App = () => {
 
   return (
     <Router>
+      <Analytics />
       <Routes>
         <Route
           path="/"
@@ -47,7 +48,11 @@ const App = () => {
         <Route
           path="/login"
           element={
-            isAuthenticated ? <Navigate to="/dashboard" replace /> : <LoginPage />
+            isAuthenticated ? (
+              <Navigate to="/dashboard" replace />
+            ) : (
+              <LoginPage />
+            )
           }
         />
         <Route
