@@ -62,9 +62,11 @@ const studyPlanSchema = new mongoose.Schema(
     },
     shareSlug: {
       type: String,
-      default: null,
+      default: undefined,
       trim: true,
       lowercase: true,
+      sparse: true,
+      unique: true,
     },
     topics: {
       type: [studyPlanTopicSchema],

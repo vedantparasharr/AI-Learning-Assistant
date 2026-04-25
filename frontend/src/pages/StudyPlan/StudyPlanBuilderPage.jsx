@@ -1,97 +1,45 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import toast from "react-hot-toast";
-import { FileText, MessageSquareText, UploadCloud } from "lucide-react";
 import studyPlanService from "../../services/studyPlanService";
-import {
-  EmptyState,
-  ErrorState,
-  PageShell,
-  PrimaryButton,
-  SecondaryButton,
-  SectionCard,
-} from "../../components/common/ui";
+import toast from "react-hot-toast";
 
-const blankTopic = () => ({
-  name: "",
-  estimated_hours: 1,
-});
-
-const SOURCE_MODES = [
-  {
-    id: "prompt",
-    title: "AI Prompt",
-    description: "Tell AI what you want to study and get a topic roadmap.",
-    icon: MessageSquareText,
-  },
-  {
-    id: "text",
-    title: "Paste Notes",
-    description: "Paste modules, units, or rough notes.",
-    icon: FileText,
-  },
-  {
-    id: "document",
-    title: "Upload PDF",
-    description: "Upload syllabus or notes PDF to extract topics.",
-    icon: UploadCloud,
-  },
-];
-
-const StudyPlanBuilderPage = () => {
+export default function UploadMain() {
   const navigate = useNavigate();
-
+  const [file, setFile] = useState(null);
+  const [text, setText] = useState("");
   const [subjectName, setSubjectName] = useState("");
   const [examDate, setExamDate] = useState("");
-
-  const [sourceMode, setSourceMode] = useState("prompt");
-  const [learningPrompt, setLearningPrompt] = useState("");
-  const [outlineText, setOutlineText] = useState("");
-  const [file, setFile] = useState(null);
-
+  const [loading, setLoading] = useState(false);
+  const [step, setStep] = useState(1);
   const [topics, setTopics] = useState([]);
   const [sourceText, setSourceText] = useState("");
-  const [sourceType, setSourceType] = useState("manual");
 
-  const [parsing, setParsing] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
+  const today = new Date().toISOString().split("T")[0];
 
-  const [hasGenerated, setHasGenerated] = useState(false);
-
-  const parsedTopicCount = useMemo(
-    () => topics.filter((t) => t.name.trim()).length,
-    [topics],
-  );
-
-  // =====================
-  // Generate Topics
-  // =====================
-  const handleParse = async () => {
-    if (sourceMode === "document" && !file) {
-      return setError("Upload a PDF");
+  const handleProcess = async () => {
+    if (!subjectName.trim()) {
+      return toast.error("Subject Name is required");
     }
-    if (sourceMode === "text" && !outlineText.trim()) {
-      return setError("Paste your notes");
+
+    if (!file && !text.trim()) {
+      return toast.error("Provide file or text");
     }
-    if (sourceMode === "prompt" && !learningPrompt.trim()) {
-      return setError("Describe what you want to study");
+
+    if (file && file.size > 10 * 1024 * 1024) {
+      return toast.error("PDF must be less than 10MB");
     }
 
     try {
-      setParsing(true);
-      setError("");
+      setLoading(true);
 
       const res = await studyPlanService.parseStudyPlan({
-        file: sourceMode === "document" ? file : null,
-        outlineText: sourceMode === "text" ? outlineText : "",
-        learningPrompt: sourceMode === "prompt" ? learningPrompt : "",
-        sourceMode,
+        file,
+        outlineText: text,
+        sourceMode: file ? "document" : "text",
         subjectName,
       });
 
       const payload = res.data || {};
-
       const normalized = (payload.topics || []).map((t) => ({
         name: String(t?.name || "").trim(),
         estimated_hours:
@@ -99,224 +47,269 @@ const StudyPlanBuilderPage = () => {
       }));
 
       setTopics(normalized);
-      setSourceText(
-        payload.sourceText ||
-          (sourceMode === "prompt" ? learningPrompt : outlineText)
-      );
-      setSourceType(payload.sourceType || sourceMode);
-
-      setHasGenerated(true);
-
-      toast.success("Study plan topics generated");
+      setSourceText(payload.sourceText || text);
+      toast.success("Topics Generated");
+      setStep(2);
     } catch (err) {
-      setError(err.error || err.message || "Failed to generate topics");
+      toast.error(err.message || "Failed");
     } finally {
-      setParsing(false);
+      setLoading(false);
     }
   };
 
-  // =====================
-  // Topic Editing
-  // =====================
-  const updateTopic = (i, key, value) => {
-    setTopics((prev) =>
-      prev.map((t, idx) => (idx === i ? { ...t, [key]: value } : t))
-    );
-  };
-
-  const removeTopic = (i) => {
-    setTopics((prev) => prev.filter((_, idx) => idx !== i));
-  };
-
-  const addTopic = () => {
-    setTopics((prev) => [...prev, blankTopic()]);
-  };
-
-  // =====================
-  // Create Plan
-  // =====================
   const handleCreate = async () => {
     try {
-      setSaving(true);
-      setError("");
+      setLoading(true);
 
       const res = await studyPlanService.createStudyPlan({
         subjectName,
         examDate,
         topics,
         sourceText,
-        sourceType,
+        sourceType: file ? "document" : "text",
       });
 
       toast.success("Study plan created");
-
       navigate(`/plans/${res.data.studyPlan._id}`);
     } catch (err) {
-      setError(err.error || err.message || "Failed to create plan");
+      toast.error(err.message || "Failed to create plan");
     } finally {
-      setSaving(false);
+      setLoading(false);
     }
   };
 
-  const resetAll = () => {
-    setSourceMode("prompt");
-    setLearningPrompt("");
-    setOutlineText("");
-    setFile(null);
-    setTopics([]);
-    setSourceText("");
-    setSourceType("manual");
-    setHasGenerated(false);
-    setError("");
-  };
+  const updateTopic = (index, field, value) =>
+    setTopics(
+      topics.map((t, i) => (i === index ? { ...t, [field]: value } : t)),
+    );
+
+  const removeTopic = (index) =>
+    setTopics(topics.filter((_, i) => i !== index));
+
+  const addTopic = () =>
+    setTopics([...topics, { name: "", estimated_hours: 1 }]);
 
   return (
-    <PageShell
-      title="Study Plan Builder"
-      description="Step 1: provide content. Step 2: review and edit topics before creating the study plan."
-    >
-      <div className="mx-auto max-w-5xl space-y-6">
-        
-        {/* ================= INPUT PHASE ================= */}
-        {!hasGenerated && (
-          <SectionCard
-            title="Step 1: Provide Content"
-            description="Choose one mode and generate topics."
-          >
-            <div className="space-y-5">
+    <div className="w-full">
+      {/* Page Header */}
+      <div className="mb-lg">
+        <h1 className="font-h1 text-h1 text-on-background mb-xs">
+          {step === 1 ? "Source Material" : "Review Topics"}
+        </h1>
+        <p className="font-body-lg text-body-lg text-on-surface-variant">
+          {step === 1
+            ? "Provide the foundational content for your study session."
+            : "Adjust the generated topics and estimated hours for your study plan."}
+        </p>
+      </div>
 
-              <label className="space-y-2">
-                <span className="text-sm font-medium text-slate-700">Subject</span>
-                <input
-                  value={subjectName}
-                  onChange={(e) => setSubjectName(e.target.value)}
-                  placeholder="e.g. DSA, Backend Development"
-                  className="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none transition focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
-                />
-              </label>
-
-              <label className="space-y-2">
-                <span className="text-sm font-medium text-slate-700">Target Date (optional)</span>
-                <input
-                  type="date"
-                  value={examDate}
-                  onChange={(e) => setExamDate(e.target.value)}
-                  className="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none transition focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
-                />
-              </label>
-
-              {/* Mode Switch */}
-              <div className="grid gap-3 sm:grid-cols-3 mt-2">
-                {SOURCE_MODES.map((m) => {
-                  const Icon = m.icon;
-                  const active = sourceMode === m.id;
-
-                  return (
-                    <button
-                      key={m.id}
-                      type="button"
-                      onClick={() => setSourceMode(m.id)}
-                      className={`rounded-3xl border p-4 text-left transition ${
-                        active
-                          ? "border-slate-900 bg-slate-900 text-white"
-                          : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50"
-                      }`}
-                    >
-                      <div className="flex items-center gap-2">
-                        <Icon className="h-4 w-4" />
-                        <span className="text-sm font-semibold tracking-tight">{m.title}</span>
-                      </div>
-                      <p className={`mt-2 text-xs leading-5 ${active ? "text-slate-200" : "text-slate-500"}`}>
-                        {m.description}
-                      </p>
-                    </button>
-                  );
-                })}
+      {/* Main Layout Grid */}
+      {step === 1 ? (
+        <div className="grid grid-cols-12 gap-gutter">
+          {/* Left Column: Upload Area */}
+          <div className="col-span-12 lg:col-span-7 flex flex-col gap-lg">
+            {/* Drop Zone */}
+            <div className="border-2 border-dashed border-outline-variant rounded-xl bg-surface-container-lowest hover:border-primary transition-colors duration-300 flex flex-col items-center justify-center py-xxl px-lg text-center cursor-pointer shadow-[0_4px_20px_-4px_rgba(26,20,107,0.04)]">
+              <div className="w-16 h-16 rounded-full bg-surface-container-low flex items-center justify-center mb-md">
+                <span
+                  className="material-symbols-outlined text-primary"
+                  style={{ fontSize: "32px" }}
+                >
+                  cloud_upload
+                </span>
               </div>
 
-              {/* Inputs */}
-              {sourceMode === "prompt" && (
-                <label className="space-y-2">
-                  <span className="text-sm font-medium text-slate-700">What do you want to study?</span>
-                  <textarea
-                    value={learningPrompt}
-                    onChange={(e) => setLearningPrompt(e.target.value)}
-                    placeholder="Example: I want to study backend with Node, Express, MongoDB, auth, and deployment."
-                    className="h-32 w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none transition focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
-                  />
-                </label>
-              )}
+              <h3 className="font-h3 text-h3 text-on-surface mb-xs">
+                Upload Document
+              </h3>
 
-              {sourceMode === "text" && (
-                <label className="space-y-2">
-                  <span className="text-sm font-medium text-slate-700">Paste notes or outline</span>
-                  <textarea
-                    value={outlineText}
-                    onChange={(e) => setOutlineText(e.target.value)}
-                    placeholder="Paste your modules, notes, or unit list..."
-                    className="h-32 w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none transition focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
-                  />
-                </label>
-              )}
+              <p className="font-body-md text-body-md text-on-surface-variant max-w-sm mb-lg">
+                Drag and drop your PDF, DOCX, or TXT files here, or click to
+                browse your computer.
+              </p>
 
-              {sourceMode === "document" && (
-                <label className="space-y-2">
-                  <span className="text-sm font-medium text-slate-700">Upload PDF</span>
-                  <input
-                    type="file"
-                    accept="application/pdf"
-                    onChange={(e) => setFile(e.target.files?.[0] || null)}
-                    className="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none transition file:mr-4 file:rounded-xl file:border-0 file:bg-slate-950 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white"
-                  />
-                </label>
-              )}
-
-              <div className="flex flex-wrap gap-3 pt-2">
-                <PrimaryButton type="button" onClick={handleParse} disabled={parsing}>
-                  {parsing ? "Generating..." : "Generate Topics"}
-                </PrimaryButton>
-                <SecondaryButton type="button" onClick={resetAll}>
-                  Reset
-                </SecondaryButton>
-              </div>
-
-              {error && <ErrorState description={error} />}
-            </div>
-          </SectionCard>
-        )}
-
-        {/* ================= EDIT PHASE ================= */}
-        {hasGenerated && (
-          <SectionCard
-            title="Step 2: Review and Edit Topics"
-            description="Manual editing appears only after content is parsed."
-            action={
-              <span className="text-sm text-slate-500">
-                {parsedTopicCount} topics
-              </span>
-            }
-          >
-            {topics.length === 0 ? (
-              <EmptyState
-                title="No topics generated"
-                description="Try again or add manually"
+              <input
+                type="file"
+                id="fileUpload"
+                className="hidden"
+                onChange={(e) => setFile(e.target.files[0])}
               />
-            ) : (
-              <div className="space-y-3">
-                {topics.map((t, i) => (
-                  <div
-                    key={i}
-                    className="grid gap-3 rounded-3xl border border-slate-200 bg-slate-50/70 p-4 md:grid-cols-[1fr_140px_auto] md:items-center"
-                  >
-                    <input
-                      value={t.name}
-                      onChange={(e) =>
-                        updateTopic(i, "name", e.target.value)
-                      }
-                      placeholder="Topic name"
-                      className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
-                    />
 
+              <label
+                htmlFor="fileUpload"
+                className="border border-primary text-primary hover:bg-surface-container-low font-label-md text-label-md py-2 px-6 rounded-lg transition-colors cursor-pointer"
+              >
+                Select File
+              </label>
+            </div>
+
+            {/* Alternate: Paste Text Area */}
+            <div className="bg-surface-container-lowest rounded-xl shadow-[0_4px_20px_-4px_rgba(26,20,107,0.04)] p-lg border border-surface-variant">
+              <label className="block font-label-md text-label-md text-on-surface mb-sm">
+                Or Paste Raw Text
+              </label>
+              <textarea
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                placeholder="Paste your lecture notes or article text here..."
+                className="w-full h-32 bg-background border border-outline-variant rounded-lg p-md font-body-sm text-body-sm text-on-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all resize-none"
+              />
+            </div>
+          </div>
+
+          {/* Right Column: Processing State & Options */}
+          <div className="col-span-12 lg:col-span-5 flex flex-col">
+            <div className="bg-surface-container-lowest rounded-xl shadow-[0_4px_20px_-4px_rgba(26,20,107,0.08)] p-xl border-t-2 border-primary h-full flex flex-col">
+              {/* Plan Details */}
+              <div className="mb-xl">
+                <h2 className="font-h3 text-h3 text-on-surface mb-md">
+                  Plan Details
+                </h2>
+
+                <div className="flex flex-col gap-md">
+                  <div>
+                    <label className="block font-label-md text-label-md text-on-surface mb-xs">
+                      Subject Name <span className="text-error">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={subjectName}
+                      onChange={(e) => setSubjectName(e.target.value)}
+                      placeholder="e.g. Data Structures"
+                      className="w-full bg-background border border-outline-variant rounded-lg p-md font-body-sm text-body-sm text-on-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-label-md text-label-md text-on-surface mb-xs">
+                      Target Date (Optional)
+                    </label>
+                    <input
+                      type="date"
+                      min={today}
+                      value={examDate}
+                      onChange={(e) => setExamDate(e.target.value)}
+                      className="w-full bg-background border border-outline-variant rounded-lg p-md font-body-sm text-body-sm text-on-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* File State */}
+              {file && (
+                <div className="mb-xl">
+                  <h2 className="font-label-md text-label-md text-on-surface-variant uppercase mb-md tracking-widest">
+                    Current Document
+                  </h2>
+                  <div className="flex items-center gap-md p-md bg-surface-container-low rounded-lg border border-outline-variant">
+                    <span
+                      className="material-symbols-outlined text-primary"
+                      style={{ fontVariationSettings: "'FILL' 1" }}
+                    >
+                      description
+                    </span>
+
+                    <div className="flex-1 min-w-0">
+                      <p className="font-body-sm text-body-sm text-on-surface font-semibold truncate">
+                        {file.name}
+                      </p>
+                      <p className="font-label-sm text-label-sm text-on-surface-variant">
+                        {(file.size / 1024 / 1024).toFixed(2)} MB
+                      </p>
+                    </div>
+
+                    <button
+                      onClick={() => setFile(null)}
+                      className="text-outline hover:text-error transition-colors"
+                    >
+                      <span
+                        className="material-symbols-outlined"
+                        style={{ fontSize: "20px" }}
+                      >
+                        close
+                      </span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Processing Actions */}
+              <div className="flex-1 flex flex-col">
+                <h2 className="font-label-md text-label-md text-on-surface-variant uppercase mb-md tracking-widest">
+                  What Happens Next
+                </h2>
+
+                <div className="flex flex-col gap-sm bg-surface-container-low p-md rounded-xl border border-outline-variant">
+                  {[
+                    "AI analyzes your material",
+                    "Breaks down into topics",
+                    "You review and edit",
+                  ].map((item) => (
+                    <div
+                      key={item}
+                      className="flex items-center gap-3 text-on-surface"
+                    >
+                      <span
+                        className="material-symbols-outlined text-primary"
+                        style={{ fontSize: "20px" }}
+                      >
+                        check_circle
+                      </span>
+                      <span className="font-body-sm">{item}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Proceed Button */}
+              <div className="mt-xl pt-lg border-t border-surface-variant">
+                <button
+                  onClick={handleProcess}
+                  disabled={loading}
+                  className="w-full bg-secondary hover:bg-on-secondary-container text-on-secondary py-3 rounded-lg font-body-md text-body-md font-semibold transition-colors flex justify-center items-center gap-sm disabled:opacity-70 disabled:cursor-not-allowed"
+                >
+                  {loading ? "Processing..." : "Generate Topics"}
+                  <span
+                    className="material-symbols-outlined"
+                    style={{ fontSize: "20px" }}
+                  >
+                    arrow_forward
+                  </span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="bg-surface-container-lowest rounded-xl shadow-[0_4px_20px_-4px_rgba(26,20,107,0.08)] p-xl border-t-2 border-primary">
+          <div className="flex items-center justify-between mb-lg">
+            <h2 className="font-h3 text-h3 text-on-surface">Topics to Study</h2>
+            <div className="text-sm font-label-md text-on-surface-variant bg-surface-container px-sm py-xs rounded-md">
+              {topics.length} topics
+            </div>
+          </div>
+
+          {topics.length === 0 ? (
+            <p className="text-on-surface-variant text-center py-xl">
+              No topics generated.
+            </p>
+          ) : (
+            <div className="flex flex-col gap-sm">
+              {topics.map((t, i) => (
+                <div
+                  key={i}
+                  className="flex flex-col sm:flex-row gap-md items-center bg-surface-container-low p-md rounded-lg border border-outline-variant"
+                >
+                  <input
+                    value={t.name}
+                    onChange={(e) => updateTopic(i, "name", e.target.value)}
+                    placeholder="Topic name"
+                    className="flex-1 w-full bg-background border border-outline-variant rounded-lg p-md font-body-sm text-body-sm text-on-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
+                  />
+                  <div className="flex items-center gap-sm w-full sm:w-auto">
+                    <span className="font-label-sm text-on-surface-variant hidden sm:inline-block">
+                      Hours:
+                    </span>
                     <input
                       type="number"
                       min="1"
@@ -329,45 +322,62 @@ const StudyPlanBuilderPage = () => {
                           Number(e.target.value) || 1,
                         )
                       }
-                      className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+                      className="w-24 bg-background border border-outline-variant rounded-lg p-md font-body-sm text-body-sm text-on-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
                     />
-
-                    <SecondaryButton type="button" onClick={() => removeTopic(i)}>
-                      Remove
-                    </SecondaryButton>
+                    <button
+                      onClick={() => removeTopic(i)}
+                      className="p-sm text-outline hover:text-error transition-colors"
+                      title="Remove Topic"
+                    >
+                      <span
+                        className="material-symbols-outlined"
+                        style={{ fontSize: "20px" }}
+                      >
+                        delete
+                      </span>
+                    </button>
                   </div>
-                ))}
-
-                <div className="flex flex-wrap gap-3 pt-2">
-                  <SecondaryButton type="button" onClick={addTopic}>
-                    + Add Topic
-                  </SecondaryButton>
-
-                  <SecondaryButton type="button" onClick={() => setHasGenerated(false)}>
-                    Back to content
-                  </SecondaryButton>
-
-                  <PrimaryButton
-                    type="button"
-                    onClick={handleCreate}
-                    disabled={
-                      saving ||
-                      !subjectName.trim() ||
-                      parsedTopicCount === 0
-                    }
-                  >
-                    {saving ? "Creating..." : "Create Study Plan"}
-                  </PrimaryButton>
                 </div>
-              </div>
-            )}
+              ))}
+            </div>
+          )}
 
-            {error && <ErrorState description={error} />}
-          </SectionCard>
-        )}
-      </div>
-    </PageShell>
+          <div className="mt-xl flex flex-wrap gap-md items-center pt-lg border-t border-surface-variant">
+            <button
+              onClick={addTopic}
+              className="border border-outline-variant text-on-surface hover:bg-surface-container-low font-label-md text-label-md py-2 px-4 rounded-lg transition-colors flex items-center gap-2"
+            >
+              <span
+                className="material-symbols-outlined"
+                style={{ fontSize: "20px" }}
+              >
+                add
+              </span>
+              Add Topic
+            </button>
+            <button
+              onClick={() => setStep(1)}
+              className="border border-outline-variant text-on-surface hover:bg-surface-container-low font-label-md text-label-md py-2 px-4 rounded-lg transition-colors"
+            >
+              Back
+            </button>
+            <div className="flex-1" />
+            <button
+              onClick={handleCreate}
+              disabled={loading || topics.length === 0}
+              className="bg-primary hover:bg-primary-dark text-on-primary py-2 px-6 rounded-lg font-body-md text-body-md font-semibold transition-colors disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              {loading ? "Creating..." : "Create Study Plan"}
+              <span
+                className="material-symbols-outlined"
+                style={{ fontSize: "20px" }}
+              >
+                check_circle
+              </span>
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
   );
-};
-
-export default StudyPlanBuilderPage;
+}

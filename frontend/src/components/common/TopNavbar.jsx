@@ -1,6 +1,6 @@
 export default function TopNavbar() {
   return (
-    <header className="fixed top-0 right-0 w-[calc(100%-16rem)] z-40 border-b border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-none bg-slate-50/80 dark:bg-slate-950/80 backdrop-blur-md text-indigo-900 dark:text-indigo-300 text-sm font-medium flex justify-between items-center px-8 h-16">
+    <header className="fixed top-0 right-0 w-[calc(100%-16rem)] z-40 border-b border-slate-200 shadow-sm bg-slate-50/80 backdrop-blur-md text-indigo-900 text-sm font-medium flex justify-between items-center px-8 h-16">
       
       {/* Search */}
       <div className="flex items-center gap-4 flex-1">
@@ -8,8 +8,9 @@ export default function TopNavbar() {
           <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[20px]">
             search
           </span>
+
           <input
-            className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-full py-2 pl-10 pr-4 text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-shadow"
+            className="w-full bg-white border border-slate-200 rounded-full py-2 pl-10 pr-4 text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-shadow"
             placeholder="Search resources..."
           />
         </div>
@@ -17,11 +18,11 @@ export default function TopNavbar() {
 
       {/* Actions */}
       <div className="flex items-center gap-2">
-        <button className="p-2 text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-300 transition-colors active:scale-95 duration-150 rounded-full hover:bg-slate-100">
+        <button className="p-2 text-slate-500 hover:text-indigo-600 transition-colors active:scale-95 duration-150 rounded-full hover:bg-slate-100">
           <span className="material-symbols-outlined">notifications</span>
         </button>
 
-        <button className="p-2 text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-300 transition-colors active:scale-95 duration-150 rounded-full hover:bg-slate-100 mr-2">
+        <button className="p-2 text-slate-500 hover:text-indigo-600 transition-colors active:scale-95 duration-150 rounded-full hover:bg-slate-100 mr-2">
           <span className="material-symbols-outlined">settings</span>
         </button>
 
