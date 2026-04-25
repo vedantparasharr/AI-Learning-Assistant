@@ -1,109 +1,38 @@
-@import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Hubot+Sans:ital,wght@0,200..900;1,200..900&family=Roboto+Condensed:ital,wght@0,100..900;1,100..900&family=Urbanist:ital,wght@0,100..900;1,100..900&display=swap");
-@import "tailwindcss";
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200");
 
-@theme {
-  --font-display: "Urbanist", sans-serif;
-  --breakpoint-3xl: 1920px;
-  --color-primary: #ff9324;
-}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 @layer base {
-  html {
-    font-family: var(--font-display);
-    overflow-x: clip;
-  }
-
   body {
-    background-color: #fcfbfc;
+    background-color: #f8f9ff;
+    color: #0d1c2e;
+    font-family: "Inter", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
-}
 
-.flip-card {
-  perspective: 1200px;
-}
-
-.flip-card-inner {
-  position: relative;
-  width: 100%;
-  min-height: 320px;
-  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-  transform-style: preserve-3d;
-}
-
-.flip-card-inner.flipped {
-  transform: rotateY(180deg);
-}
-
-.flip-card-front,
-.flip-card-back {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-}
-
-.flip-card-back {
-  transform: rotateY(180deg);
-}
-
-.skeleton-block {
-  position: relative;
-  overflow: hidden;
-  background: linear-gradient(90deg, rgba(226,232,240,0.7), rgba(241,245,249,1), rgba(226,232,240,0.7));
-  background-size: 220% 100%;
-  animation: shimmer 1.35s linear infinite;
-}
-
-.study-markdown {
-  color: #334155;
-}
-
-.study-markdown h2,
-.study-markdown h3 {
-  margin-top: 1.5rem;
-  margin-bottom: 0.75rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  color: #0f172a;
-}
-
-.study-markdown h2:first-child,
-.study-markdown h3:first-child {
-  margin-top: 0;
-}
-
-.study-markdown p,
-.study-markdown li {
-  line-height: 1.8;
-}
-
-.study-markdown ul,
-.study-markdown ol {
-  margin: 0.75rem 0;
-  padding-left: 1.3rem;
-}
-
-.study-markdown code {
-  border-radius: 0.5rem;
-  background: #e2e8f0;
-  padding: 0.15rem 0.4rem;
-  font-size: 0.92em;
-}
-
-.study-markdown pre {
-  overflow-x: auto;
-  border-radius: 1rem;
-  background: #0f172a;
-  color: #f8fafc;
-  padding: 1rem;
-}
-
-@keyframes shimmer {
-  0% {
-    background-position: 200% 0;
+  ::selection {
+    background-color: #312e81;
+    color: #9c9af4;
   }
-  100% {
-    background-position: -200% 0;
+
+  .material-symbols-outlined {
+    font-family: "Material Symbols Outlined";
+    font-weight: normal;
+    font-style: normal;
+    font-size: 24px;
+    line-height: 1;
+    letter-spacing: normal;
+    text-transform: none;
+    display: inline-block;
+    white-space: nowrap;
+    word-wrap: normal;
+    direction: ltr;
+    -webkit-font-smoothing: antialiased;
+    font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+    user-select: none;
   }
 }
