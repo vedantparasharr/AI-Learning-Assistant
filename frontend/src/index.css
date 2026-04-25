@@ -12,15 +12,16 @@
     font-family: var(--font-display);
     overflow-x: clip;
   }
+
   body {
     background-color: #fcfbfc;
   }
 }
 
-/* Flashcard flip */
 .flip-card {
   perspective: 1200px;
 }
+
 .flip-card-inner {
   position: relative;
   width: 100%;
@@ -28,16 +29,81 @@
   transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   transform-style: preserve-3d;
 }
+
 .flip-card-inner.flipped {
   transform: rotateY(180deg);
 }
+
 .flip-card-front,
 .flip-card-back {
   position: absolute;
   inset: 0;
+  width: 100%;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
 }
+
 .flip-card-back {
   transform: rotateY(180deg);
+}
+
+.skeleton-block {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(90deg, rgba(226,232,240,0.7), rgba(241,245,249,1), rgba(226,232,240,0.7));
+  background-size: 220% 100%;
+  animation: shimmer 1.35s linear infinite;
+}
+
+.study-markdown {
+  color: #334155;
+}
+
+.study-markdown h2,
+.study-markdown h3 {
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #0f172a;
+}
+
+.study-markdown h2:first-child,
+.study-markdown h3:first-child {
+  margin-top: 0;
+}
+
+.study-markdown p,
+.study-markdown li {
+  line-height: 1.8;
+}
+
+.study-markdown ul,
+.study-markdown ol {
+  margin: 0.75rem 0;
+  padding-left: 1.3rem;
+}
+
+.study-markdown code {
+  border-radius: 0.5rem;
+  background: #e2e8f0;
+  padding: 0.15rem 0.4rem;
+  font-size: 0.92em;
+}
+
+.study-markdown pre {
+  overflow-x: auto;
+  border-radius: 1rem;
+  background: #0f172a;
+  color: #f8fafc;
+  padding: 1rem;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }

@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Study Plans - DistillLearn</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary": "#1a146b",
+                        "on-tertiary-container": "#a3a3ad",
+                        "error-container": "#ffdad6",
+                        "surface-dim": "#ccdbf3",
+                        "surface": "#f8f9ff",
+                        "secondary-fixed-dim": "#6bd8cb",
+                        "on-primary": "#ffffff",
+                        "on-background": "#0d1c2e",
+                        "tertiary-container": "#393942",
+                        "inverse-surface": "#233144",
+                        "primary-container": "#312e81",
+                        "on-tertiary-fixed": "#1a1b23",
+                        "tertiary-fixed": "#e3e1ed",
+                        "primary-fixed-dim": "#c3c0ff",
+                        "inverse-on-surface": "#eaf1ff",
+                        "surface-container-highest": "#d5e3fc",
+                        "on-surface-variant": "#474651",
+                        "surface-container-high": "#dce9ff",
+                        "on-secondary-container": "#006f66",
+                        "error": "#ba1a1a",
+                        "on-secondary-fixed-variant": "#005049",
+                        "on-primary-fixed-variant": "#3e3c8f",
+                        "on-error": "#ffffff",
+                        "on-primary-fixed": "#100563",
+                        "tertiary": "#23242c",
+                        "on-secondary": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "outline-variant": "#c8c5d3",
+                        "background": "#f8f9ff",
+                        "surface-bright": "#f8f9ff",
+                        "on-surface": "#0d1c2e",
+                        "primary-fixed": "#e2dfff",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary": "#006a61",
+                        "on-tertiary": "#ffffff",
+                        "surface-variant": "#d5e3fc",
+                        "secondary-fixed": "#89f5e7",
+                        "tertiary-fixed-dim": "#c7c5d1",
+                        "surface-container": "#e6eeff",
+                        "on-primary-container": "#9c9af4",
+                        "inverse-primary": "#c3c0ff",
+                        "surface-container-low": "#eff4ff",
+                        "on-tertiary-fixed-variant": "#46464f",
+                        "outline": "#777682",
+                        "surface-tint": "#5654a8",
+                        "secondary-container": "#86f2e4",
+                        "on-secondary-fixed": "#00201d"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "xxl": "80px",
+                        "gutter": "24px",
+                        "xl": "48px",
+                        "container-max": "1280px",
+                        "lg": "24px",
+                        "md": "16px",
+                        "unit": "8px",
+                        "margin": "32px",
+                        "sm": "8px",
+                        "xs": "4px"
+                    },
+                    "fontFamily": {
+                        "h2": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "h3": ["Inter"],
+                        "label-md": ["Inter"],
+                        "body-md": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "h1": ["Inter"],
+                        "display": ["Inter"]
+                    },
+                    "fontSize": {
+                        "h2": ["30px", {"lineHeight": "1.3", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "body-lg": ["18px", {"lineHeight": "1.6", "letterSpacing": "0", "fontWeight": "400"}],
+                        "label-sm": ["11px", {"lineHeight": "1", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                        "h3": ["24px", {"lineHeight": "1.4", "letterSpacing": "0", "fontWeight": "600"}],
+                        "label-md": ["12px", {"lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "body-md": ["16px", {"lineHeight": "1.6", "letterSpacing": "0", "fontWeight": "400"}],
+                        "body-sm": ["14px", {"lineHeight": "1.5", "letterSpacing": "0", "fontWeight": "400"}],
+                        "h1": ["36px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                        "display": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body-md text-body-md antialiased overflow-hidden flex h-screen w-full">
+<!-- Shared Component: SideNavBar -->
+<nav class="bg-white dark:bg-slate-900 font-inter text-sm font-medium h-screen w-64 border-r border-slate-200 dark:border-slate-800 shadow-xl shadow-indigo-900/5 fixed left-0 top-0 flex flex-col py-8 px-4 space-y-2 z-20">
+<!-- Brand Header -->
+<div class="px-4 mb-8">
+<h1 class="text-xl font-black text-indigo-900 dark:text-indigo-100">DistillLearn</h1>
+<p class="text-slate-500 dark:text-slate-400 mt-1" style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em;">Intellectual Rigor</p>
+</div>
+<!-- Navigation Links -->
+<a class="flex items-center px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-indigo-900 transition-colors duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined mr-4 text-[20px]">dashboard</span>
+            Dashboard
+        </a>
+<a class="flex items-center px-4 py-3 bg-indigo-50 dark:bg-indigo-950/30 text-indigo-900 dark:text-indigo-300 border-r-4 border-indigo-900 rounded-r-lg transition-colors duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined mr-4 text-[20px]" style="font-variation-settings: 'FILL' 1;">menu_book</span>
+            Study Plans
+        </a>
+<a class="flex items-center px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-indigo-900 transition-colors duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined mr-4 text-[20px]">analytics</span>
+            Insights
+        </a>
+<a class="flex items-center px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-indigo-900 transition-colors duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined mr-4 text-[20px]">folder_copy</span>
+            Resources
+        </a>
+<div class="flex-grow"></div>
+<a class="flex items-center px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-indigo-900 transition-colors duration-200 ease-in-out mb-4" href="#">
+<span class="material-symbols-outlined mr-4 text-[20px]">settings</span>
+            Settings
+        </a>
+<!-- CTA -->
+<button class="bg-primary hover:bg-primary-container text-on-primary font-label-md text-label-md rounded-lg py-3 px-4 w-full flex items-center justify-center gap-2 transition-colors">
+<span class="material-symbols-outlined text-[16px]">add</span>
+            New Study Plan
+        </button>
+</nav>
+<!-- Main Content Wrapper -->
+<div class="flex-1 flex flex-col ml-64 min-h-screen relative overflow-hidden bg-surface">
+<!-- Shared Component: TopAppBar Container -->
+<div class="w-full bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 shadow-sm shadow-indigo-900/5 z-10 sticky top-0">
+<header class="font-inter antialiased text-slate-900 dark:text-slate-100 flex justify-between items-center px-8 h-16 w-full max-w-[1280px] mx-auto">
+<!-- Search Bar (Left aligned per JSON) -->
+<div class="flex-1 max-w-md relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[20px]">search</span>
+<input class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md py-1.5 pl-10 pr-4 text-sm focus:outline-none focus:border-indigo-900 focus:ring-1 focus:ring-indigo-900 transition-shadow" placeholder="Search resources..." type="text"/>
+</div>
+<!-- Trailing Actions -->
+<div class="flex items-center space-x-2">
+<button class="text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 p-2 rounded-full transition-all duration-200 cursor-pointer active:opacity-80 flex items-center justify-center">
+<span class="material-symbols-outlined text-[20px]">notifications</span>
+</button>
+<button class="text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 p-2 rounded-full transition-all duration-200 cursor-pointer active:opacity-80 flex items-center justify-center">
+<span class="material-symbols-outlined text-[20px]">help_outline</span>
+</button>
+<div class="ml-4 w-8 h-8 rounded-full overflow-hidden border-2 border-transparent hover:border-indigo-900 transition-colors cursor-pointer">
+<img alt="User profile" class="w-full h-full object-cover" data-alt="close-up portrait of professional man with short dark hair in light environment" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBiIX6A_D8wvkIWLBefS4trrtKJjG9qmBMUVrhpr5W5pofF9DJY-Z48FLjxL6e6XRhSouve2kc0DThyTRh4QvKY8z_NibafuA4ZWRtp58CvDfSGqpjJoirpOv-in7RYVNPqIkfrQs-dtv5Uik8j7bG4BfdHXT2sg9WrdAzcM_WSytsDuIsAg3K-vCwWgMWKmw2iCFOlux6ujk_HGHUZotS2H3UcDdyPpc_-75ePWWoLv0CxYy-P0t9x0X9oT8zqc_oJ33IHdrko5eVS"/>
+</div>
+</div>
+</header>
+</div>
+<!-- Scrollable Canvas -->
+<main class="flex-1 overflow-y-auto w-full p-margin md:p-xl">
+<div class="max-w-container-max mx-auto w-full">
+<!-- Canvas Header & Filters -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-lg mb-xl">
+<div>
+<h2 class="font-h1 text-h1 text-on-surface mb-xs">Study Plans</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant">Your active curriculums and distilled learning paths.</p>
+</div>
+<div class="flex flex-wrap items-center gap-md">
+<div class="relative">
+<select class="appearance-none bg-surface-container-lowest border border-outline-variant rounded p-2 pl-4 pr-10 font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary shadow-sm min-w-[160px] cursor-pointer">
+<option>All Subjects</option>
+<option>Sciences</option>
+<option>Economics</option>
+<option>Humanities</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant text-[18px]">expand_more</span>
+</div>
+<div class="relative">
+<select class="appearance-none bg-surface-container-lowest border border-outline-variant rounded p-2 pl-4 pr-10 font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary shadow-sm min-w-[160px] cursor-pointer">
+<option>Last Active</option>
+<option>Recently Added</option>
+<option>Progress (High-Low)</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant text-[18px]">expand_more</span>
+</div>
+</div>
+</div>
+<!-- Study Plans Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-gutter">
+<!-- Card 1 -->
+<article class="bg-surface-container-lowest border-t-2 border-primary rounded-xl p-lg flex flex-col shadow-sm shadow-primary/5 hover:shadow-md hover:shadow-primary/10 transition-shadow duration-300 group">
+<div class="flex justify-between items-start mb-md">
+<span class="bg-surface-variant text-on-surface-variant font-label-sm text-label-sm px-3 py-1 rounded-full">Neuroscience</span>
+<button class="text-outline hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined text-[20px]">more_vert</span>
+</button>
+</div>
+<h3 class="font-h3 text-h3 text-on-surface mb-xs group-hover:text-primary transition-colors cursor-pointer">Advanced Neuroscience</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant line-clamp-2 mb-lg">Synaptic transmission, neuroplasticity, and the architecture of cognitive networks.</p>
+<div class="flex items-center gap-lg mb-xl mt-auto">
+<div class="flex items-center gap-xs text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">subject</span>
+<span class="font-label-md text-label-md">14 Topics</span>
+</div>
+<div class="flex items-center gap-xs text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">style</span>
+<span class="font-label-md text-label-md">320 Cards</span>
+</div>
+</div>
+<div>
+<div class="flex justify-between items-end mb-xs">
+<span class="font-label-md text-label-md text-on-surface-variant">Progress</span>
+<span class="font-label-md text-label-md text-secondary">72%</span>
+</div>
+<div class="h-[8px] w-full bg-tertiary-fixed rounded-full overflow-hidden">
+<div class="h-full bg-secondary rounded-full" style="width: 72%;"></div>
+</div>
+</div>
+</article>
+<!-- Card 2 -->
+<article class="bg-surface-container-lowest border-t-2 border-outline-variant hover:border-primary rounded-xl p-lg flex flex-col shadow-sm shadow-primary/5 hover:shadow-md hover:shadow-primary/10 transition-all duration-300 group">
+<div class="flex justify-between items-start mb-md">
+<span class="bg-surface-variant text-on-surface-variant font-label-sm text-label-sm px-3 py-1 rounded-full">Economics</span>
+<button class="text-outline hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined text-[20px]">more_vert</span>
+</button>
+</div>
+<h3 class="font-h3 text-h3 text-on-surface mb-xs group-hover:text-primary transition-colors cursor-pointer">Macroeconomic Theory</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant line-clamp-2 mb-lg">Global market structures, monetary policy, and long-term growth models.</p>
+<div class="flex items-center gap-lg mb-xl mt-auto">
+<div class="flex items-center gap-xs text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">subject</span>
+<span class="font-label-md text-label-md">8 Topics</span>
+</div>
+<div class="flex items-center gap-xs text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">style</span>
+<span class="font-label-md text-label-md">150 Cards</span>
+</div>
+</div>
+<div>
+<div class="flex justify-between items-end mb-xs">
+<span class="font-label-md text-label-md text-on-surface-variant">Progress</span>
+<span class="font-label-md text-label-md text-secondary">35%</span>
+</div>
+<div class="h-[8px] w-full bg-tertiary-fixed rounded-full overflow-hidden">
+<div class="h-full bg-secondary rounded-full" style="width: 35%;"></div>
+</div>
+</div>
+</article>
+<!-- Card 3 -->
+<article class="bg-surface-container-lowest border-t-2 border-outline-variant hover:border-primary rounded-xl p-lg flex flex-col shadow-sm shadow-primary/5 hover:shadow-md hover:shadow-primary/10 transition-all duration-300 group">
+<div class="flex justify-between items-start mb-md">
+<span class="bg-surface-variant text-on-surface-variant font-label-sm text-label-sm px-3 py-1 rounded-full">History</span>
+<button class="text-outline hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined text-[20px]">more_vert</span>
+</button>
+</div>
+<h3 class="font-h3 text-h3 text-on-surface mb-xs group-hover:text-primary transition-colors cursor-pointer">Modern European History</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant line-clamp-2 mb-lg">Analysis of political shifts and cultural movements from 1789 to present.</p>
+<div class="flex items-center gap-lg mb-xl mt-auto">
+<div class="flex items-center gap-xs text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">subject</span>
+<span class="font-label-md text-label-md">22 Topics</span>
+</div>
+<div class="flex items-center gap-xs text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">style</span>
+<span class="font-label-md text-label-md">410 Cards</span>
+</div>
+</div>
+<div>
+<div class="flex justify-between items-end mb-xs">
+<span class="font-label-md text-label-md text-on-surface-variant">Progress</span>
+<span class="font-label-md text-label-md text-secondary">8%</span>
+</div>
+<div class="h-[8px] w-full bg-tertiary-fixed rounded-full overflow-hidden">
+<div class="h-full bg-secondary rounded-full" style="width: 8%;"></div>
+</div>
+</div>
+</article>
+<!-- Card 4 (Empty State / Add New) -->
+<article class="bg-surface border-2 border-dashed border-outline-variant hover:border-primary hover:bg-surface-container-lowest rounded-xl p-lg flex flex-col items-center justify-center text-center shadow-none transition-all duration-300 cursor-pointer group min-h-[280px]">
+<div class="w-16 h-16 rounded-full bg-surface-container flex items-center justify-center mb-md group-hover:bg-primary-container transition-colors">
+<span class="material-symbols-outlined text-[32px] text-primary group-hover:text-on-primary">add</span>
+</div>
+<h3 class="font-h3 text-h3 text-on-surface mb-xs">Create Plan</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Compile a new curriculum</p>
+</article>
+</div>
+</div>
+</main>
+</div>
+</body></html>

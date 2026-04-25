@@ -1,0 +1,635 @@
+<!doctype html>
+
+<html class="light" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Dashboard - DistillLearn</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "tertiary-container": "#393942",
+              "on-primary-fixed-variant": "#3e3c8f",
+              "on-error-container": "#93000a",
+              background: "#f8f9ff",
+              "on-secondary-container": "#006f66",
+              "on-primary-fixed": "#100563",
+              "secondary-container": "#86f2e4",
+              "on-background": "#0d1c2e",
+              "on-surface": "#0d1c2e",
+              secondary: "#006a61",
+              "on-surface-variant": "#474651",
+              "tertiary-fixed": "#e3e1ed",
+              "secondary-fixed": "#89f5e7",
+              "primary-fixed": "#e2dfff",
+              "on-tertiary": "#ffffff",
+              error: "#ba1a1a",
+              "surface-bright": "#f8f9ff",
+              "surface-tint": "#5654a8",
+              "surface-container": "#e6eeff",
+              "on-tertiary-container": "#a3a3ad",
+              "inverse-primary": "#c3c0ff",
+              outline: "#777682",
+              "primary-fixed-dim": "#c3c0ff",
+              "on-primary-container": "#9c9af4",
+              "inverse-surface": "#233144",
+              "inverse-on-surface": "#eaf1ff",
+              "outline-variant": "#c8c5d3",
+              "surface-container-low": "#eff4ff",
+              "on-secondary-fixed-variant": "#005049",
+              "surface-dim": "#ccdbf3",
+              "on-secondary-fixed": "#00201d",
+              "surface-variant": "#d5e3fc",
+              "surface-container-high": "#dce9ff",
+              "primary-container": "#312e81",
+              "surface-container-lowest": "#ffffff",
+              "error-container": "#ffdad6",
+              surface: "#f8f9ff",
+              "on-error": "#ffffff",
+              "on-secondary": "#ffffff",
+              "tertiary-fixed-dim": "#c7c5d1",
+              "secondary-fixed-dim": "#6bd8cb",
+              "on-tertiary-fixed": "#1a1b23",
+              primary: "#1a146b",
+              "on-primary": "#ffffff",
+              "surface-container-highest": "#d5e3fc",
+              tertiary: "#23242c",
+              "on-tertiary-fixed-variant": "#46464f",
+            },
+            borderRadius: {
+              DEFAULT: "0.125rem",
+              lg: "0.25rem",
+              xl: "0.5rem",
+              full: "0.75rem",
+            },
+            spacing: {
+              xxl: "80px",
+              lg: "24px",
+              xl: "48px",
+              xs: "4px",
+              md: "16px",
+              "container-max": "1280px",
+              unit: "8px",
+              gutter: "24px",
+              sm: "8px",
+              margin: "32px",
+            },
+            fontFamily: {
+              h2: ["Inter"],
+              "body-md": ["Inter"],
+              "label-sm": ["Inter"],
+              display: ["Inter"],
+              h1: ["Inter"],
+              "label-md": ["Inter"],
+              "body-sm": ["Inter"],
+              "body-lg": ["Inter"],
+              h3: ["Inter"],
+            },
+            fontSize: {
+              h2: [
+                "30px",
+                {
+                  lineHeight: "1.3",
+                  letterSpacing: "-0.01em",
+                  fontWeight: "600",
+                },
+              ],
+              "body-md": [
+                "16px",
+                { lineHeight: "1.6", letterSpacing: "0", fontWeight: "400" },
+              ],
+              "label-sm": [
+                "11px",
+                { lineHeight: "1", letterSpacing: "0.02em", fontWeight: "500" },
+              ],
+              display: [
+                "48px",
+                {
+                  lineHeight: "1.1",
+                  letterSpacing: "-0.02em",
+                  fontWeight: "700",
+                },
+              ],
+              h1: [
+                "36px",
+                {
+                  lineHeight: "1.2",
+                  letterSpacing: "-0.02em",
+                  fontWeight: "600",
+                },
+              ],
+              "label-md": [
+                "12px",
+                { lineHeight: "1", letterSpacing: "0.05em", fontWeight: "600" },
+              ],
+              "body-sm": [
+                "14px",
+                { lineHeight: "1.5", letterSpacing: "0", fontWeight: "400" },
+              ],
+              "body-lg": [
+                "18px",
+                { lineHeight: "1.6", letterSpacing: "0", fontWeight: "400" },
+              ],
+              h3: [
+                "24px",
+                { lineHeight: "1.4", letterSpacing: "0", fontWeight: "600" },
+              ],
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      body {
+        background-color: theme("colors.background");
+        color: theme("colors.on-background");
+      }
+    </style>
+  </head>
+  <body
+    class="antialiased min-h-screen flex selection:bg-primary-container selection:text-on-primary-container"
+  >
+    <!-- SideNavBar -->
+    <nav
+      class="h-screen w-64 fixed left-0 top-0 z-50 border-r border-slate-200 dark:border-slate-800 shadow-[10px_0_15px_-3px_rgba(49,46,129,0.05)] dark:shadow-none bg-white dark:bg-slate-900 text-indigo-900 dark:text-indigo-300 font-sans text-sm tracking-wide flex flex-col h-full py-8"
+    >
+      <div class="px-6 mb-8 flex flex-col gap-1">
+        <span class="text-lg font-black text-indigo-900 dark:text-indigo-400"
+          >DistillLearn</span
+        >
+        <span class="font-label-sm text-label-sm text-on-surface-variant"
+          >AI Mentor</span
+        >
+      </div>
+      <div class="px-4 mb-6">
+        <button
+          class="w-full bg-primary hover:bg-on-primary-fixed-variant text-on-primary font-label-md text-label-md py-3 rounded-lg flex items-center justify-center gap-2 transition-colors shadow-sm"
+        >
+          <span class="material-symbols-outlined text-[18px]">add</span>
+          New Study Session
+        </button>
+      </div>
+      <div class="flex-1 overflow-y-auto w-full pr-4">
+        <!-- Active Tab -->
+        <a
+          class="flex items-center gap-3 px-4 py-3 rounded-r-lg bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 border-l-4 border-indigo-700 font-bold hover:translate-x-1 duration-200 mb-1"
+          href="#"
+        >
+          <span
+            class="material-symbols-outlined"
+            style="font-variation-settings: &quot;FILL&quot; 1"
+            >dashboard</span
+          >
+          Dashboard
+        </a>
+        <a
+          class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-300 transition-all hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:translate-x-1 duration-200 rounded-r-lg mb-1"
+          href="#"
+        >
+          <span class="material-symbols-outlined">cloud_upload</span>
+          Upload
+        </a>
+        <a
+          class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-300 transition-all hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:translate-x-1 duration-200 rounded-r-lg mb-1"
+          href="#"
+        >
+          <span class="material-symbols-outlined">auto_stories</span>
+          Study Plan
+        </a>
+        <a
+          class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-300 transition-all hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:translate-x-1 duration-200 rounded-r-lg mb-1"
+          href="#"
+        >
+          <span class="material-symbols-outlined">folder_copy</span>
+          Library
+        </a>
+        <a
+          class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-300 transition-all hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:translate-x-1 duration-200 rounded-r-lg mb-1"
+          href="#"
+        >
+          <span class="material-symbols-outlined">style</span>
+          Flashcards
+        </a>
+      </div>
+      <div class="mt-auto pr-4 pt-4 border-t border-slate-100">
+        <a
+          class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-300 transition-all hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:translate-x-1 duration-200 rounded-r-lg mb-1"
+          href="#"
+        >
+          <span class="material-symbols-outlined">help_outline</span>
+          Help Center
+        </a>
+        <a
+          class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-300 transition-all hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:translate-x-1 duration-200 rounded-r-lg"
+          href="#"
+        >
+          <span class="material-symbols-outlined">logout</span>
+          Logout
+        </a>
+      </div>
+    </nav>
+    <!-- Main Content Wrapper -->
+    <div class="flex-1 ml-64 flex flex-col relative min-h-screen">
+      <!-- TopNavBar -->
+      <header
+        class="fixed top-0 right-0 w-[calc(100%-16rem)] z-40 border-b border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-none bg-slate-50/80 dark:bg-slate-950/80 backdrop-blur-md text-indigo-900 dark:text-indigo-300 font-sans text-sm font-medium flex justify-between items-center px-8 h-16"
+      >
+        <div class="flex items-center gap-4 flex-1">
+          <div class="relative w-64">
+            <span
+              class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[20px]"
+              >search</span
+            >
+            <input
+              class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-full py-2 pl-10 pr-4 text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-shadow"
+              placeholder="Search resources..."
+              type="text"
+            />
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <button
+            class="p-2 text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-300 transition-colors active:scale-95 duration-150 rounded-full hover:bg-slate-100"
+          >
+            <span class="material-symbols-outlined">notifications</span>
+          </button>
+          <button
+            class="p-2 text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-300 transition-colors active:scale-95 duration-150 rounded-full hover:bg-slate-100 mr-2"
+          >
+            <span class="material-symbols-outlined">settings</span>
+          </button>
+          <div
+            class="h-8 w-8 rounded-full bg-indigo-100 overflow-hidden border border-indigo-200 cursor-pointer active:scale-95 duration-150"
+          >
+            <img
+              alt="User profile"
+              class="w-full h-full object-cover"
+              data-alt="Professional headshot of a person with a serene expression against a light background"
+              src="https://lh3.googleusercontent.com/aida-public/AB6AXuACKlPpmyUYB3rwzheva3r8QY47_0nncz_fq35yx19cpxhDn8n_dbi3L4asRO2PIRZcm5wlHF9nNdG3WmlWYLn7lApV_4M4pEzAV6EGSDxBLw9x_Z4m1Ba5cCuE1-f0vZ2FgRtp-BY1xhyHU3YIE5ITQ6OdFnJNAFlrBW7GMmAoWfilKXRbD7oMEfrdYVoUKLGO-xQugAgxAbsCEMF4EMsb3Y6-16H6quqwTJ7uLGanNyKsR7-NzyhCRCKbeC4PhB1OZcFtzvi1nYfw"
+            />
+          </div>
+        </div>
+      </header>
+      <!-- Canvas -->
+      <main class="flex-1 pt-24 px-8 pb-xxl max-w-[1280px] w-full mx-auto">
+        <header class="mb-lg">
+          <h1 class="font-h1 text-h1 text-on-surface mb-xs">
+            Welcome back, Scholar
+          </h1>
+          <p class="font-body-md text-body-md text-on-surface-variant">
+            Your distilled learning environment is ready. You have 42 items to
+            review today.
+          </p>
+        </header>
+        <!-- Bento Grid Layout -->
+        <div class="grid grid-cols-12 gap-gutter mb-xl">
+          <!-- Daily Review Card (FSRS) - Spans 8 cols -->
+          <div
+            class="col-span-12 md:col-span-8 bg-surface-container-lowest rounded-xl p-6 shadow-[0_10px_30px_-15px_rgba(49,46,129,0.15)] border-t-2 border-primary relative overflow-hidden flex flex-col justify-between min-h-[280px]"
+          >
+            <div class="relative z-10 flex justify-between items-start mb-4">
+              <div>
+                <h2
+                  class="font-h3 text-h3 text-on-surface flex items-center gap-2"
+                >
+                  <span class="material-symbols-outlined text-primary"
+                    >psychology</span
+                  >
+                  Daily Review
+                </h2>
+                <p
+                  class="font-body-sm text-body-sm text-on-surface-variant mt-1"
+                >
+                  FSRS Spaced Repetition Queue
+                </p>
+              </div>
+              <span
+                class="bg-surface-container-high text-on-surface font-label-md text-label-md px-3 py-1 rounded-full"
+                >High Priority</span
+              >
+            </div>
+            <div class="relative z-10 flex items-end gap-6 mt-auto">
+              <div class="flex flex-col">
+                <span
+                  class="font-display text-display text-primary leading-none"
+                  >42</span
+                >
+                <span
+                  class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mt-2"
+                  >Cards Due Today</span
+                >
+              </div>
+              <div class="flex gap-4 flex-1 items-center justify-end">
+                <div class="flex flex-col gap-1 items-center">
+                  <span
+                    class="w-12 h-12 rounded-full bg-error-container text-on-error-container flex items-center justify-center font-body-md text-body-md font-semibold"
+                    >12</span
+                  >
+                  <span
+                    class="font-label-sm text-label-sm text-on-surface-variant"
+                    >Learn</span
+                  >
+                </div>
+                <div class="flex flex-col gap-1 items-center">
+                  <span
+                    class="w-12 h-12 rounded-full bg-surface-variant text-primary-container flex items-center justify-center font-body-md text-body-md font-semibold"
+                    >25</span
+                  >
+                  <span
+                    class="font-label-sm text-label-sm text-on-surface-variant"
+                    >Review</span
+                  >
+                </div>
+                <div class="flex flex-col gap-1 items-center">
+                  <span
+                    class="w-12 h-12 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center font-body-md text-body-md font-semibold"
+                    >5</span
+                  >
+                  <span
+                    class="font-label-sm text-label-sm text-on-surface-variant"
+                    >New</span
+                  >
+                </div>
+              </div>
+            </div>
+            <div
+              class="relative z-10 mt-6 pt-6 border-t border-outline-variant flex justify-between items-center"
+            >
+              <div
+                class="flex items-center gap-2 text-on-surface-variant font-body-sm text-body-sm"
+              >
+                <span class="material-symbols-outlined text-[16px]"
+                  >schedule</span
+                >
+                Estimated time: ~20 mins
+              </div>
+              <button
+                class="bg-primary hover:bg-on-primary-fixed-variant text-on-primary font-label-md text-label-md px-6 py-2 rounded-lg transition-colors shadow-sm"
+              >
+                Start Review
+              </button>
+            </div>
+          </div>
+          <!-- Quick Upload Action - Spans 4 cols -->
+          <div
+            class="col-span-12 md:col-span-4 bg-primary-container rounded-xl p-6 shadow-[0_10px_30px_-15px_rgba(49,46,129,0.2)] flex flex-col items-center justify-center text-center relative group overflow-hidden cursor-pointer transition-transform hover:-translate-y-1 duration-300 min-h-[280px]"
+          >
+            <div
+              class="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white via-transparent to-transparent"
+            ></div>
+            <div
+              class="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 backdrop-blur-sm border border-white/20"
+            >
+              <span class="material-symbols-outlined text-white text-[32px]"
+                >upload_file</span
+              >
+            </div>
+            <h3 class="font-h3 text-h3 text-white mb-2 relative z-10">
+              Distill New Document
+            </h3>
+            <p
+              class="font-body-sm text-body-sm text-primary-fixed-dim mb-6 relative z-10"
+            >
+              Upload PDF, DOCX, or text to generate a new study plan and
+              flashcards.
+            </p>
+            <button
+              class="bg-white text-primary font-label-md text-label-md px-6 py-2 rounded-lg transition-colors shadow-sm relative z-10 w-full hover:bg-surface-container-low"
+            >
+              Browse Files
+            </button>
+          </div>
+        </div>
+        <!-- Lower Section: Study Plans & Progress -->
+        <div class="grid grid-cols-12 gap-gutter">
+          <!-- Recent Study Plans - Spans 7 cols -->
+          <div class="col-span-12 md:col-span-7 flex flex-col gap-4">
+            <div class="flex justify-between items-center mb-2">
+              <h2 class="font-h2 text-h2 text-on-surface">
+                Recent Study Plans
+              </h2>
+              <button
+                class="font-label-md text-label-md text-primary hover:text-on-primary-fixed-variant flex items-center gap-1 transition-colors"
+              >
+                View All
+                <span class="material-symbols-outlined text-[16px]"
+                  >arrow_forward</span
+                >
+              </button>
+            </div>
+            <!-- Plan Card 1 -->
+            <div
+              class="bg-surface-container-lowest rounded-xl p-5 shadow-[0_4px_15px_-5px_rgba(49,46,129,0.08)] border border-surface-container-high hover:border-primary-container transition-colors cursor-pointer group"
+            >
+              <div class="flex justify-between items-start mb-3">
+                <div class="flex gap-3">
+                  <div
+                    class="w-10 h-10 rounded-lg bg-surface-variant flex items-center justify-center text-primary"
+                  >
+                    <span class="material-symbols-outlined">menu_book</span>
+                  </div>
+                  <div>
+                    <h4
+                      class="font-body-lg text-body-lg text-on-surface font-semibold group-hover:text-primary transition-colors"
+                    >
+                      Advanced Cellular Biology
+                    </h4>
+                    <p
+                      class="font-body-sm text-body-sm text-on-surface-variant"
+                    >
+                      Chapter 4-6: Membrane Dynamics
+                    </p>
+                  </div>
+                </div>
+                <span
+                  class="font-label-sm text-label-sm text-secondary bg-secondary-fixed-dim/20 px-2 py-1 rounded"
+                  >Active</span
+                >
+              </div>
+              <div class="mt-4">
+                <div
+                  class="flex justify-between font-label-sm text-label-sm text-on-surface-variant mb-1"
+                >
+                  <span>Progress</span>
+                  <span>68%</span>
+                </div>
+                <div
+                  class="w-full h-2 bg-surface-container rounded-full overflow-hidden"
+                >
+                  <div
+                    class="h-full bg-secondary rounded-full"
+                    style="width: 68%"
+                  ></div>
+                </div>
+              </div>
+            </div>
+            <!-- Plan Card 2 -->
+            <div
+              class="bg-surface-container-lowest rounded-xl p-5 shadow-[0_4px_15px_-5px_rgba(49,46,129,0.08)] border border-surface-container-high hover:border-primary-container transition-colors cursor-pointer group"
+            >
+              <div class="flex justify-between items-start mb-3">
+                <div class="flex gap-3">
+                  <div
+                    class="w-10 h-10 rounded-lg bg-surface-variant flex items-center justify-center text-primary"
+                  >
+                    <span class="material-symbols-outlined">functions</span>
+                  </div>
+                  <div>
+                    <h4
+                      class="font-body-lg text-body-lg text-on-surface font-semibold group-hover:text-primary transition-colors"
+                    >
+                      Linear Algebra Fundamentals
+                    </h4>
+                    <p
+                      class="font-body-sm text-body-sm text-on-surface-variant"
+                    >
+                      Eigenvalues and Eigenvectors
+                    </p>
+                  </div>
+                </div>
+                <span
+                  class="font-label-sm text-label-sm text-secondary bg-secondary-fixed-dim/20 px-2 py-1 rounded"
+                  >Active</span
+                >
+              </div>
+              <div class="mt-4">
+                <div
+                  class="flex justify-between font-label-sm text-label-sm text-on-surface-variant mb-1"
+                >
+                  <span>Progress</span>
+                  <span>32%</span>
+                </div>
+                <div
+                  class="w-full h-2 bg-surface-container rounded-full overflow-hidden"
+                >
+                  <div
+                    class="h-full bg-secondary rounded-full"
+                    style="width: 32%"
+                  ></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Learning Progress Chart Area - Spans 5 cols -->
+          <div
+            class="col-span-12 md:col-span-5 bg-surface-container-lowest rounded-xl p-6 shadow-[0_10px_30px_-15px_rgba(49,46,129,0.1)] border border-surface-container-high"
+          >
+            <h2 class="font-h3 text-h3 text-on-surface mb-6">
+              Learning Activity
+            </h2>
+            <!-- Faux Chart Structure -->
+            <div
+              class="h-48 flex items-end justify-between gap-2 border-b border-outline-variant pb-2 relative"
+            >
+              <!-- Y-axis labels -->
+              <div
+                class="absolute left-0 top-0 bottom-0 flex flex-col justify-between text-on-surface-variant font-label-sm text-label-sm -ml-2 translate-y-[-50%] w-6"
+              >
+                <span>100</span>
+                <span>50</span>
+                <span>0</span>
+              </div>
+              <!-- Bars -->
+              <div class="w-full flex justify-around items-end h-full pl-6">
+                <div
+                  class="w-[12%] bg-surface-variant rounded-t-sm h-[30%] hover:bg-primary-container transition-colors relative group"
+                >
+                  <div
+                    class="absolute -top-8 left-1/2 -translate-x-1/2 bg-inverse-surface text-inverse-on-surface font-label-sm text-label-sm px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    30
+                  </div>
+                </div>
+                <div
+                  class="w-[12%] bg-surface-variant rounded-t-sm h-[50%] hover:bg-primary-container transition-colors relative group"
+                >
+                  <div
+                    class="absolute -top-8 left-1/2 -translate-x-1/2 bg-inverse-surface text-inverse-on-surface font-label-sm text-label-sm px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    50
+                  </div>
+                </div>
+                <div
+                  class="w-[12%] bg-surface-variant rounded-t-sm h-[80%] hover:bg-primary-container transition-colors relative group"
+                >
+                  <div
+                    class="absolute -top-8 left-1/2 -translate-x-1/2 bg-inverse-surface text-inverse-on-surface font-label-sm text-label-sm px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    80
+                  </div>
+                </div>
+                <div
+                  class="w-[12%] bg-primary rounded-t-sm h-[100%] hover:bg-primary-container transition-colors relative group"
+                >
+                  <div
+                    class="absolute -top-8 left-1/2 -translate-x-1/2 bg-inverse-surface text-inverse-on-surface font-label-sm text-label-sm px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    100
+                  </div>
+                </div>
+                <div
+                  class="w-[12%] bg-surface-variant rounded-t-sm h-[60%] hover:bg-primary-container transition-colors relative group"
+                >
+                  <div
+                    class="absolute -top-8 left-1/2 -translate-x-1/2 bg-inverse-surface text-inverse-on-surface font-label-sm text-label-sm px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    60
+                  </div>
+                </div>
+                <div
+                  class="w-[12%] bg-surface-variant rounded-t-sm h-[40%] hover:bg-primary-container transition-colors relative group"
+                >
+                  <div
+                    class="absolute -top-8 left-1/2 -translate-x-1/2 bg-inverse-surface text-inverse-on-surface font-label-sm text-label-sm px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    40
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- X-axis labels -->
+            <div
+              class="flex justify-around items-center pt-2 pl-6 text-on-surface-variant font-label-sm text-label-sm"
+            >
+              <span>Mon</span>
+              <span>Tue</span>
+              <span>Wed</span>
+              <span class="text-primary font-bold">Thu</span>
+              <span>Fri</span>
+              <span>Sat</span>
+            </div>
+            <div
+              class="mt-6 flex justify-between items-center bg-surface p-3 rounded-lg border border-surface-container-high"
+            >
+              <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-secondary"
+                  >local_fire_department</span
+                >
+                <span class="font-body-sm text-body-sm text-on-surface"
+                  >Current Streak</span
+                >
+              </div>
+              <span class="font-h3 text-h3 text-on-surface">4 Days</span>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </body>
+</html>

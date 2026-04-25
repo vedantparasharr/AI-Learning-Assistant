@@ -1,10 +1,13 @@
 import { useState } from "react";
 import toast from "react-hot-toast";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import authService from "../../services/authService";
 
 const RegisterPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const query = new URLSearchParams(location.search);
+  const returnTo = query.get("returnTo") || "";
   const [form, setForm] = useState({
     username: "",
     email: "",
@@ -30,7 +33,11 @@ const RegisterPage = () => {
         form.password,
       );
       toast.success(response.message || "OTP sent to your email");
-      navigate(`/verify-email?email=${encodeURIComponent(form.email)}`, {
+      const params = new URLSearchParams({ email: form.email });
+      if (returnTo) {
+        params.set("returnTo", returnTo);
+      }
+      navigate(`/verify-email?${params.toString()}`, {
         replace: true,
       });
     } catch (error) {
@@ -48,7 +55,7 @@ const RegisterPage = () => {
             Start here
           </p>
           <h1 className="mt-6 max-w-lg text-4xl font-semibold tracking-tight text-slate-950">
-            Build a private study workspace around your own documents.
+            Build a learning-path workspace around your exam goals.
           </h1>
           <p className="mt-5 max-w-xl text-sm leading-7 text-slate-600">
             Upload PDFs, generate revision material, and keep your progress organized without leaving the app.
@@ -98,7 +105,7 @@ const RegisterPage = () => {
 
           <p className="mt-6 text-sm text-slate-300">
             Already registered?{" "}
-            <Link to="/login" className="font-semibold text-white underline decoration-orange-300 underline-offset-4">
+            <Link to={`/login${location.search || ""}`} className="font-semibold text-white underline decoration-orange-300 underline-offset-4">
               Sign in instead
             </Link>
           </p>

@@ -5,7 +5,7 @@ export const PageShell = ({ title, description, actions, children }) => (
     <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
       <div className="space-y-2">
         <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
-          DistillLearn
+          DistillLearn 2.0
         </p>
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">
@@ -58,8 +58,12 @@ export const StatCard = ({ label, value, hint }) => (
 export const StatusBadge = ({ status }) => {
   const toneMap = {
     ready: "bg-emerald-50 text-emerald-700 ring-emerald-200",
-    processing: "bg-amber-50 text-amber-700 ring-amber-200",
+    generating: "bg-amber-50 text-amber-700 ring-amber-200",
     failed: "bg-rose-50 text-rose-700 ring-rose-200",
+    pending: "bg-slate-100 text-slate-700 ring-slate-200",
+    completed: "bg-sky-50 text-sky-700 ring-sky-200",
+    active: "bg-emerald-50 text-emerald-700 ring-emerald-200",
+    locked: "bg-zinc-100 text-zinc-700 ring-zinc-200",
   };
 
   return (

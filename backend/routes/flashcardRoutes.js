@@ -1,22 +1,17 @@
 import express from "express";
-import {
-  getFlashcards,
-  getAllFlashcardSets,
-  reviewFlashcard,
-  toggleStarFlashcard,
-  deleteFlashcardSet,
-} from "../controllers/flashcardController.js";
-
 import protect from "../middleware/auth.js";
+import {
+  activateTopicFlashcards,
+  getDailyReviewQueue,
+  reviewFlashcard,
+} from "../controllers/flashcardController.js";
 
 const router = express.Router();
 
 router.use(protect);
 
-router.get("/", getAllFlashcardSets);
-router.get("/:documentId", getFlashcards);
-router.post("/:cardId/review", reviewFlashcard);
-router.put("/:cardId/star", toggleStarFlashcard);
-router.delete("/:id", deleteFlashcardSet);
+router.post("/activate/:topicKey", activateTopicFlashcards);
+router.get("/queue", getDailyReviewQueue);
+router.post("/review/:cardId", reviewFlashcard);
 
 export default router;

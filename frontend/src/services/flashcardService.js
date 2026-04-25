@@ -1,68 +1,41 @@
 import axiosInstance from "../utils/axiosInstance";
 import { API_PATHS } from "../utils/apiPaths";
 
-const getAllFlashcardSets = async () => {
+const activateTopic = async (topicKey) => {
   try {
-    const response = await axiosInstance.get(
-      API_PATHS.FLASHCARDS.GET_ALL_FLASHCARD_SETS,
-    );
+    const response = await axiosInstance.post(API_PATHS.FLASHCARDS.ACTIVATE_TOPIC(topicKey));
     return response.data;
   } catch (error) {
-    throw error.response?.data || { message: "Failed to fetch flashcard sets" };
+    throw error.response?.data || { message: "Failed to sync topic flashcards" };
   }
 };
 
-const getFlashcardsForDocument = async (documentId) => {
+const getQueue = async (topicKey = "") => {
   try {
-    const response = await axiosInstance.get(
-      API_PATHS.FLASHCARDS.GET_FLASHCARDS_FOR_DOC(documentId),
-    );
+    const response = await axiosInstance.get(API_PATHS.FLASHCARDS.GET_QUEUE, {
+      params: topicKey ? { topicKey } : undefined,
+    });
     return response.data;
   } catch (error) {
-    throw error.response?.data || { message: "Failed to fetch flashcards" };
+    throw error.response?.data || { message: "Failed to fetch review queue" };
   }
 };
 
-const reviewFlashcard = async (cardId, cardIndex) => {
+const reviewCard = async (cardId, rating) => {
   try {
-    const response = await axiosInstance.post(
-      API_PATHS.FLASHCARDS.REVIEW_FLASHCARD(cardId),
-      { cardIndex },
-    );
+    const response = await axiosInstance.post(API_PATHS.FLASHCARDS.REVIEW_CARD(cardId), {
+      rating,
+    });
     return response.data;
   } catch (error) {
     throw error.response?.data || { message: "Failed to review flashcard" };
   }
 };
 
-const toggleStar = async (cardId) => {
-  try {
-    const response = await axiosInstance.put(
-      API_PATHS.FLASHCARDS.TOGGLE_STAR(cardId),
-    );
-    return response.data;
-  } catch (error) {
-    throw error.response?.data || { message: "Failed to star flashcard" };
-  }
-};
-
-const deleteFlashcardSet = async (id) => {
-  try {
-    const response = await axiosInstance.delete(
-      API_PATHS.FLASHCARDS.DELETE_FLASHCARD_SET(id),
-    );
-    return response.data;
-  } catch (error) {
-    throw error.response?.data || { message: "Failed to delete flashcards" };
-  }
-};
-
 const flashcardService = {
-  getAllFlashcardSets,
-  getFlashcardsForDocument,
-  reviewFlashcard,
-  toggleStar,
-  deleteFlashcardSet,
+  activateTopic,
+  getQueue,
+  reviewCard,
 };
 
 export default flashcardService;

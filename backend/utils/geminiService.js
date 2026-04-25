@@ -1,5 +1,7 @@
 import dotenv from "dotenv";
 import { GoogleGenAI } from "@google/genai";
+import { parseJsonResponse } from "./parseJsonResponse.js";
+import { buildStarterFlashcardsFallback } from "./flashcardHelpers.js";
 
 dotenv.config();
 
@@ -9,7 +11,6 @@ if (!process.env.GEMINI_API_KEY) {
 }
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-
 const MODEL = "gemini-2.5-flash-lite";
 
 const jsonConfig = (schema) => ({
@@ -17,155 +18,292 @@ const jsonConfig = (schema) => ({
   responseSchema: schema,
 });
 
-// ── Schemas ──────────────────────────────────────────────────────────
-
-const flashcardSchema = {
+const syllabusTopicSchema = {
   type: "array",
   items: {
     type: "object",
     properties: {
-      question: { type: "string" },
-      answer: { type: "string" },
-      difficulty: { type: "string", enum: ["easy", "medium", "hard"] },
+      name: { type: "string" },
+      estimated_hours: { type: "number" },
     },
-    required: ["question", "answer", "difficulty"],
+    required: ["name", "estimated_hours"],
   },
 };
 
-const quizSchema = {
+const starterDeckSchema = {
   type: "array",
   items: {
     type: "object",
     properties: {
-      question: { type: "string" },
-      options: { type: "array", items: { type: "string" }, minItems: 4, maxItems: 4 },
-      correctAnswer: { type: "string" },
-      explanation: { type: "string" },
-      difficulty: { type: "string", enum: ["easy", "medium", "hard"] },
+      name: { type: "string" },
+      flashcards: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            question: { type: "string" },
+            answer: { type: "string" },
+          },
+          required: ["question", "answer"],
+        },
+      },
     },
-    required: ["question", "options", "correctAnswer", "explanation", "difficulty"],
+    required: ["name", "flashcards"],
   },
 };
 
-const summarySchema = {
+const weaknessSupportSchema = {
   type: "object",
   properties: {
-    summary: { type: "string" },
+    simpler_explanation: { type: "string" },
+    easier_flashcards: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          question: { type: "string" },
+          answer: { type: "string" },
+        },
+        required: ["question", "answer"],
+      },
+    },
   },
-  required: ["summary"],
+  required: ["simpler_explanation", "easier_flashcards"],
 };
 
-const chatSchema = {
-  type: "object",
-  properties: {
-    answer: { type: "string" },
-  },
-  required: ["answer"],
-};
+export const parseSyllabusTopics = async (text) => {
+  const prompt = `You are extracting a syllabus into study topics for an exam planner.
 
-const explainSchema = {
-  type: "object",
-  properties: {
-    explanation: { type: "string" },
-  },
-  required: ["explanation"],
-};
+Return ONLY a flat JSON array. Do not include markdown, commentary, or code fences.
 
-// ── Generators ───────────────────────────────────────────────────────
+Each array item must contain:
+- "name": the topic name
+- "estimated_hours": a realistic number of study hours for that topic
 
-// Generate flashcards from document text
-export const generateFlashcards = async (text, count = 10) => {
-  const prompt = `Generate exactly ${count} educational flashcards from the following text. Each flashcard must have a clear question, a concise answer, and a difficulty level (easy, medium, or hard).\n\nText:\n${text.substring(0, 15000)}`;
+Rules:
+- Preserve the original syllabus wording as much as possible.
+- Do not invent topics that are not supported by the syllabus text.
+- Merge obvious duplicates.
+- Keep the array flat. No nesting, modules, units, or metadata outside the array.
+- estimated_hours must be a positive number.
+
+Syllabus text:
+${text.substring(0, 25000)}`;
 
   try {
     const response = await ai.models.generateContent({
       model: MODEL,
       contents: prompt,
-      config: jsonConfig(flashcardSchema),
+      config: jsonConfig(syllabusTopicSchema),
     });
 
-    const cards = JSON.parse(response.text);
-    return cards.slice(0, count);
+    const topics = parseJsonResponse(response.text);
+
+    return Array.isArray(topics)
+      ? topics
+          .map((topic) => ({
+            name: String(topic?.name || "").trim(),
+            estimated_hours:
+              Number(topic?.estimated_hours) > 0
+                ? Number(topic.estimated_hours)
+                : 1,
+          }))
+          .filter((topic) => topic.name)
+      : [];
   } catch (error) {
     console.error("Gemini API error:", error);
-    throw new Error("Failed to generate flashcards");
+    throw new Error("Failed to parse syllabus topics");
   }
 };
 
-// Generate multiple choice quiz questions from document text
-export const generateQuiz = async (text, numQuestions = 5) => {
-  const prompt = `Generate exactly ${numQuestions} multiple choice questions from the following text. Each question must have exactly 4 options, a correctAnswer that matches one of the options exactly, a brief explanation, and a difficulty level (easy, medium, or hard).\n\nText:\n${text.substring(0, 15000)}`;
+export const generateRoadmapTopicsFromPrompt = async ({ prompt, subjectName = "" }) => {
+  const roadmapPrompt = `You are designing a practical study roadmap.
+
+Return ONLY a flat JSON array. Do not include markdown, commentary, or code fences.
+
+Each array item must contain:
+- "name": the topic name
+- "estimated_hours": a realistic number of study hours for that topic
+
+Rules:
+- Build a progressive roadmap from fundamentals to advanced topics.
+- Keep topic names concise and actionable.
+- Avoid duplicates and near-duplicates.
+- Prefer 8 to 18 topics based on scope.
+- estimated_hours must be a positive number.
+
+Learner goal:
+${prompt.substring(0, 4000)}
+
+Subject hint (if available):
+${String(subjectName || "").trim() || "Not provided"}`;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: MODEL,
+      contents: roadmapPrompt,
+      config: jsonConfig(syllabusTopicSchema),
+    });
+
+    const topics = parseJsonResponse(response.text);
+
+    return Array.isArray(topics)
+      ? topics
+          .map((topic) => ({
+            name: String(topic?.name || "").trim(),
+            estimated_hours:
+              Number(topic?.estimated_hours) > 0
+                ? Number(topic.estimated_hours)
+                : 1,
+          }))
+          .filter((topic) => topic.name)
+      : [];
+  } catch (error) {
+    console.error("Gemini roadmap generation error:", error);
+    throw new Error("Failed to generate roadmap topics");
+  }
+};
+
+export const generateStarterFlashcardsForTopics = async ({ subjectName, topics }) => {
+  const prompt = `Create exactly 2 starter flashcards for each study topic below.
+
+Subject: ${subjectName}
+Topics:
+${topics.map((topic, index) => `${index + 1}. ${topic.name}`).join("\n")}
+
+Return only JSON. Each topic should have short, exam-useful flashcards. Avoid duplicate wording across topics.`;
 
   try {
     const response = await ai.models.generateContent({
       model: MODEL,
       contents: prompt,
-      config: jsonConfig(quizSchema),
+      config: jsonConfig(starterDeckSchema),
     });
 
-    const questions = JSON.parse(response.text);
-    return questions.slice(0, numQuestions);
+    const parsed = parseJsonResponse(response.text);
+
+    if (!Array.isArray(parsed)) {
+      return topics.map((topic) => ({
+        name: topic.name,
+        flashcards: buildStarterFlashcardsFallback(subjectName, topic.name),
+      }));
+    }
+
+    return topics.map((topic) => {
+      const generated = parsed.find(
+        (entry) => String(entry?.name || "").trim().toLowerCase() === topic.name.trim().toLowerCase(),
+      );
+
+      const flashcards = Array.isArray(generated?.flashcards)
+        ? generated.flashcards
+            .map((card) => ({
+              question: String(card?.question || "").trim(),
+              answer: String(card?.answer || "").trim(),
+            }))
+            .filter((card) => card.question && card.answer)
+            .slice(0, 2)
+        : [];
+
+      return {
+        name: topic.name,
+        flashcards: flashcards.length > 0
+          ? flashcards
+          : buildStarterFlashcardsFallback(subjectName, topic.name),
+      };
+    });
   } catch (error) {
-    console.error("Gemini API error:", error);
-    throw new Error("Failed to generate quiz");
+    console.error("Gemini starter flashcards error:", error);
+    return topics.map((topic) => ({
+      name: topic.name,
+      flashcards: buildStarterFlashcardsFallback(subjectName, topic.name),
+    }));
   }
 };
 
-// Generate a concise summary of document text
-export const generateSummary = async (text) => {
-  const prompt = `Provide a concise summary of the following text, highlighting the key concepts, main ideas, and important points. Keep the summary clear and structured. Use markdown formatting.\n\nText:\n${text.substring(0, 20000)}`;
+export const generateTopicNotes = async ({ subjectName, topicName }) => {
+  const prompt = `Create exam-oriented Markdown notes for the topic "${topicName}" in the subject "${subjectName}".
+
+Write for a student preparing under a deadline.
+
+Required structure:
+- ## Topic Overview
+- ## Core Concepts
+- ## Important Formulas / Facts (only if relevant)
+- ## Common Exam Pitfalls
+- ## Quick Revision Checklist
+
+Rules:
+- Stay focused on this topic only.
+- Keep explanations clear, accurate, and concise.
+- Prefer bullet points and short examples over long paragraphs.
+- Use Markdown only.
+- Do not mention that you are an AI.
+- Do not wrap the answer in code fences.`;
 
   try {
     const response = await ai.models.generateContent({
       model: MODEL,
       contents: prompt,
-      config: jsonConfig(summarySchema),
     });
 
-    const result = JSON.parse(response.text);
-    return result.summary;
+    return response.text.trim();
   } catch (error) {
     console.error("Gemini API error:", error);
-    throw new Error("Failed to generate summary");
+    throw new Error("Failed to generate topic notes");
   }
 };
 
-// Answer a user question based on relevant document chunks
-export const chatWithContext = async (question, chunks) => {
-  const context = chunks.map((c, i) => `[Chunk ${i + 1}]\n${c.content}`).join("\n\n");
+export const generateWeaknessSupport = async ({ subjectName, topicName, question, answer }) => {
+  const prompt = `A student is struggling with this topic.
 
-  const prompt = `Based on the following context from a document, answer the user's question accurately. If the answer is not in the context, say so. Use markdown formatting for the answer.\n\nContext:\n${context}\n\nQuestion: ${question}`;
+Subject: ${subjectName}
+Topic: ${topicName}
+Card they missed:
+Question: ${question}
+Answer: ${answer}
+
+Return only JSON with:
+- simpler_explanation: a much easier explanation in plain language
+- easier_flashcards: exactly 2 easier flashcards for rebuilding confidence
+
+Keep everything concise, clear, and exam-oriented.`;
 
   try {
     const response = await ai.models.generateContent({
       model: MODEL,
       contents: prompt,
-      config: jsonConfig(chatSchema),
+      config: jsonConfig(weaknessSupportSchema),
     });
 
-    const result = JSON.parse(response.text);
-    return result.answer;
+    const parsed = parseJsonResponse(response.text);
+
+    return {
+      simpler_explanation: String(parsed?.simpler_explanation || "").trim(),
+      easier_flashcards: Array.isArray(parsed?.easier_flashcards)
+        ? parsed.easier_flashcards
+            .map((card) => ({
+              question: String(card?.question || "").trim(),
+              answer: String(card?.answer || "").trim(),
+            }))
+            .filter((card) => card.question && card.answer)
+            .slice(0, 2)
+        : [],
+    };
   } catch (error) {
-    console.error("Gemini API error:", error);
-    throw new Error("Failed to process chat request");
+    console.error("Gemini weakness support error:", error);
+    return {
+      simpler_explanation: `${topicName} becomes easier if you first focus on the basic idea, one small example, and the most common exam trap before attempting harder questions.`,
+      easier_flashcards: [
+        {
+          question: `What is the simplest way to describe ${topicName}?`,
+          answer: `${topicName} is easiest to learn by understanding its main goal, its simplest example, and when to use it.`,
+        },
+        {
+          question: `What should you remember first about ${topicName}?`,
+          answer: `Remember the core definition, one worked example, and the most common mistake students make.`,
+        },
+      ],
+    };
   }
 };
 
-// Explain a specific concept using relevant document context
-export const explainConcept = async (concept, context) => {
-  const prompt = `Explain the concept of "${concept}" based on the following context. Provide a clear, educational explanation that's easy to understand. Include examples if relevant. Use markdown formatting.\n\nContext:\n${context.substring(0, 10000)}`;
-
-  try {
-    const response = await ai.models.generateContent({
-      model: MODEL,
-      contents: prompt,
-      config: jsonConfig(explainSchema),
-    });
-
-    const result = JSON.parse(response.text);
-    return result.explanation;
-  } catch (error) {
-    console.error("Gemini API error:", error);
-    throw new Error("Failed to explain concept");
-  }
-};

@@ -43,6 +43,11 @@ const VerifyEmailPage = () => {
     return queryParams.get("email") || "";
   }, [location.search]);
 
+  const returnTo = useMemo(() => {
+    const queryParams = new URLSearchParams(location.search);
+    return queryParams.get("returnTo") || "/dashboard";
+  }, [location.search]);
+
   const [otp, setOtp] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [resending, setResending] = useState(false);
@@ -77,7 +82,7 @@ const VerifyEmailPage = () => {
       const response = await authService.verifyEmail(email, otp);
       login(response.data.user);
       toast.success(response.message || "Email verified successfully");
-      navigate("/dashboard", { replace: true });
+      navigate(returnTo, { replace: true });
     } catch (error) {
       toast.error(error.error || error.message || "Verification failed");
     } finally {
@@ -160,7 +165,7 @@ const VerifyEmailPage = () => {
 
         <p className="mt-6 text-sm text-slate-600">
           Back to{" "}
-          <Link to="/login" className="font-semibold text-slate-950 underline decoration-orange-300 underline-offset-4">
+          <Link to={`/login${location.search ? `?${new URLSearchParams({ returnTo }).toString()}` : ""}`} className="font-semibold text-slate-950 underline decoration-orange-300 underline-offset-4">
             login
           </Link>
         </p>

@@ -1,14 +1,18 @@
 import { useState } from "react";
 import toast from "react-hot-toast";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import authService from "../../services/authService";
 
 const LoginPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useAuth();
   const [form, setForm] = useState({ email: "", password: "" });
   const [submitting, setSubmitting] = useState(false);
+
+  const query = new URLSearchParams(location.search);
+  const returnTo = query.get("returnTo") || "/dashboard";
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -18,7 +22,7 @@ const LoginPage = () => {
       const response = await authService.login(form.email, form.password);
       login(response.data.user);
       toast.success(response.message || "Logged in successfully");
-      navigate("/dashboard", { replace: true });
+      navigate(returnTo, { replace: true });
     } catch (error) {
       toast.error(error.error || error.message || "Unable to log in");
     } finally {
@@ -34,7 +38,7 @@ const LoginPage = () => {
             Welcome back
           </p>
           <h1 className="mt-6 max-w-lg text-4xl font-semibold tracking-tight">
-            Study your documents with generated summaries, flashcards, and quizzes.
+            Return to your AI-assisted study plan, topic notes, and daily review queue.
           </h1>
           <p className="mt-5 max-w-xl text-sm leading-7 text-slate-300">
             Sign in to upload source material, ask document-grounded AI questions, and keep your revision progress in one place.
@@ -91,7 +95,7 @@ const LoginPage = () => {
 
           <p className="mt-6 text-sm text-slate-600">
             New here?{" "}
-            <Link to="/register" className="font-semibold text-slate-950 underline decoration-orange-300 underline-offset-4">
+            <Link to={`/register${location.search || ""}`} className="font-semibold text-slate-950 underline decoration-orange-300 underline-offset-4">
               Create an account
             </Link>
           </p>

@@ -1,4 +1,12 @@
-import { BrainCircuit, Droplets, FileText, LayoutDashboard, LogOut, UserCircle2, Youtube } from "lucide-react";
+import {
+  BookMarked,
+  BrainCircuit,
+  Droplets,
+  LayoutDashboard,
+  LogOut,
+  PlusCircle,
+  UserCircle2,
+} from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 
@@ -9,18 +17,13 @@ const navigation = [
     icon: LayoutDashboard,
   },
   {
-    to: "/documents",
-    label: "Documents",
-    icon: FileText,
-  },
-  {
-    to: "/youtube",
-    label: "YouTube",
-    icon: Youtube,
+    to: "/study-plan/new",
+    label: "New study plan",
+    icon: PlusCircle,
   },
   {
     to: "/flashcards",
-    label: "Flashcards",
+    label: "Review",
     icon: BrainCircuit,
   },
   {
@@ -51,9 +54,11 @@ const AppLayout = ({ children }) => {
             </div>
             <div>
               <p className="text-sm font-semibold uppercase tracking-[0.28em] text-orange-500">
-                Learn smarter
+                Memory pressure
               </p>
-              <h1 className="text-lg font-semibold tracking-tight">DistillLearn</h1>
+              <h1 className="text-lg font-semibold tracking-tight">
+                DistillLearn
+              </h1>
             </div>
           </div>
 
@@ -71,13 +76,16 @@ const AppLayout = ({ children }) => {
           </div>
 
           <div className="mt-8 rounded-3xl border border-slate-200 bg-slate-50 p-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
+            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
+              <BookMarked className="h-4 w-4" />
               Signed in as
-            </p>
+            </div>
             <p className="mt-2 text-lg font-semibold tracking-tight text-slate-950">
               {user?.username || "Learner"}
             </p>
-            <p className="mt-1 break-all text-sm text-slate-600">{user?.email}</p>
+            <p className="mt-1 break-all text-sm text-slate-600">
+              {user?.email}
+            </p>
           </div>
 
           <button
@@ -90,7 +98,10 @@ const AppLayout = ({ children }) => {
           </button>
 
           <p className="mt-6 text-xs leading-5 text-slate-500">
-            Current route: <span className="font-semibold text-slate-700">{location.pathname}</span>
+            Current route:{" "}
+            <span className="font-semibold text-slate-700">
+              {location.pathname}
+            </span>
           </p>
         </aside>
 

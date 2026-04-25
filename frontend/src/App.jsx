@@ -8,19 +8,19 @@ import {
 import LoginPage from "./pages/Auth/LoginPage";
 import RegisterPage from "./pages/Auth/RegisterPage";
 import VerifyEmailPage from "./pages/Auth/VerifyEmailPage";
-import NotFoundPage from "./pages/Quizzes/NotFoundPage";
+import NotFoundPage from "./pages/NotFoundPage";
 import DashboardPage from "./pages/Dashboard/DashboardPage";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
-import DocumentListPage from "./pages/Documents/DocumentListPage";
-import DocumentDetailPage from "./pages/Documents/DocumentDetailPage";
-import YouTubeListPage from "./pages/YouTube/YouTubeListPage";
-import FlashcardListPage from "./pages/Flashcards/FlashcardListPage";
-import FlashcardPage from "./pages/Flashcards/FlashcardPage";
-import QuizTakePage from "./pages/Quizzes/QuizTakePage";
-import QuizResultPage from "./pages/Quizzes/QuizResultPage";
+import RequireAuth from "./components/auth/RequireAuth";
+import ReviewQueuePage from "./pages/Flashcards/ReviewQueuePage";
+import StudyPlanBuilderPage from "./pages/StudyPlan/StudyPlanBuilderPage";
+import TopicStudyPage from "./pages/Study/TopicStudyPage";
+import SyllabusPage from "./pages/Syllabus/SyllabusPage";
 import ProfilePage from "./pages/Profile/ProfilePage";
+import SharedStudyPlanPage from "./pages/Shared/SharedStudyPlanPage";
 import { useAuth } from "./context/AuthContext";
 import { Analytics } from "@vercel/analytics/react";
+
 const App = () => {
   const { isAuthenticated, loading } = useAuth();
 
@@ -39,9 +39,9 @@ const App = () => {
           path="/"
           element={
             isAuthenticated ? (
-              <Navigate to={"/dashboard"} replace />
+              <Navigate to="/dashboard" replace />
             ) : (
-              <Navigate to={"/login"} replace />
+              <Navigate to="/login" replace />
             )
           }
         />
@@ -75,19 +75,19 @@ const App = () => {
             )
           }
         />
+        <Route path="/shared/:shareSlug" element={<SharedStudyPlanPage />} />
 
         <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<DashboardPage />} />
-          <Route path="/documents" element={<DocumentListPage />} />
-          <Route path="/documents/:id" element={<DocumentDetailPage />} />
-          <Route path="/youtube" element={<YouTubeListPage />} />
-          <Route path="/youtube/:id" element={<DocumentDetailPage />} />
-          <Route path="/youtube/:id/flashcards" element={<FlashcardPage />} />
-          <Route path="/flashcards" element={<FlashcardListPage />} />
-          <Route path="/documents/:id/flashcards" element={<FlashcardPage />} />
-          <Route path="/quizzes/:quizId" element={<QuizTakePage />} />
-          <Route path="/quizzes/:quizId/results" element={<QuizResultPage />} />
+          <Route path="/study-plan/new" element={<StudyPlanBuilderPage />} />
+          <Route path="/learning-path/new" element={<Navigate to="/study-plan/new" replace />} />
+          <Route path="/plans/:planId" element={<SyllabusPage />} />
+          <Route path="/study/:topicKey" element={<TopicStudyPage />} />
           <Route path="/profile" element={<ProfilePage />} />
+        </Route>
+
+        <Route element={<RequireAuth />}>
+          <Route path="/flashcards" element={<ReviewQueuePage />} />
         </Route>
 
         <Route path="*" element={<NotFoundPage />} />
