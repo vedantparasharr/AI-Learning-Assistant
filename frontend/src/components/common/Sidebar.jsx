@@ -4,7 +4,7 @@ export default function Sidebar() {
   const navItems = [
     { icon: "dashboard", label: "Dashboard", to: "/dashboard" },
     { icon: "cloud_upload", label: "Upload", to: "/study-plan/new" },
-    { icon: "auto_stories", label: "Study Plans", to: "/study-plans" },
+    { icon: "menu_book", label: "Study Plans", to: "/plans" },
     { icon: "style", label: "Flashcards", to: "/flashcards" },
   ];
 

@@ -14,6 +14,7 @@ import ProtectedRoute from "./components/auth/ProtectedRoute";
 import RequireAuth from "./components/auth/RequireAuth";
 import ReviewQueuePage from "./pages/Flashcards/ReviewQueuePage";
 import StudyPlanBuilderPage from "./pages/StudyPlan/StudyPlanBuilderPage";
+import StudyPlans from "./pages/StudyPlans/StudyPlans";
 import TopicStudyPage from "./pages/Study/TopicStudyPage";
 import SyllabusPage from "./pages/Syllabus/SyllabusPage";
 import ProfilePage from "./pages/Profile/ProfilePage";
@@ -81,6 +82,7 @@ const App = () => {
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/study-plan/new" element={<StudyPlanBuilderPage />} />
           <Route path="/learning-path/new" element={<Navigate to="/study-plan/new" replace />} />
+          <Route path="/plans" element={<StudyPlans />} />
           <Route path="/plans/:planId" element={<SyllabusPage />} />
           <Route path="/study/:topicKey" element={<TopicStudyPage />} />
           <Route path="/profile" element={<ProfilePage />} />
