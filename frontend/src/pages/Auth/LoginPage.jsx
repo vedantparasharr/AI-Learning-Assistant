@@ -31,76 +31,98 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[radial-gradient(circle_at_top,rgba(255,147,36,0.18),transparent_35%),linear-gradient(180deg,#fffdf6_0%,#f8fafc_50%,#eef2ff_100%)] px-4 py-10">
-      <div className="grid w-full max-w-5xl gap-6 lg:grid-cols-[1.15fr_0.85fr]">
-        <section className="rounded-4xl border border-white/70 bg-slate-950 p-8 text-white shadow-[0_28px_80px_-40px_rgba(15,23,42,0.85)] lg:p-12">
-          <p className="text-sm font-semibold uppercase tracking-[0.36em] text-orange-300">
-            Welcome back
-          </p>
-          <h1 className="mt-6 max-w-lg text-4xl font-semibold tracking-tight">
-            Return to your AI-assisted study plan, topic notes, and daily review queue.
-          </h1>
-          <p className="mt-5 max-w-xl text-sm leading-7 text-slate-300">
-            Sign in to upload source material, ask document-grounded AI questions, and keep your revision progress in one place.
-          </p>
-        </section>
+    <div className="flex min-h-screen items-center justify-center bg-surface text-on-surface p-md">
+      <main className="w-full max-w-[440px] mx-auto">
+        <div className="text-center mb-xl">
+          <h1 className="font-h1 text-h1 text-primary mb-sm">DistillLearn</h1>
+          <p className="font-body-lg text-body-lg text-on-surface-variant">Sign in to your account</p>
+        </div>
 
-        <section className="rounded-4xl border border-white/70 bg-white/90 p-8 shadow-[0_28px_80px_-40px_rgba(15,23,42,0.35)] backdrop-blur lg:p-10">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.28em] text-orange-500">
-              Login
-            </p>
-            <h2 className="mt-3 text-3xl font-semibold tracking-tight text-slate-950">
-              Continue your study session
-            </h2>
-          </div>
+        <div className="bg-surface-container-lowest rounded-xl shadow-[0_4px_24px_-4px_rgba(26,20,107,0.15)] border border-surface-variant p-xl">
+          <form onSubmit={handleSubmit} className="space-y-gutter">
+            <div>
+              <label className="block font-label-md text-label-md text-on-surface-variant mb-xs" htmlFor="email">
+                Email address
+              </label>
+              <div className="relative">
+                <span className="material-symbols-outlined absolute inset-y-0 left-0 pl-sm flex items-center text-outline-variant pointer-events-none" style={{ fontVariationSettings: "'FILL' 0" }}>
+                  mail
+                </span>
+                <input
+                  autoComplete="email"
+                  className="block w-full pl-xl pr-sm py-sm bg-surface-container-lowest border border-outline-variant rounded focus:ring-2 focus:ring-primary focus:border-primary font-body-md text-body-md text-on-surface placeholder:text-outline outline-none transition-colors"
+                  id="email"
+                  name="email"
+                  placeholder="you@example.com"
+                  required
+                  type="email"
+                  value={form.email}
+                  onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))}
+                />
+              </div>
+            </div>
 
-          <form onSubmit={handleSubmit} className="mt-8 space-y-5">
-            <label className="block space-y-2">
-              <span className="text-sm font-medium text-slate-700">Email</span>
+            <div>
+              <div className="flex items-center justify-between mb-xs">
+                <label className="block font-label-md text-label-md text-on-surface-variant" htmlFor="password">
+                  Password
+                </label>
+                <Link className="font-label-md text-label-md text-primary hover:text-primary-container transition-colors" to="/help-center">
+                  Forgot password?
+                </Link>
+              </div>
+              <div className="relative">
+                <span className="material-symbols-outlined absolute inset-y-0 left-0 pl-sm flex items-center text-outline-variant pointer-events-none" style={{ fontVariationSettings: "'FILL' 0" }}>
+                  lock
+                </span>
+                <input
+                  autoComplete="current-password"
+                  className="block w-full pl-xl pr-sm py-sm bg-surface-container-lowest border border-outline-variant rounded focus:ring-2 focus:ring-primary focus:border-primary font-body-md text-body-md text-on-surface placeholder:text-outline outline-none transition-colors"
+                  id="password"
+                  name="password"
+                  placeholder="••••••••"
+                  required
+                  type="password"
+                  value={form.password}
+                  onChange={(event) => setForm((current) => ({ ...current, password: event.target.value }))}
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center">
               <input
-                type="email"
-                value={form.email}
-                onChange={(event) =>
-                  setForm((current) => ({ ...current, email: event.target.value }))
-                }
-                className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-950 outline-none transition focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
-                placeholder="you@example.com"
-                required
+                className="h-4 w-4 text-primary focus:ring-primary border-outline-variant rounded cursor-pointer"
+                id="remember-me"
+                name="remember-me"
+                type="checkbox"
               />
-            </label>
+              <label className="ml-sm block font-body-sm text-body-sm text-on-surface-variant cursor-pointer" htmlFor="remember-me">
+                Remember me
+              </label>
+            </div>
 
-            <label className="block space-y-2">
-              <span className="text-sm font-medium text-slate-700">Password</span>
-              <input
-                type="password"
-                value={form.password}
-                onChange={(event) =>
-                  setForm((current) => ({ ...current, password: event.target.value }))
-                }
-                className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-950 outline-none transition focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
-                placeholder="Enter your password"
-                required
-              />
-            </label>
-
-            <button
-              type="submit"
-              disabled={submitting}
-              className="w-full rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {submitting ? "Signing in..." : "Sign in"}
-            </button>
+            <div>
+              <button
+                className="w-full flex justify-center items-center py-md px-lg border border-transparent rounded bg-primary font-label-md text-label-md text-on-primary hover:bg-primary-container focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors cursor-pointer"
+                type="submit"
+                disabled={submitting}
+              >
+                {submitting ? "Signing In..." : "Sign In"}
+                <span className="material-symbols-outlined ml-xs text-[18px]" style={{ fontVariationSettings: "'FILL' 0" }}>
+                  arrow_forward
+                </span>
+              </button>
+            </div>
           </form>
+        </div>
 
-          <p className="mt-6 text-sm text-slate-600">
-            New here?{" "}
-            <Link to={`/register${location.search || ""}`} className="font-semibold text-slate-950 underline decoration-orange-300 underline-offset-4">
-              Create an account
-            </Link>
-          </p>
-        </section>
-      </div>
+        <p className="mt-xl text-center font-body-sm text-body-sm text-on-surface-variant">
+          Don&apos;t have an account?
+          <Link className="font-label-md text-label-md text-primary hover:text-primary-container transition-colors ml-xs" to={`/register${location.search || ""}`}>
+            Sign up
+          </Link>
+        </p>
+      </main>
     </div>
   );
 };

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import studyPlanService from "../../services/studyPlanService";
 
 const SORTS = {
@@ -21,6 +21,8 @@ const StudyPlans = () => {
 	const [error, setError] = useState("");
 	const [openMenuPlanId, setOpenMenuPlanId] = useState("");
 	const [deletingPlanId, setDeletingPlanId] = useState("");
+	const [searchParams] = useSearchParams();
+	const query = searchParams.get("query")?.trim().toLowerCase() || "";
 
 	useEffect(() => {
 		const fetchPlans = async () => {
@@ -50,7 +52,16 @@ const StudyPlans = () => {
 			? plans
 			: plans.filter((plan) => plan.subjectTag === subjectFilter);
 
-		const sorted = [...filtered];
+		const searched = query
+			? filtered.filter((plan) => {
+				const haystack = [plan.subjectName, plan.subjectTag, plan.snippet]
+					.join(" ")
+					.toLowerCase();
+				return haystack.includes(query);
+			})
+			: filtered;
+
+		const sorted = [...searched];
 		if (sortBy === SORTS.RECENTLY_ADDED) {
 			sorted.sort((left, right) => toEpoch(right.createdAt) - toEpoch(left.createdAt));
 			return sorted;
@@ -63,7 +74,7 @@ const StudyPlans = () => {
 
 		sorted.sort((left, right) => toEpoch(right.updatedAt) - toEpoch(left.updatedAt));
 		return sorted;
-	}, [plans, sortBy, subjectFilter]);
+	}, [plans, sortBy, subjectFilter, query]);
 
 	const handleDeletePlan = async (planId) => {
 		const targetPlan = plans.find((plan) => String(plan.id) === String(planId));

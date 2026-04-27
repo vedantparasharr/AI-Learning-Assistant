@@ -1,6 +1,8 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, Link } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 
 export default function Sidebar() {
+  const { logout } = useAuth();
   const navItems = [
     { icon: "dashboard", label: "Dashboard", to: "/dashboard" },
     { icon: "cloud_upload", label: "Upload", to: "/study-plan/new" },
@@ -56,21 +58,22 @@ export default function Sidebar() {
 
       {/* Footer */}
       <div className="mt-auto pr-4 pt-4 border-t border-slate-100">
-        <a
-          href="#"
+        <Link
+          to="/help-center"
           className="flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-indigo-600 transition-all hover:bg-slate-50 hover:translate-x-1 duration-200 rounded-r-lg mb-1"
         >
           <span className="material-symbols-outlined">help_outline</span>
           Help Center
-        </a>
+        </Link>
 
-        <a
-          href="#"
+        <button
+          type="button"
+          onClick={logout}
           className="flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-indigo-600 transition-all hover:bg-slate-50 hover:translate-x-1 duration-200 rounded-r-lg"
         >
           <span className="material-symbols-outlined">logout</span>
           Logout
-        </a>
+        </button>
       </div>
     </nav>
   );

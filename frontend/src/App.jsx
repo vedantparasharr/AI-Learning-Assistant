@@ -19,6 +19,7 @@ import TopicStudyPage from "./pages/Study/TopicStudyPage";
 import SyllabusPage from "./pages/Syllabus/SyllabusPage";
 import ProfilePage from "./pages/Profile/ProfilePage";
 import SharedStudyPlanPage from "./pages/Shared/SharedStudyPlanPage";
+import HelpCenterPage from "./pages/HelpCenter/HelpCenterPage";
 import { useAuth } from "./context/AuthContext";
 import { Analytics } from "@vercel/analytics/react";
 
@@ -86,6 +87,7 @@ const App = () => {
           <Route path="/plans/:planId" element={<SyllabusPage />} />
           <Route path="/study/:topicKey" element={<TopicStudyPage />} />
           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/help-center" element={<HelpCenterPage />} />
         </Route>
 
         <Route element={<RequireAuth />}>

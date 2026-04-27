@@ -27,11 +27,7 @@ const RegisterPage = () => {
     setSubmitting(true);
 
     try {
-      const response = await authService.register(
-        form.username,
-        form.email,
-        form.password,
-      );
+      const response = await authService.register(form.username, form.email, form.password);
       toast.success(response.message || "OTP sent to your email");
       const params = new URLSearchParams({ email: form.email });
       if (returnTo) {
@@ -48,68 +44,156 @@ const RegisterPage = () => {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[radial-gradient(circle_at_top,rgba(255,147,36,0.18),transparent_35%),linear-gradient(180deg,#fffdf6_0%,#f8fafc_50%,#eef2ff_100%)] px-4 py-10">
-      <div className="grid w-full max-w-5xl gap-6 lg:grid-cols-[1.15fr_0.85fr]">
-        <section className="rounded-4xl border border-white/70 bg-white/80 p-8 shadow-[0_28px_80px_-40px_rgba(15,23,42,0.35)] backdrop-blur lg:p-12">
-          <p className="text-sm font-semibold uppercase tracking-[0.36em] text-orange-500">
-            Start here
-          </p>
-          <h1 className="mt-6 max-w-lg text-4xl font-semibold tracking-tight text-slate-950">
-            Build a learning-path workspace around your exam goals.
-          </h1>
-          <p className="mt-5 max-w-xl text-sm leading-7 text-slate-600">
-            Upload PDFs, generate revision material, and keep your progress organized without leaving the app.
-          </p>
-        </section>
-
-        <section className="rounded-4xl border border-white/70 bg-slate-950 p-8 text-white shadow-[0_28px_80px_-40px_rgba(15,23,42,0.85)] lg:p-10">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.28em] text-orange-300">
-              Register
+    <div className="flex min-h-screen items-center justify-center bg-surface-bright text-on-surface font-body-md antialiased">
+      <div className="flex min-h-full flex-1 w-full max-w-container-max mx-auto">
+        <div className="hidden lg:flex lg:flex-1 relative overflow-hidden bg-primary items-center justify-center p-xxl">
+          <div
+            className="absolute inset-0 bg-cover bg-center mix-blend-overlay opacity-60"
+            style={{
+              backgroundImage:
+                "url('https://lh3.googleusercontent.com/aida-public/AB6AXuDWvQ_uWIkxFXb5Evt0JDW9C4W6dkgRHZLbv6rsThyi0ndR8x6dAxbLIqelvyXVgSwSuBYqZ1UZtsztx_ikxAvikE9VpZCzIitloT7anPMNBI55sske30bI-605TwIN5lAH4cCWAzfs0yMB6Pb1WgoB_gtgGqg8f9ZnXlolM8E8Q9voM8pqtPb-2_2pO14WBuTg4cCEisTyzGlFDzO-6BbeIyhkgF5TWp7UotRtJUwgYXZ3okxZ8lmcd0bzJndw5A_-GmPh7BWCzaMw')",
+            }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/90 to-surface-tint/80 backdrop-blur-[2px]" />
+          <div className="relative z-10 flex flex-col items-center text-center max-w-md text-on-primary">
+            <div className="mb-lg p-md rounded-xl bg-surface-container-lowest/10 backdrop-blur-md border border-surface-container-lowest/20 shadow-lg shadow-primary/20">
+              <span className="material-symbols-outlined text-display" style={{ fontVariationSettings: "'FILL' 1" }}>
+                menu_book
+              </span>
+            </div>
+            <h2 className="font-display text-display mb-md tracking-tight">DistillLearn</h2>
+            <p className="font-body-lg text-body-lg text-primary-fixed-dim max-w-sm mx-auto">
+              Cultivate deep focus. Master complex concepts in a distraction-free environment designed for lifelong learners.
             </p>
-            <h2 className="mt-3 text-3xl font-semibold tracking-tight">
-              Create your account
-            </h2>
           </div>
+        </div>
 
-          <form onSubmit={handleSubmit} className="mt-8 space-y-5">
-            {[
-              ["username", "Username", "text", "Your display name"],
-              ["email", "Email", "email", "you@example.com"],
-              ["password", "Password", "password", "At least 6 characters"],
-              ["confirmPassword", "Confirm password", "password", "Re-enter your password"],
-            ].map(([name, label, type, placeholder]) => (
-              <label key={name} className="block space-y-2">
-                <span className="text-sm font-medium text-slate-200">{label}</span>
-                <input
-                  type={type}
-                  value={form[name]}
-                  onChange={(event) =>
-                    setForm((current) => ({ ...current, [name]: event.target.value }))
-                  }
-                  className="w-full rounded-2xl border border-slate-700 bg-slate-900/60 px-4 py-3 text-sm text-white outline-none transition focus:border-orange-400 focus:ring-4 focus:ring-orange-500/15"
-                  placeholder={placeholder}
-                  required
-                />
-              </label>
-            ))}
+        <div className="flex flex-1 flex-col justify-center px-gutter py-xxl sm:px-xxl lg:px-24 bg-surface-bright">
+          <div className="mx-auto w-full max-w-sm">
+            <div className="text-center mb-xl">
+              <div className="lg:hidden flex justify-center mb-md">
+                <span className="material-symbols-outlined text-h1 text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>
+                  menu_book
+                </span>
+              </div>
+              <h1 className="font-h1 text-h1 text-on-surface mb-xs">Create Account</h1>
+              <p className="font-body-sm text-body-sm text-on-surface-variant">Begin your journey to intellectual mastery.</p>
+            </div>
 
-            <button
-              type="submit"
-              disabled={submitting}
-              className="w-full rounded-2xl bg-orange-500 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-orange-400 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {submitting ? "Creating account..." : "Create account"}
-            </button>
-          </form>
+            <form onSubmit={handleSubmit} className="space-y-margin">
+              <div className="space-y-lg">
+                <div className="space-y-xs">
+                  <label className="block font-label-md text-label-md text-on-surface" htmlFor="name">
+                    Full Name
+                  </label>
+                  <div className="relative">
+                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-sm">
+                      <span className="material-symbols-outlined text-outline text-[18px]">person</span>
+                    </div>
+                    <input
+                      autoComplete="name"
+                      className="block w-full rounded border border-outline-variant bg-surface-container-lowest py-md pl-xl pr-md font-body-md text-body-md text-on-surface shadow-sm shadow-primary/5 focus:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-0 transition-all duration-200 placeholder:text-outline/60"
+                      id="name"
+                      name="name"
+                      placeholder="Jane Doe"
+                      required
+                      type="text"
+                      value={form.username}
+                      onChange={(event) => setForm((current) => ({ ...current, username: event.target.value }))}
+                    />
+                  </div>
+                </div>
 
-          <p className="mt-6 text-sm text-slate-300">
-            Already registered?{" "}
-            <Link to={`/login${location.search || ""}`} className="font-semibold text-white underline decoration-orange-300 underline-offset-4">
-              Sign in instead
-            </Link>
-          </p>
-        </section>
+                <div className="space-y-xs">
+                  <label className="block font-label-md text-label-md text-on-surface" htmlFor="email">
+                    Email Address
+                  </label>
+                  <div className="relative">
+                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-sm">
+                      <span className="material-symbols-outlined text-outline text-[18px]">mail</span>
+                    </div>
+                    <input
+                      autoComplete="email"
+                      className="block w-full rounded border border-outline-variant bg-surface-container-lowest py-md pl-xl pr-md font-body-md text-body-md text-on-surface shadow-sm shadow-primary/5 focus:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-0 transition-all duration-200 placeholder:text-outline/60"
+                      id="email"
+                      name="email"
+                      placeholder="jane@example.com"
+                      required
+                      type="email"
+                      value={form.email}
+                      onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-xs">
+                  <label className="block font-label-md text-label-md text-on-surface" htmlFor="password">
+                    Password
+                  </label>
+                  <div className="relative">
+                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-sm">
+                      <span className="material-symbols-outlined text-outline text-[18px]">lock</span>
+                    </div>
+                    <input
+                      autoComplete="new-password"
+                      className="block w-full rounded border border-outline-variant bg-surface-container-lowest py-md pl-xl pr-md font-body-md text-body-md text-on-surface shadow-sm shadow-primary/5 focus:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-0 transition-all duration-200 placeholder:text-outline/60"
+                      id="password"
+                      name="password"
+                      placeholder="••••••••"
+                      required
+                      type="password"
+                      value={form.password}
+                      onChange={(event) => setForm((current) => ({ ...current, password: event.target.value }))}
+                    />
+                  </div>
+                  <p className="font-label-sm text-label-sm text-on-surface-variant mt-1">Must be at least 8 characters long.</p>
+                </div>
+
+                <div className="space-y-xs">
+                  <label className="block font-label-md text-label-md text-on-surface" htmlFor="confirmPassword">
+                    Confirm Password
+                  </label>
+                  <div className="relative">
+                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-sm">
+                      <span className="material-symbols-outlined text-outline text-[18px]">lock</span>
+                    </div>
+                    <input
+                      autoComplete="new-password"
+                      className="block w-full rounded border border-outline-variant bg-surface-container-lowest py-md pl-xl pr-md font-body-md text-body-md text-on-surface shadow-sm shadow-primary/5 focus:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-0 transition-all duration-200 placeholder:text-outline/60"
+                      id="confirmPassword"
+                      name="confirmPassword"
+                      placeholder="••••••••"
+                      required
+                      type="password"
+                      value={form.confirmPassword}
+                      onChange={(event) => setForm((current) => ({ ...current, confirmPassword: event.target.value }))}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <button
+                  className="flex w-full justify-center items-center gap-2 rounded bg-primary px-md py-md font-label-md text-label-md text-on-primary shadow-md shadow-primary/20 hover:bg-primary-container focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary transition-all active:scale-[0.98]"
+                  type="submit"
+                  disabled={submitting}
+                >
+                  {submitting ? "Creating Account..." : "Create Account"}
+                  <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+                </button>
+              </div>
+            </form>
+
+            <div className="mt-xl text-center border-t border-outline-variant/30 pt-lg">
+              <p className="font-body-sm text-body-sm text-on-surface-variant">
+                Already a member?
+                <Link className="font-label-md text-label-md text-primary hover:text-surface-tint underline decoration-primary/30 underline-offset-4 transition-colors" to={`/login${location.search || ""}`}>
+                  Sign in to your account
+                </Link>
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
