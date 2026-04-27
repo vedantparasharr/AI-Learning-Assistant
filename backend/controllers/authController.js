@@ -76,7 +76,6 @@ export const register = async (req, res, next) => {
       username,
       password,
       verified: false,
-      verifed: false,
     });
 
     await issueOtpForUser(user);
@@ -121,7 +120,7 @@ export const login = async (req, res, next) => {
       });
     }
 
-    if (!user.verified && !user.verifed) {
+    if (!user.verified) {
       return res.status(403).json({
         success: false,
         error: "Email not verified. Please verify OTP first.",
@@ -330,7 +329,7 @@ export const verifyEmailOtp = async (req, res, next) => {
       });
     }
 
-    if (user.verified || user.verifed) {
+    if (user.verified) {
       const token = generateToken(user._id);
       res.cookie("token", token, getCookieOptions(req));
 
@@ -379,7 +378,6 @@ export const verifyEmailOtp = async (req, res, next) => {
     }
 
     user.verified = true;
-    user.verifed = true;
     user.otpHash = null;
     user.otpExpiresAt = null;
     user.otpAttempts = 0;
@@ -430,7 +428,7 @@ export const resendOtp = async (req, res, next) => {
       });
     }
 
-    if (user.verified || user.verifed) {
+    if (user.verified) {
       return res.status(400).json({
         success: false,
         error: "Email already verified",
