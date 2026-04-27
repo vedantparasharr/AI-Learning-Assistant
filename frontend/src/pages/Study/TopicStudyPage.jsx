@@ -1,385 +1,344 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import topicService from "../../services/topicService";
-import {
-  ErrorState,
-  InlineLinkButton,
-  PageShell,
-  PrimaryButton,
-  SecondaryButton,
-  SectionCard,
-} from "../../components/common/ui";
 
-const WORK_SECONDS = 25 * 60;
-const BREAK_SECONDS = 5 * 60;
+const formatViews = (views) => {
+	const count = Number(views) || 0;
+	if (count >= 1000000) {
+		return `${(count / 1000000).toFixed(1)}M views`;
+	}
 
-const getTodayKey = () => {
-  const now = new Date();
-  const month = `${now.getMonth() + 1}`.padStart(2, "0");
-  const day = `${now.getDate()}`.padStart(2, "0");
-  return `${now.getFullYear()}-${month}-${day}`;
+	if (count >= 1000) {
+		return `${Math.round(count / 1000)}K views`;
+	}
+
+	return `${count} views`;
 };
-
-const getPomodoroStorageKey = () => `distilllearn:pomodoro:sessions:${getTodayKey()}`;
-
-const formatTimer = (seconds) => {
-  const mins = Math.floor(seconds / 60);
-  const secs = seconds % 60;
-  return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
-};
-
-const playSoftNotification = () => {
-  try {
-    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-    if (!AudioContextClass) {
-      return;
-    }
-    const context = new AudioContextClass();
-    const osc = context.createOscillator();
-    const gain = context.createGain();
-
-    osc.type = "sine";
-    osc.frequency.value = 680;
-    gain.gain.value = 0.0001;
-    gain.gain.exponentialRampToValueAtTime(0.08, context.currentTime + 0.05);
-    gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.45);
-
-    osc.connect(gain);
-    gain.connect(context.destination);
-    osc.start();
-    osc.stop(context.currentTime + 0.45);
-  } catch {
-    // Ignore notification audio failures silently.
-  }
-};
-
-const PomodoroWidget = ({ topicKey }) => {
-  const [collapsed, setCollapsed] = useState(true);
-  const [mode, setMode] = useState("work");
-  const [secondsLeft, setSecondsLeft] = useState(WORK_SECONDS);
-  const [running, setRunning] = useState(false);
-  const [sessionCount, setSessionCount] = useState(() => {
-    if (typeof window === "undefined") {
-      return 0;
-    }
-    return Number(window.localStorage.getItem(getPomodoroStorageKey())) || 0;
-  });
-  const [showNudge, setShowNudge] = useState(false);
-
-  useEffect(() => {
-    if (!running) {
-      return undefined;
-    }
-
-    const intervalId = window.setInterval(() => {
-      setSecondsLeft((current) => {
-        if (current <= 1) {
-          playSoftNotification();
-
-          if (mode === "work") {
-            const nextCount = sessionCount + 1;
-            setSessionCount(nextCount);
-            if (typeof window !== "undefined") {
-              window.localStorage.setItem(getPomodoroStorageKey(), String(nextCount));
-            }
-            setMode("break");
-            setShowNudge(true);
-            return BREAK_SECONDS;
-          }
-
-          setMode("work");
-          return WORK_SECONDS;
-        }
-        return current - 1;
-      });
-    }, 1000);
-
-    return () => window.clearInterval(intervalId);
-  }, [mode, running, sessionCount]);
-
-  const resetTimer = () => {
-    setRunning(false);
-    setSecondsLeft(mode === "work" ? WORK_SECONDS : BREAK_SECONDS);
-  };
-
-  return (
-    <div className="fixed bottom-4 right-4 z-40 w-75 max-w-[calc(100vw-2rem)]">
-      {collapsed ? (
-        <button
-          type="button"
-          onClick={() => setCollapsed(false)}
-          className="ml-auto flex items-center gap-3 rounded-full border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 shadow-[0_20px_45px_-30px_rgba(15,23,42,0.5)]"
-        >
-          Pomodoro {formatTimer(secondsLeft)}
-        </button>
-      ) : (
-        <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-[0_25px_60px_-35px_rgba(15,23,42,0.45)]">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Pomodoro</p>
-              <p className="mt-1 text-sm font-semibold text-slate-900">{mode === "work" ? "Work block" : "Break block"}</p>
-            </div>
-            <button
-              type="button"
-              onClick={() => setCollapsed(true)}
-              className="rounded-xl border border-slate-300 px-2 py-1 text-xs font-semibold text-slate-600"
-            >
-              Hide
-            </button>
-          </div>
-
-          <p className="mt-4 text-4xl font-semibold tracking-tight text-slate-950">{formatTimer(secondsLeft)}</p>
-          <p className="mt-1 text-xs font-medium uppercase tracking-[0.16em] text-slate-500">Today: {sessionCount} work sessions</p>
-
-          <div className="mt-4 flex flex-wrap gap-2">
-            <PrimaryButton type="button" onClick={() => setRunning((current) => !current)}>
-              {running ? "Pause" : "Play"}
-            </PrimaryButton>
-            <SecondaryButton type="button" onClick={resetTimer}>
-              Reset
-            </SecondaryButton>
-          </div>
-
-          {showNudge ? (
-            <div className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">
-              Work block complete. Great focus. 
-              <Link to={`/flashcards?topicKey=${topicKey}`} className="font-semibold underline underline-offset-4">
-                Review this topic now
-              </Link>
-              .
-            </div>
-          ) : null}
-        </div>
-      )}
-    </div>
-  );
-};
-
-const TopicStudySkeleton = () => (
-  <PageShell title="Preparing topic" description="Generating the best study material for this topic.">
-    <div className="space-y-6">
-      <div className="skeleton-block h-44 rounded-3xl" />
-      <div className="skeleton-block h-80 rounded-3xl" />
-      <div className="skeleton-block h-56 rounded-3xl" />
-      <div className="skeleton-block h-48 rounded-3xl" />
-    </div>
-  </PageShell>
-);
 
 const TopicStudyPage = () => {
-  const { topicKey } = useParams();
-  const timeoutRef = useRef(null);
-  const [loadingState, setLoadingState] = useState("loading");
-  const [payload, setPayload] = useState(null);
-  const [selectedVideoId, setSelectedVideoId] = useState("");
-  const [showNotes, setShowNotes] = useState(true);
-  const [error, setError] = useState("");
+	const { topicKey } = useParams();
+	const navigate = useNavigate();
+	const [payload, setPayload] = useState(null);
+	const [loading, setLoading] = useState(true);
+	const [error, setError] = useState("");
+	const [completing, setCompleting] = useState(false);
+	const [completionMessage, setCompletionMessage] = useState("");
 
-  const clearPendingTimeout = useCallback(() => {
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-      timeoutRef.current = null;
-    }
-  }, []);
+	useEffect(() => {
+		let cancelled = false;
 
-  const fetchTopic = useCallback(async ({ reset = false } = {}) => {
-    try {
-      if (reset) {
-        setLoadingState("loading");
-        setPayload(null);
-        setError("");
-      }
+		const loadTopic = async (attempt = 0) => {
+			try {
+				if (attempt === 0) {
+					setLoading(true);
+					setError("");
+				}
 
-      const response = await topicService.generateTopicContent(topicKey);
-      const data = response.body?.data || null;
-      if (data) {
-        setPayload(data);
-        setSelectedVideoId(data.content?.video?.videoId || "");
-      }
+				const response = await topicService.generateTopicContent(topicKey);
+				const status = response?.status;
+				const body = response?.body;
 
-      if (response.status === 202) {
-        setLoadingState("generating");
-        return;
-      }
+				if (cancelled) {
+					return;
+				}
 
-      if (response.status === 500) {
-        setLoadingState("error");
-        setError(response.body?.error || "Topic generation failed.");
-        return;
-      }
+				if (status === 200 && body?.success) {
+					setPayload(body.data);
+					setLoading(false);
+					return;
+				}
 
-      setLoadingState("ready");
-      setError("");
-    } catch (requestError) {
-      setLoadingState("error");
-      setError(requestError.error || requestError.message || "Unable to load this topic");
-    }
-  }, [topicKey]);
+				if (status === 202 && attempt < 25) {
+					window.setTimeout(() => {
+						loadTopic(attempt + 1);
+					}, 1800);
+					return;
+				}
 
-  useEffect(() => {
-    clearPendingTimeout();
-    timeoutRef.current = window.setTimeout(() => {
-      fetchTopic({ reset: true });
-    }, 0);
+				throw new Error(body?.error || body?.message || "Failed to load topic content");
+			} catch (requestError) {
+				if (!cancelled) {
+					setError(requestError?.message || "Failed to load topic content");
+					setLoading(false);
+				}
+			}
+		};
 
-    return () => {
-      clearPendingTimeout();
-    };
-  }, [clearPendingTimeout, fetchTopic]);
+		if (topicKey) {
+			loadTopic();
+		}
 
-  useEffect(() => {
-    if (loadingState !== "generating") {
-      return undefined;
-    }
+		return () => {
+			cancelled = true;
+		};
+	}, [topicKey]);
 
-    clearPendingTimeout();
-    timeoutRef.current = window.setTimeout(() => {
-      fetchTopic();
-    }, 3000);
+	const topic = payload?.topic;
+	const markdownNotes = payload?.content?.notes || "";
+	const notesSections = useMemo(() => payload?.notesSections || [], [payload]);
+	const curatedVideos = useMemo(() => payload?.curatedVideos || [], [payload]);
+	const mastery = payload?.mastery || {};
 
-    return () => {
-      clearPendingTimeout();
-    };
-  }, [clearPendingTimeout, fetchTopic, loadingState]);
+	const handleMarkCompleted = async () => {
+		if (!topic?.topic_key || completing) {
+			return;
+		}
 
-  const topic = payload?.topic || null;
-  const content = payload?.content || null;
-  const cards = payload?.cards || [];
+		try {
+			setCompleting(true);
+			setCompletionMessage("");
+			const response = await topicService.markTopicCompleted(topic.topic_key);
+			const update = response?.data || {};
 
-  const videos = useMemo(() => {
-    const primary = content?.video ? [content.video] : [];
-    return [...primary, ...(content?.fallback_videos || [])].filter(Boolean);
-  }, [content]);
+			setPayload((previous) => {
+				if (!previous) {
+					return previous;
+				}
 
-  const selectedVideo = useMemo(
-    () => videos.find((video) => video.videoId === selectedVideoId) || videos[0] || null,
-    [videos, selectedVideoId],
-  );
+				return {
+					...previous,
+					topic: {
+						...previous.topic,
+						completionStatus: "completed",
+					},
+					mastery: {
+						...previous.mastery,
+						status: "completed",
+					},
+				};
+			});
 
-  const dueCards = cards.filter((card) => new Date(card.due) <= new Date());
+			setCompletionMessage(`Marked completed. Plan progress is now ${update.progressPercentage || 0}%.`);
+		} catch (requestError) {
+			setCompletionMessage(requestError?.message || "Could not update completion status.");
+		} finally {
+			setCompleting(false);
+		}
+	};
 
-  if (loadingState === "loading" || loadingState === "generating") {
-    return <TopicStudySkeleton />;
-  }
+	if (loading) {
+		return <p className="text-on-surface-variant">Preparing topic content...</p>;
+	}
 
-  if (loadingState === "error") {
-    return (
-      <PageShell title={topic?.name || "Topic"} description="We couldn�t prepare this topic right now.">
-        <ErrorState description={error} action={<SecondaryButton onClick={() => fetchTopic({ reset: true })}>Try again</SecondaryButton>} />
-      </PageShell>
-    );
-  }
+	if (error) {
+		return <p className="text-error">{error}</p>;
+	}
 
-  return (
-    <PageShell
-      title={topic?.name || "Topic"}
-      description={`${topic?.dueCount || 0} due`}
-      actions={
-        <>
-          <Link to={`/flashcards?topicKey=${topicKey}`}>
-            <PrimaryButton>Review Now</PrimaryButton>
-          </Link>
-          <InlineLinkButton to={`/plans/${topic?.studyPlanId}`}>Back to study plan</InlineLinkButton>
-        </>
-      }
-    >
-      <div className="space-y-6">
-        <SectionCard title="Video" description="Top-ranked learning video for this topic.">
-          {selectedVideo ? (
-            <div className="space-y-4">
-              {videos.length > 1 ? (
-                <label className="block space-y-2">
-                  <span className="text-sm font-medium text-slate-700">Switch video</span>
-                  <select
-                    value={selectedVideo.videoId}
-                    onChange={(event) => setSelectedVideoId(event.target.value)}
-                    className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
-                  >
-                    {videos.map((video, index) => (
-                      <option key={video.videoId || `${video.url}-${index}`} value={video.videoId}>
-                        {index === 0 ? "Best match" : `Alternative ${index}`}: {video.title}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              ) : null}
+	if (!payload || !topic) {
+		return <p className="text-on-surface-variant">Topic data unavailable.</p>;
+	}
 
-              <div className="overflow-hidden rounded-3xl border border-slate-200 bg-slate-950 shadow-[0_25px_70px_-40px_rgba(15,23,42,0.65)]">
-                <div className="aspect-video">
-                  <iframe
-                    title={selectedVideo.title}
-                    src={`https://www.youtube.com/embed/${selectedVideo.videoId}`}
-                    className="h-full w-full"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                  />
-                </div>
-              </div>
-            </div>
-          ) : (
-            <p className="text-sm text-slate-600">No high-confidence video result yet for this topic.</p>
-          )}
-        </SectionCard>
+	return (
+		<>
+			<div className="flex-1 w-full max-w-container-max mx-auto">
+				<nav className="flex items-center gap-2 text-on-surface-variant font-label-sm text-label-sm uppercase tracking-wider mb-8">
+					<Link to="/plans" className="hover:text-primary transition-colors">
+						Study Plans
+					</Link>
+					<span className="material-symbols-outlined text-[14px]">chevron_right</span>
+					<Link to={`/plans/${topic.studyPlanId}`} className="hover:text-primary transition-colors">
+						{topic.subjectName}
+					</Link>
+					<span className="material-symbols-outlined text-[14px]">chevron_right</span>
+					<span className="text-primary font-semibold">{topic.name}</span>
+				</nav>
 
-        <SectionCard
-          title="Notes"
-          description="Short, exam-focused notes. Collapse them once you�re done so the screen stays clean."
-          action={
-            <SecondaryButton type="button" onClick={() => setShowNotes((current) => !current)}>
-              {showNotes ? "Collapse" : "Expand"}
-            </SecondaryButton>
-          }
-        >
-          {showNotes ? (
-            <div className="study-markdown">
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>{content?.notes || "No notes available."}</ReactMarkdown>
-            </div>
-          ) : (
-            <p className="text-sm text-slate-500">Notes are collapsed.</p>
-          )}
-        </SectionCard>
+				<div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-xxl">
+					<div>
+						<h1 className="font-display text-display text-on-surface mb-2">{topic.name}</h1>
+						<p className="font-body-lg text-body-lg text-on-surface-variant max-w-2xl">
+							{topic.overview}
+						</p>
+						{completionMessage ? (
+							<p className="font-body-sm text-body-sm text-secondary mt-3">{completionMessage}</p>
+						) : null}
+					</div>
 
-        <SectionCard title="Flashcards" description="Topic cards are listed here. Due cards are highlighted so you know what needs attention first.">
-          <div className="mb-4 flex items-center justify-between gap-3 rounded-2xl bg-slate-50 p-4">
-            <p className="text-sm text-slate-600">{cards.length} card(s) in this topic</p>
-            <p className="text-sm font-semibold text-slate-900">{dueCards.length} due now</p>
-          </div>
+					<div className="flex-shrink-0 flex flex-wrap gap-3">
+						<button
+							type="button"
+							onClick={handleMarkCompleted}
+							disabled={topic.completionStatus === "completed" || completing}
+							className="border border-primary text-primary font-label-md text-label-md uppercase tracking-wider px-6 py-4 rounded-lg hover:bg-surface-container-low transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+						>
+							{topic.completionStatus === "completed" ? "Completed" : (completing ? "Saving..." : "Mark as Completed")}
+						</button>
 
-          <div className="space-y-3">
-            {cards.map((card) => {
-              const dueNow = new Date(card.due) <= new Date();
-              return (
-                <article
-                  key={card._id}
-                  className={`rounded-3xl border p-4 ${dueNow ? "border-rose-200 bg-rose-50/60" : "border-slate-200 bg-white"}`}
-                >
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                    <div className="min-w-0 flex-1">
-                      <h3 className="text-base font-semibold text-slate-950">{card.question}</h3>
-                      <p className="mt-2 text-sm leading-7 text-slate-600">{card.answer}</p>
-                    </div>
-                    <div className="flex shrink-0 flex-wrap gap-2">
-                      <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-700">
-                        {card.source}
-                      </span>
-                      {dueNow ? (
-                        <span className="rounded-full bg-rose-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-rose-700">
-                          Due
-                        </span>
-                      ) : null}
-                    </div>
-                  </div>
-                </article>
-              );
-            })}
-          </div>
-        </SectionCard>
-      </div>
-      <PomodoroWidget topicKey={topicKey} />
-    </PageShell>
-  );
+						<button
+							type="button"
+							onClick={() => navigate(`/flashcards?topicKey=${encodeURIComponent(topic.topic_key)}`)}
+							className="bg-primary text-on-primary font-label-md text-label-md uppercase tracking-wider px-8 py-4 rounded-lg shadow-lg shadow-primary/20 hover:bg-primary-container transition-all flex items-center gap-3"
+						>
+							<span className="material-symbols-outlined">view_carousel</span>
+							Start Flashcard Review
+						</button>
+					</div>
+				</div>
+
+				<div className="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+					<div className="lg:col-span-8 flex flex-col gap-gutter">
+						<div className="bg-surface-container-lowest rounded-xl shadow-[0_10px_25px_-5px_rgba(26,20,107,0.05),0_8px_10px_-6px_rgba(26,20,107,0.01)] border-t-2 border-primary p-10 h-full">
+							<div className="flex items-center gap-3 mb-8 pb-4 border-b border-surface-variant">
+								<div className="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-primary">
+									<span className="material-symbols-outlined">psychiatry</span>
+								</div>
+								<h2 className="font-h2 text-h2 text-on-surface">AI Distilled Notes</h2>
+							</div>
+
+							<div className="space-y-8">
+								{markdownNotes ? (
+									<div className="space-y-6">
+										<ReactMarkdown
+											remarkPlugins={[remarkGfm]}
+											components={{
+												h2: ({ children }) => (
+													<h3 className="font-h3 text-h3 text-primary mb-3 mt-8 first:mt-0 flex items-center gap-2">
+														<span className="material-symbols-outlined text-secondary text-[20px]">bolt</span>
+														{children}
+													</h3>
+												),
+												h3: ({ children }) => (
+													<h4 className="font-body-lg text-body-lg text-on-surface font-semibold mb-2 mt-6">{children}</h4>
+												),
+												p: ({ children }) => (
+													<p className="font-body-md text-body-md text-on-surface-variant leading-relaxed mb-4">{children}</p>
+												),
+												ul: ({ children }) => (
+													<ul className="space-y-2 pl-5 mb-4 list-disc marker:text-secondary text-on-surface">{children}</ul>
+												),
+												ol: ({ children }) => (
+													<ol className="space-y-2 pl-5 mb-4 list-decimal marker:text-secondary text-on-surface">{children}</ol>
+												),
+												li: ({ children }) => (
+													<li className="font-body-sm text-body-sm leading-relaxed">{children}</li>
+												),
+												strong: ({ children }) => (
+													<strong className="font-semibold text-on-surface">{children}</strong>
+												),
+												code: ({ children }) => (
+													<code className="bg-surface-container px-1.5 py-0.5 rounded text-on-surface text-[0.9em]">{children}</code>
+												),
+											}}
+										>
+											{markdownNotes}
+										</ReactMarkdown>
+									</div>
+								) : notesSections.length > 0 ? (
+									notesSections.map((section) => (
+										<div key={section.heading}>
+											<h3 className="font-h3 text-h3 text-primary mb-3 flex items-center gap-2">
+												<span className="material-symbols-outlined text-secondary text-[20px]">bolt</span>
+												{section.heading}
+											</h3>
+											{section.body ? (
+												<p className="font-body-md text-body-md text-on-surface-variant leading-relaxed mb-4 pl-7">{section.body}</p>
+											) : null}
+										</div>
+									))
+								) : (
+									<p className="font-body-md text-body-md text-on-surface-variant">
+										Notes are being prepared for this topic.
+									</p>
+								)}
+							</div>
+						</div>
+					</div>
+
+					<div className="lg:col-span-4 flex flex-col gap-gutter">
+						<div className="bg-surface-container-lowest rounded-xl shadow-[0_10px_25px_-5px_rgba(26,20,107,0.05),0_8px_10px_-6px_rgba(26,20,107,0.01)] p-6">
+							<div className="flex items-center justify-between mb-4">
+								<h3 className="font-h3 text-h3 text-on-surface text-lg">Topic Mastery</h3>
+								<span className="font-label-md text-label-md text-secondary bg-secondary-container px-2 py-1 rounded">
+									{mastery.status === "completed" ? "Completed" : "In Progress"}
+								</span>
+							</div>
+
+							<div className="flex items-end gap-2 mb-3">
+								<span className="font-display text-display text-primary leading-none text-4xl">
+									{mastery.retentionRate || 0}%
+								</span>
+								<span className="font-body-sm text-body-sm text-on-surface-variant mb-1">retention rate</span>
+							</div>
+
+							<div className="w-full h-2 bg-tertiary-fixed rounded-full overflow-hidden">
+								<div
+									className="h-full bg-secondary rounded-full"
+									style={{ width: `${mastery.retentionRate || 0}%` }}
+								/>
+							</div>
+
+							<div className="flex justify-between mt-2 font-label-sm text-label-sm text-on-surface-variant">
+								<span>{mastery.masteredCards || 0} Cards Mastered</span>
+								<span>{mastery.totalCards || 0} Total Cards</span>
+							</div>
+						</div>
+
+						<div className="bg-surface-container-lowest rounded-xl shadow-[0_10px_25px_-5px_rgba(26,20,107,0.05),0_8px_10px_-6px_rgba(26,20,107,0.01)] p-6 flex-1">
+							<div className="flex items-center gap-2 mb-6 pb-4 border-b border-surface-variant">
+								<span className="material-symbols-outlined text-primary">smart_display</span>
+								<h3 className="font-h3 text-h3 text-on-surface text-lg">Curated Video Explanations</h3>
+							</div>
+
+							<div className="space-y-6">
+								{curatedVideos.length > 0 ? (
+									curatedVideos.map((video) => (
+										<button
+											key={`${video.rank}-${video.url}`}
+											type="button"
+											onClick={() => {
+												if (video.url) {
+													window.open(video.url, "_blank", "noopener,noreferrer");
+												}
+											}}
+											className="block group w-full text-left"
+										>
+											<div className="relative w-full aspect-video rounded-lg overflow-hidden mb-3 bg-surface-container">
+												{video.thumbnail ? (
+													<img
+														alt={video.title}
+														src={video.thumbnail}
+														className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+													/>
+												) : null}
+
+												<div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors flex items-center justify-center">
+													<div className="w-12 h-12 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center text-white border border-white/30">
+														<span className="material-symbols-outlined">play_arrow</span>
+													</div>
+												</div>
+
+												{video.duration ? (
+													<div className="absolute bottom-2 right-2 bg-black/80 text-white font-label-sm text-label-sm px-2 py-0.5 rounded backdrop-blur-md">
+														{video.duration}
+													</div>
+												) : null}
+											</div>
+
+											<div>
+												<h4 className="font-label-md text-label-md text-on-surface group-hover:text-primary transition-colors line-clamp-2 leading-tight mb-1">
+													{video.title}
+												</h4>
+												<p className="font-body-sm text-body-sm text-on-surface-variant text-xs">
+													{video.authorName || "Recommended Channel"}
+													{video.views ? ` • ${formatViews(video.views)}` : ""}
+												</p>
+											</div>
+										</button>
+									))
+								) : (
+									<p className="font-body-sm text-body-sm text-on-surface-variant">
+										Video recommendations will appear once available.
+									</p>
+								)}
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</>
+	);
 };
 
 export default TopicStudyPage;

@@ -10,6 +10,15 @@ const getStudyPlans = async () => {
   }
 };
 
+const deleteStudyPlan = async (planId) => {
+  try {
+    const response = await axiosInstance.delete(API_PATHS.STUDY_PLAN.DELETE(planId));
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { message: "Failed to delete study plan" };
+  }
+};
+
 const getStudyPlanOverview = async (planId) => {
   try {
     const response = await axiosInstance.get(API_PATHS.STUDY_PLAN.GET_ONE(planId));
@@ -95,6 +104,7 @@ const createStudyPlan = async ({ subjectName, examDate, topics, sourceText, sour
 
 const studyPlanService = {
   getStudyPlans,
+  deleteStudyPlan,
   getStudyPlanOverview,
   getSharedStudyPlan,
   shareStudyPlan,

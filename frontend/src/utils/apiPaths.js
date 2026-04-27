@@ -16,6 +16,7 @@ export const API_PATHS = {
   STUDY_PLAN: {
     GET_ALL: "/api/study-plan",
     GET_ONE: (planId) => `/api/study-plan/${planId}`,
+    DELETE: (planId) => `/api/study-plan/${planId}`,
     GET_SHARED: (shareSlug) => `/api/study-plan/shared/${shareSlug}`,
     CLONE_SHARED: (shareSlug) => `/api/study-plan/shared/${shareSlug}/clone`,
     SHARE: (planId) => `/api/study-plan/${planId}/share`,
@@ -25,6 +26,7 @@ export const API_PATHS = {
 
   TOPICS: {
     GENERATE: (topicKey) => `/api/topics/${topicKey}/generate`,
+    COMPLETE: (topicKey) => `/api/topics/${topicKey}/complete`,
   },
 
   FLASHCARDS: {

@@ -4,6 +4,7 @@ import protect from "../middleware/auth.js";
 import {
   cloneSharedStudyPlan,
   createStudyPlan,
+  deleteStudyPlan,
   getSharedStudyPlan,
   getStudyPlanOverview,
   getStudyPlans,
@@ -21,6 +22,7 @@ router.get("/", getStudyPlans);
 router.post("/shared/:shareSlug/clone", cloneSharedStudyPlan);
 router.post("/:planId/share", shareStudyPlan);
 router.get("/:planId", getStudyPlanOverview);
+router.delete("/:planId", deleteStudyPlan);
 router.post("/parse", upload.single("file"), parseStudyPlan);
 router.post("/create", createStudyPlan);
 

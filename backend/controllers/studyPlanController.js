@@ -52,6 +52,43 @@ const getPlanById = (userId, planId) =>
     userId,
   });
 
+const buildPlanSnippet = (plan) => {
+  const source = String(plan?.sourceText || "").replace(/\s+/g, " ").trim();
+  if (source.length > 0) {
+    return source.slice(0, 140);
+  }
+
+  const topicNames = (plan?.topics || [])
+    .map((topic) => String(topic?.name || "").trim())
+    .filter(Boolean)
+    .slice(0, 3);
+
+  if (topicNames.length > 0) {
+    return topicNames.join(", ");
+  }
+
+  return "Compile a new curriculum and start learning.";
+};
+
+const buildSubjectTag = (subjectName) => {
+  const clean = String(subjectName || "").trim();
+  if (!clean) {
+    return "General";
+  }
+
+  const [firstWord] = clean.split(/\s+/);
+  return firstWord || clean;
+};
+
+const buildOverviewDescription = (plan) => {
+  const source = String(plan?.sourceText || "").replace(/\s+/g, " ").trim();
+  if (source.length > 0) {
+    return source.slice(0, 260);
+  }
+
+  return `An in-depth learning path for ${plan.subjectName}, focusing on key modules, active recall, and spaced repetition.`;
+};
+
 const PUBLIC_BASE_URL = process.env.APP_URL || "https://distilllearn.com";
 
 const buildShareUrl = (shareSlug) => `${PUBLIC_BASE_URL.replace(/\/$/, "")}/shared/${shareSlug}`;
@@ -218,10 +255,59 @@ export const getStudyPlans = async (req, res, next) => {
   try {
     const plans = await StudyPlan.find({ userId: req.user._id }).sort({ examDate: 1, createdAt: -1 });
 
+    const topicKeys = plans.flatMap((plan) => (plan.topics || []).map((topic) => topic.topic_key));
+    const flashcards = topicKeys.length > 0
+      ? await Flashcard.find({
+        userId: req.user._id,
+        status: "active",
+        topic_key: { $in: topicKeys },
+      }).select("topic_key")
+      : [];
+
+    const cardCountByTopic = flashcards.reduce((accumulator, card) => {
+      const key = String(card.topic_key || "");
+      if (!key) {
+        return accumulator;
+      }
+
+      accumulator.set(key, (accumulator.get(key) || 0) + 1);
+      return accumulator;
+    }, new Map());
+
+    const galleryPlans = plans.map((plan) => {
+      const topicCount = (plan.topics || []).length;
+      const completedTopicCount = (plan.topics || []).filter((topic) => topic.completionStatus === "completed").length;
+      const progressPercentage = topicCount > 0
+        ? Math.round((completedTopicCount / topicCount) * 100)
+        : 0;
+
+      const cardCount = (plan.topics || []).reduce(
+        (total, topic) => total + (cardCountByTopic.get(topic.topic_key) || 0),
+        0,
+      );
+
+      return {
+        id: plan._id,
+        subjectName: plan.subjectName,
+        examDate: plan.examDate,
+        sourceType: plan.sourceType,
+        sourceText: plan.sourceText,
+        subjectTag: buildSubjectTag(plan.subjectName),
+        snippet: buildPlanSnippet(plan),
+        topicCount,
+        cardCount,
+        completedTopicCount,
+        progressPercentage,
+        topics: plan.topics,
+        createdAt: plan.createdAt,
+        updatedAt: plan.updatedAt,
+      };
+    });
+
     return res.status(200).json({
       success: true,
-      data: plans,
-      count: plans.length,
+      data: galleryPlans,
+      count: galleryPlans.length,
       statusCode: 200,
     });
   } catch (error) {
@@ -252,18 +338,104 @@ export const getStudyPlanOverview = async (req, res, next) => {
       flashcards,
     });
 
+    const now = new Date();
+    const completedTopicCount = (plan.topics || []).filter((topic) => topic.completionStatus === "completed").length;
+    const topicCount = (plan.topics || []).length;
+    const progressPercentage = topicCount > 0
+      ? Math.round((completedTopicCount / topicCount) * 100)
+      : 0;
+
+    const topicByKey = new Map((plan.topics || []).map((topic) => [topic.topic_key, topic]));
+
+    const topicOverview = topicMetrics.map((metric, index) => {
+      const rawTopic = topicByKey.get(metric.topic_key);
+      const completionStatus = rawTopic?.completionStatus || "pending";
+      const isCompleted = completionStatus === "completed";
+      const hasActivity = metric.totalCards > 0 && metric.dueCount < metric.totalCards;
+      const stage = isCompleted ? "completed" : (hasActivity ? "in_progress" : "not_started");
+      const lessonsCompleted = isCompleted
+        ? metric.totalCards
+        : Math.max(0, metric.totalCards - metric.dueCount);
+
+      return {
+        ...metric,
+        moduleNumber: index + 1,
+        lessonCount: Math.max(1, metric.totalCards || Math.round((rawTopic?.estimated_hours || 1) * 2)),
+        lessonsCompleted,
+        stage,
+        completionStatus,
+      };
+    });
+
+    const totalEstimatedHours = (plan.topics || []).reduce(
+      (sum, topic) => sum + (Number(topic.estimated_hours) > 0 ? Number(topic.estimated_hours) : 1),
+      0,
+    );
+    const remainingHours = Math.max(
+      0,
+      topicOverview
+        .filter((topic) => topic.completionStatus !== "completed")
+        .reduce((sum, topic) => sum + (Number(topic.estimated_hours) > 0 ? Number(topic.estimated_hours) : 1), 0),
+    );
+
+    const nextTopic = topicOverview.find((topic) => topic.completionStatus !== "completed") || null;
+
     return res.status(200).json({
       success: true,
       data: {
         id: plan._id,
         subjectName: plan.subjectName,
+        description: buildOverviewDescription(plan),
         examDate: plan.examDate,
         sourceType: plan.sourceType,
         dueTopicCount,
-        topics: topicMetrics,
+        topicCount,
+        completedTopicCount,
+        progressPercentage,
+        totalEstimatedHours,
+        remainingEstimatedHours: remainingHours,
+        nextTopicKey: nextTopic?.topic_key || null,
+        topics: topicOverview,
         isPublic: Boolean(plan.isPublic),
         shareSlug: plan.shareSlug || null,
+        generatedAt: now,
       },
+      statusCode: 200,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteStudyPlan = async (req, res, next) => {
+  try {
+    const { planId } = req.params;
+    const plan = await getPlanById(req.user._id, planId);
+
+    if (!plan) {
+      return res.status(404).json({
+        success: false,
+        error: "Study plan not found",
+        statusCode: 404,
+      });
+    }
+
+    const topicKeys = (plan.topics || []).map((topic) => topic.topic_key);
+
+    await Promise.all([
+      Flashcard.deleteMany({
+        userId: req.user._id,
+        topic_key: { $in: topicKeys },
+      }),
+      StudyPlan.deleteOne({ _id: plan._id, userId: req.user._id }),
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        deletedPlanId: String(plan._id),
+      },
+      message: "Study plan deleted successfully",
       statusCode: 200,
     });
   } catch (error) {

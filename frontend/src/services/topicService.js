@@ -20,8 +20,18 @@ const generateTopicContent = async (topicKey) => {
   }
 };
 
+const markTopicCompleted = async (topicKey) => {
+  try {
+    const response = await axiosInstance.patch(API_PATHS.TOPICS.COMPLETE(topicKey));
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { message: "Failed to mark topic completed" };
+  }
+};
+
 const topicService = {
   generateTopicContent,
+  markTopicCompleted,
 };
 
 export default topicService;
