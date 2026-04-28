@@ -52,12 +52,21 @@ const userSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-// Hash password before saving
+// Hash password and Otp before saving
 userSchema.pre("save", async function () {
-  if (!this.isModified("password")) return;
+  if (this.isModified("password")) {
+    this.password = await bcrypt.hash(this.password, 10);
+  }
 
-  this.password = await bcrypt.hash(this.password, 10);
+  if (this.isModified("otpHash")) {
+    this.otpHash = await bcrypt.hash(this.otpHash, 10);
+  }
 });
+
+// Compare entered OTP with hased OTP
+userSchema.methods.matchOtp = async function (otp) {
+  return await bcrypt.compare(otp, this.otpHash);
+};
 
 // Compare entered password with hashed password
 userSchema.methods.matchPassword = async function (enteredPassword) {

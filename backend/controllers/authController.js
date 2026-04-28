@@ -28,17 +28,9 @@ const generateToken = (id) => {
 const OTP_EXPIRY_MS = 10 * 60 * 1000;
 const MAX_OTP_ATTEMPTS = 5;
 
-const generateSixDigitOtp = () => {
-  return String(Math.floor(100000 + Math.random() * 900000));
-};
-
-const hashOtp = (otp) => {
-  return crypto.createHash("sha256").update(String(otp)).digest("hex");
-};
-
 const issueOtpForUser = async (user) => {
-  const otp = generateSixDigitOtp();
-  user.otpHash = hashOtp(otp);
+  const otp = crypto.randomInt(100000, 1000000).toString();
+  user.otpHash = otp;
   user.otpExpiresAt = new Date(Date.now() + OTP_EXPIRY_MS);
   user.otpAttempts = 0;
   await user.save({ validateBeforeSave: false });
@@ -365,7 +357,7 @@ export const verifyEmailOtp = async (req, res, next) => {
       });
     }
 
-    const isValidOtp = hashOtp(otp) === user.otpHash;
+    const isValidOtp = await user.matchOtp(otp);
     if (!isValidOtp) {
       user.otpAttempts += 1;
       await user.save({ validateBeforeSave: false });
