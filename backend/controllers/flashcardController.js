@@ -2,7 +2,11 @@ import Flashcard from "../models/Flashcard.js";
 import StudyPlan from "../models/StudyPlan.js";
 import TopicContent from "../models/TopicContent.js";
 import { fsrs, Rating } from "ts-fsrs";
-import { filterNewFlashcards, seedUserFlashcards, serializeFsrsCard } from "../utils/flashcardHelpers.js";
+import {
+  filterNewFlashcards,
+  seedUserFlashcards,
+  serializeFsrsCard,
+} from "../utils/flashcardHelpers.js";
 
 const scheduler = fsrs();
 
@@ -14,15 +18,6 @@ const RATING_MAP = {
 };
 
 /**
- * Internal helper to find a user's study plan for a specific topic.
- */
-const getUserPlanForTopic = (userId, topicKey) =>
-  StudyPlan.findOne({
-    userId,
-    "topics.topic_key": topicKey,
-  });
-
-/**
  * Activates flashcards for a specific topic by syncing them from TopicContent to the user's collection.
  * POST /api/flashcards/activate/:topicKey
  */
@@ -32,7 +27,10 @@ export const activateTopicFlashcards = async (req, res, next) => {
 
     const [topicContent, plan] = await Promise.all([
       TopicContent.findOne({ topic_key: topicKey, status: "ready" }),
-      getUserPlanForTopic(req.user._id, topicKey),
+      StudyPlan.findOne({
+        userId: req.user._id,
+        "topics.topic_key": topicKey,
+      }),
     ]);
 
     if (!plan) {
@@ -131,7 +129,9 @@ export const getDailyReviewQueue = async (req, res, next) => {
 export const reviewFlashcard = async (req, res, next) => {
   try {
     const { cardId } = req.params;
-    const normalizedRating = String(req.body?.rating || "").trim().toLowerCase();
+    const normalizedRating = String(req.body?.rating || "")
+      .trim()
+      .toLowerCase();
     const rating = RATING_MAP[normalizedRating];
 
     if (!rating) {
