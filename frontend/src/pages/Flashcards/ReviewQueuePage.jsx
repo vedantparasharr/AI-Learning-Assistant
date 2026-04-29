@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import toast from "react-hot-toast";
 import flashcardService from "../../services/flashcardService";
-import progressService from "../../services/progressService";
 
 const RATING_OPTIONS = [
   { value: "again", label: "Again", color: "border-error text-error hover:bg-error-container", hint: "< 1m" },
@@ -22,25 +21,20 @@ export default function ReviewQueuePage() {
 
   const [loading, setLoading] = useState(true);
   const [revealed, setRevealed] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
   const [isFlipping, setIsFlipping] = useState(false);
 
   const loadQueue = useCallback(async () => {
     try {
       setLoading(true);
-
-      const [queueRes] = await Promise.all([
-        flashcardService.getQueue(topicKey),
-        progressService.getDashboard().catch(() => null),
-      ]);
-
-      const cards = queueRes.data || [];
+      const res = await flashcardService.getQueue(topicKey);
+      const cards = res.data || [];
+      
       setQueue(cards);
       setInitialCount(cards.length);
       setReviewedCount(0);
       setAgainCount(0);
       setRevealed(false);
-    } catch (err) {
+    } catch {
       toast.error("Failed to load queue");
     } finally {
       setLoading(false);
@@ -57,39 +51,36 @@ export default function ReviewQueuePage() {
       ? 0
       : Math.round((reviewedCount / initialCount) * 100);
 
+  const accuracy = reviewedCount > 0 
+    ? Math.round(((reviewedCount - againCount) / reviewedCount) * 100) 
+    : 0;
+
   const handleReview = async (rating) => {
-    if (!currentCard || submitting || isFlipping) return;
+    if (!currentCard || isFlipping) return;
 
-    try {
-      setSubmitting(true);
-      setIsFlipping(true);
+    const cardToReview = currentCard;
 
-      // 1. flip back
-      setRevealed(false);
-
-      // 2. wait for animation
-      await new Promise((res) => setTimeout(res, 500));
-
-      // 3. update backend + queue
-      await flashcardService.reviewCard(currentCard._id, rating);
-
-      setQueue((prev) => prev.slice(1));
-      setReviewedCount((v) => v + 1);
-
-      if (rating === "again") {
-        setAgainCount((v) => v + 1);
-      }
-
-      // 4. allow interaction again
-      setTimeout(() => {
-        setIsFlipping(false);
-      }, 50);
-
-    } catch (err) {
-      toast.error("Failed to save");
-    } finally {
-      setSubmitting(false);
+    // 1. Optimistic Update: Advance queue and update counts immediately
+    setQueue((prev) => prev.slice(1));
+    setReviewedCount((v) => v + 1);
+    if (rating === "again") {
+      setAgainCount((v) => v + 1);
     }
+
+    // 2. Start flip-back animation for the NEXT card (or session complete state)
+    setIsFlipping(true);
+    setRevealed(false);
+
+    // 3. Backend call in background
+    flashcardService.reviewCard(cardToReview._id, rating).catch((err) => {
+      console.error("Failed to sync review:", err);
+      toast.error("Connection error: Review not synced");
+    });
+
+    // 4. Reset flipping state after animation completes (matches CSS transition)
+    setTimeout(() => {
+      setIsFlipping(false);
+    }, 600);
   };
 
   if (loading) {
@@ -145,7 +136,52 @@ export default function ReviewQueuePage() {
       <main className="flex-1 flex items-center justify-center p-xl">
 
         {!currentCard ? (
-          <h1 className="text-xl font-semibold">Session complete</h1>
+          <div className="w-full max-w-md text-center">
+            <div className="bg-surface-container-lowest rounded-xl p-8 shadow-sm border border-surface-variant">
+              <div className="w-16 h-16 bg-primary-container text-blue-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                <span className="material-symbols-outlined text-[32px]">task_alt</span>
+              </div>
+              
+              <h2 className="text-h3 font-h3 text-on-background mb-8">Session Complete</h2>
+
+              <div className="grid grid-cols-3 gap-4 mb-8">
+                <div className="flex flex-col">
+                  <span className="text-3xl font-display text-primary leading-none mb-1">{reviewedCount}</span>
+                  <span className="text-label-sm uppercase tracking-wider text-on-surface-variant">Reviewed</span>
+                </div>
+                <div className="flex flex-col border-x border-surface-variant">
+                  <span className="text-3xl font-display text-error leading-none mb-1">{againCount}</span>
+                  <span className="text-label-sm uppercase tracking-wider text-on-surface-variant">Again</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-3xl font-display text-secondary leading-none mb-1">{accuracy}%</span>
+                  <span className="text-label-sm uppercase tracking-wider text-on-surface-variant">Accuracy</span>
+                </div>
+              </div>
+
+              {againCount > 0 && (
+                <p className="text-body-md text-on-surface-variant mb-8 px-4">
+                  {againCount} {againCount === 1 ? 'card' : 'cards'} marked "again" will come back in your next session.
+                </p>
+              )}
+
+              <div className="flex flex-col gap-3">
+                <button
+                  onClick={loadQueue}
+                  className="w-full bg-primary text-on-primary font-label-md text-label-md uppercase tracking-wider py-3 rounded-lg shadow-md hover:bg-primary-container transition-all flex items-center justify-center gap-2"
+                >
+                  <span className="material-symbols-outlined text-[20px]">refresh</span>
+                  Review Again
+                </button>
+                <Link 
+                  to="/dashboard" 
+                  className="w-full border border-outline text-primary font-label-md text-label-md uppercase tracking-wider py-3 rounded-lg hover:bg-surface-container transition-colors"
+                >
+                  Back to Dashboard
+                </Link>
+              </div>
+            </div>
+          </div>
         ) : (
           <div className="w-full max-w-[800px]">
 
@@ -189,7 +225,7 @@ export default function ReviewQueuePage() {
                 {RATING_OPTIONS.map((opt) => (
                   <button
                     key={opt.value}
-                    disabled={submitting || isFlipping}
+                    disabled={isFlipping}
                     onClick={() => handleReview(opt.value)}
                     className={`flex flex-col items-center justify-center py-md rounded-lg transition ${opt.color}`}
                   >

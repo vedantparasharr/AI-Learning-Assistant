@@ -1,7 +1,7 @@
 import axiosInstance from "../utils/axiosInstance";
 import { API_PATHS } from "../utils/apiPaths";
 
-const activateTopic = async (topicKey) => {
+const activateTopicFlashcards = async (topicKey) => {
   try {
     const response = await axiosInstance.post(API_PATHS.FLASHCARDS.ACTIVATE_TOPIC(topicKey));
     return response.data;
@@ -33,7 +33,7 @@ const reviewCard = async (cardId, rating) => {
 };
 
 const flashcardService = {
-  activateTopic,
+  activateTopicFlashcards,
   getQueue,
   reviewCard,
 };

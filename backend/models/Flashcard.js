@@ -1,6 +1,9 @@
 import mongoose from "mongoose";
 import { State } from "ts-fsrs";
 
+/**
+ * Flashcard Schema for storing user-specific flashcards and their FSRS scheduling data.
+ */
 const flashcardSchema = new mongoose.Schema(
   {
     userId: {
@@ -33,6 +36,7 @@ const flashcardSchema = new mongoose.Schema(
       enum: ["locked", "active"],
       default: "active",
     },
+    // FSRS Scheduling Data
     due: {
       type: Date,
       default: Date.now,
@@ -79,6 +83,7 @@ const flashcardSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
+// Indexes for optimized queue retrieval and user lookups
 flashcardSchema.index({ userId: 1, topic_key: 1, due: 1, status: 1 });
 
 const Flashcard = mongoose.model("Flashcard", flashcardSchema);

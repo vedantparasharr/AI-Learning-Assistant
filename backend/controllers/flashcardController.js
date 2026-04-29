@@ -1,8 +1,7 @@
 import Flashcard from "../models/Flashcard.js";
 import StudyPlan from "../models/StudyPlan.js";
 import TopicContent from "../models/TopicContent.js";
-import { createEmptyCard, fsrs, Rating } from "ts-fsrs";
-import { buildDashboardSummary } from "../utils/studyMetrics.js";
+import { fsrs, Rating } from "ts-fsrs";
 import { filterNewFlashcards, seedUserFlashcards, serializeFsrsCard } from "../utils/flashcardHelpers.js";
 
 const scheduler = fsrs();
@@ -14,12 +13,19 @@ const RATING_MAP = {
   easy: Rating.Easy,
 };
 
+/**
+ * Internal helper to find a user's study plan for a specific topic.
+ */
 const getUserPlanForTopic = (userId, topicKey) =>
   StudyPlan.findOne({
     userId,
     "topics.topic_key": topicKey,
   });
 
+/**
+ * Activates flashcards for a specific topic by syncing them from TopicContent to the user's collection.
+ * POST /api/flashcards/activate/:topicKey
+ */
 export const activateTopicFlashcards = async (req, res, next) => {
   try {
     const { topicKey } = req.params;
@@ -74,7 +80,7 @@ export const activateTopicFlashcards = async (req, res, next) => {
     return res.status(200).json({
       success: true,
       data: {
-        topic_key: topicKey,
+        topicKey,
         activatedCount: activeCards.length,
         cards: activeCards,
       },
@@ -86,6 +92,10 @@ export const activateTopicFlashcards = async (req, res, next) => {
   }
 };
 
+/**
+ * Retrieves the daily review queue for a user, optionally filtered by topic.
+ * GET /api/flashcards/queue?topicKey=...
+ */
 export const getDailyReviewQueue = async (req, res, next) => {
   try {
     const now = new Date();
@@ -114,6 +124,10 @@ export const getDailyReviewQueue = async (req, res, next) => {
   }
 };
 
+/**
+ * Submits a review for a specific flashcard and updates its FSRS scheduling data.
+ * POST /api/flashcards/review/:cardId
+ */
 export const reviewFlashcard = async (req, res, next) => {
   try {
     const { cardId } = req.params;
@@ -163,16 +177,11 @@ export const reviewFlashcard = async (req, res, next) => {
     Object.assign(flashcard, serializeFsrsCard(result.card));
     await flashcard.save();
 
-    const plans = await StudyPlan.find({ userId: req.user._id });
-    const allFlashcards = await Flashcard.find({ userId: req.user._id, status: "active" });
-    const dashboard = buildDashboardSummary({ plans, flashcards: allFlashcards, now });
-
     return res.status(200).json({
       success: true,
       data: {
         card: flashcard,
         reviewLog: result.log,
-        dashboard,
       },
       message: "Flashcard reviewed successfully",
       statusCode: 200,
