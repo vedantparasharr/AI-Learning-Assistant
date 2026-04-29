@@ -7,6 +7,7 @@ export default function UploadMain() {
   const navigate = useNavigate();
   const [file, setFile] = useState(null);
   const [text, setText] = useState("");
+  const [inputMode, setInputMode] = useState("document"); // "document", "text", "prompt"
   const [subjectName, setSubjectName] = useState("");
   const [examDate, setExamDate] = useState("");
   const [loading, setLoading] = useState(false);
@@ -21,8 +22,12 @@ export default function UploadMain() {
       return toast.error("Subject Name is required");
     }
 
-    if (!file && !text.trim()) {
-      return toast.error("Provide file or text");
+    if (inputMode === "document" && !file) {
+      return toast.error("Upload a PDF file");
+    }
+
+    if (inputMode !== "document" && !text.trim()) {
+      return toast.error("Provide some text or a prompt");
     }
 
     if (file && file.size > 10 * 1024 * 1024) {
@@ -34,8 +39,9 @@ export default function UploadMain() {
 
       const res = await studyPlanService.parseStudyPlan({
         file,
-        outlineText: text,
-        sourceMode: file ? "document" : "text",
+        outlineText: inputMode === "text" ? text : "",
+        learningPrompt: inputMode === "prompt" ? text : "",
+        sourceMode: inputMode,
         subjectName,
       });
 
@@ -66,7 +72,7 @@ export default function UploadMain() {
         examDate,
         topics,
         sourceText,
-        sourceType: file ? "document" : "text",
+        sourceType: inputMode,
       });
 
       toast.success("Study plan created");
@@ -108,53 +114,101 @@ export default function UploadMain() {
         <div className="grid grid-cols-12 gap-gutter">
           {/* Left Column: Upload Area */}
           <div className="col-span-12 lg:col-span-7 flex flex-col gap-lg">
-            {/* Drop Zone */}
-            <div className="border-2 border-dashed border-outline-variant rounded-xl bg-surface-container-lowest hover:border-primary transition-colors duration-300 flex flex-col items-center justify-center py-xxl px-lg text-center cursor-pointer shadow-[0_4px_20px_-4px_rgba(26,20,107,0.04)]">
-              <div className="w-16 h-16 rounded-full bg-surface-container-low flex items-center justify-center mb-md">
-                <span
-                  className="material-symbols-outlined text-primary"
-                  style={{ fontSize: "32px" }}
+            {/* Mode Selection Tabs */}
+            <div className="flex bg-surface-container-low p-1 rounded-xl border border-outline-variant">
+              {[
+                { id: "document", label: "Upload PDF", icon: "cloud_upload" },
+                { id: "text", label: "Paste Syllabus", icon: "article" },
+                { id: "prompt", label: "AI Prompt", icon: "psychology" },
+              ].map((mode) => (
+                <button
+                  key={mode.id}
+                  onClick={() => setInputMode(mode.id)}
+                  className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg font-label-md text-label-md transition-all ${
+                    inputMode === mode.id
+                      ? "bg-surface-container-lowest text-primary shadow-sm border border-outline-variant"
+                      : "text-on-surface-variant hover:text-on-surface"
+                  }`}
                 >
-                  cloud_upload
-                </span>
-              </div>
+                  <span className="material-symbols-outlined text-[20px]">
+                    {mode.icon}
+                  </span>
+                  {mode.label}
+                </button>
+              ))}
+            </div>
 
-              <h3 className="font-h3 text-h3 text-on-surface mb-xs">
-                Upload Document
-              </h3>
-
-              <p className="font-body-md text-body-md text-on-surface-variant max-w-sm mb-lg">
-                Drag and drop your PDF, DOCX, or TXT files here, or click to
-                browse your computer.
-              </p>
-
-              <input
-                type="file"
-                id="fileUpload"
-                className="hidden"
-                onChange={(e) => setFile(e.target.files[0])}
-              />
-
-              <label
-                htmlFor="fileUpload"
-                className="border border-primary text-primary hover:bg-surface-container-low font-label-md text-label-md py-2 px-6 rounded-lg transition-colors cursor-pointer"
+            {inputMode === "document" && (
+              <div
+                className="border-2 border-dashed border-outline-variant rounded-xl bg-surface-container-lowest hover:border-primary transition-colors duration-300 flex flex-col items-center justify-center py-xxl px-lg text-center cursor-pointer shadow-[0_4px_20px_-4px_rgba(26,20,107,0.04)]"
+                onClick={() => document.getElementById("fileUpload").click()}
               >
-                Select File
-              </label>
-            </div>
+                <div className="w-16 h-16 rounded-full bg-surface-container-low flex items-center justify-center mb-md">
+                  <span
+                    className="material-symbols-outlined text-primary"
+                    style={{ fontSize: "32px" }}
+                  >
+                    cloud_upload
+                  </span>
+                </div>
 
-            {/* Alternate: Paste Text Area */}
-            <div className="bg-surface-container-lowest rounded-xl shadow-[0_4px_20px_-4px_rgba(26,20,107,0.04)] p-lg border border-surface-variant">
-              <label className="block font-label-md text-label-md text-on-surface mb-sm">
-                Or Paste Raw Text
-              </label>
-              <textarea
-                value={text}
-                onChange={(e) => setText(e.target.value)}
-                placeholder="Paste your lecture notes or article text here..."
-                className="w-full h-32 bg-background border border-outline-variant rounded-lg p-md font-body-sm text-body-sm text-on-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all resize-none"
-              />
-            </div>
+                <h3 className="font-h3 text-h3 text-on-surface mb-xs">
+                  Upload Document
+                </h3>
+
+                <p className="font-body-md text-body-md text-on-surface-variant max-w-sm mb-lg">
+                  Drag and drop your PDF file here, or click to browse.
+                </p>
+
+                <input
+                  type="file"
+                  id="fileUpload"
+                  accept=".pdf"
+                  className="hidden"
+                  onChange={(e) => setFile(e.target.files[0])}
+                />
+
+                <div className="border border-primary text-primary hover:bg-surface-container-low font-label-md text-label-md py-2 px-6 rounded-lg transition-colors cursor-pointer">
+                  Select PDF File
+                </div>
+              </div>
+            )}
+
+            {inputMode === "text" && (
+              <div className="bg-surface-container-lowest rounded-xl shadow-[0_4px_20px_-4px_rgba(26,20,107,0.04)] p-lg border border-surface-variant">
+                <label className="block font-label-md text-label-md text-on-surface mb-sm">
+                  Paste Syllabus Content
+                </label>
+                <textarea
+                  value={text}
+                  onChange={(e) => setText(e.target.value)}
+                  placeholder="Paste your course syllabus, lecture list, or detailed topics here..."
+                  className="w-full h-64 bg-background border border-outline-variant rounded-lg p-md font-body-sm text-body-sm text-on-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all resize-none"
+                />
+                <p className="mt-xs text-label-sm text-on-surface-variant italic">
+                  Best for: Existing syllabi where you want exact topic
+                  extraction.
+                </p>
+              </div>
+            )}
+
+            {inputMode === "prompt" && (
+              <div className="bg-surface-container-lowest rounded-xl shadow-[0_4px_20px_-4px_rgba(26,20,107,0.04)] p-lg border border-surface-variant">
+                <label className="block font-label-md text-label-md text-on-surface mb-sm">
+                  Ask AI for a Roadmap
+                </label>
+                <textarea
+                  value={text}
+                  onChange={(e) => setText(e.target.value)}
+                  placeholder="e.g. Create a 10-step roadmap for learning Frontend Development from scratch..."
+                  className="w-full h-64 bg-background border border-outline-variant rounded-lg p-md font-body-sm text-body-sm text-on-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all resize-none"
+                />
+                <p className="mt-xs text-label-sm text-on-surface-variant italic">
+                  Best for: Generating a new study plan from a simple
+                  instruction or goal.
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Right Column: Processing State & Options */}
