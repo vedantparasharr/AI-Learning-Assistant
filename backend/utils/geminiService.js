@@ -72,28 +72,16 @@ const weaknessSupportSchema = {
 };
 
 export const parseSyllabusTopics = async (text) => {
-  const prompt = `SYSTEM INSTRUCTION: You are a senior educator and expert curriculum designer.
+const prompt = `You are an expert curriculum designer. Extract the following syllabus into a flat list of specific, searchable study topics.
 
-TASK: Extract a syllabus into specific, actionable study topics for an exam planner.
+Rules:
+- Each topic must be a single, standalone concept a student can study in one sitting.
+- Never combine two things with a slash (React/Vue, HTML/CSS) — split them or pick the more relevant one.
+- Keep names concise and search-friendly (good for YouTube/Google lookup).
+- Merge duplicates.
+- Assign realistic study hours per topic.
 
-Return ONLY a flat JSON array. Do not include markdown, commentary, or code fences.
-
-Each array item must contain:
-- "name": the topic name
-- "estimated_hours": a realistic number of study hours for that topic
-
-RULES FOR TOPIC GENERATION:
-- Every topic must be a single, specific, unambiguous concept.
-- Never use slashes (e.g., React/Vue, HTML/CSS) — pick the most relevant or split into two topics.
-- Never use parenthetical alternatives like "A Framework (React)".
-- Topics must be learnable in isolation.
-- Bad: "A JS Framework (React/Vue)" | Good: "React Components & Props"
-- Bad: "HTML/CSS Basics" | Good: "CSS Flexbox and Grid"
-- Preserve original wording where possible, but prioritize search-friendliness for YouTube/Google.
-- Merge obvious duplicates.
-- estimated_hours must be a positive number.
-
-Syllabus text:
+Syllabus:
 ${text.substring(0, 25000)}`;
 
   try {
@@ -123,34 +111,17 @@ ${text.substring(0, 25000)}`;
 };
 
 export const generateRoadmapTopicsFromPrompt = async ({ prompt, subjectName = "" }) => {
-  const roadmapPrompt = `SYSTEM INSTRUCTION: You are a senior educator and expert curriculum designer.
+const roadmapPrompt = `You are an expert curriculum designer. Generate a progressive study roadmap for this learner goal.
 
-TASK: Design a practical, progressive study roadmap based on the learner's goal.
+Rules:
+- Start from fundamentals, build toward advanced topics.
+- Each topic must be a single standalone concept — no slashes, no vague groupings.
+- Keep names concise and search-friendly.
+- 8 to 18 topics depending on scope. No duplicates.
+- Assign realistic study hours per topic.
 
-Return ONLY a flat JSON array. Do not include markdown, commentary, or code fences.
-
-Each array item must contain:
-- "name": the topic name
-- "estimated_hours": a realistic number of study hours for that topic
-
-RULES FOR TOPIC GENERATION:
-- Every topic must be a single, specific, unambiguous concept.
-- Never use slashes (e.g., React/Vue, HTML/CSS) — pick the most relevant or split into two topics.
-- Never use parenthetical alternatives like "A Framework (React)".
-- Topics must be learnable in isolation.
-- Bad: "A JS Framework (React/Vue)" | Good: "React Components & Props"
-- Bad: "HTML/CSS Basics" | Good: "CSS Flexbox and Grid"
-- Build a progressive roadmap from fundamentals to advanced topics.
-- Keep topic names concise and actionable.
-- Avoid duplicates and near-duplicates.
-- Prefer 8 to 18 topics based on scope.
-- estimated_hours must be a positive number.
-
-Learner goal:
-${prompt.substring(0, 4000)}
-
-Subject hint (if available):
-${String(subjectName || "").trim() || "Not provided"}`;
+Goal: ${prompt.substring(0, 4000)}
+${subjectName ? `Subject: ${subjectName}` : ""}`;
 
   try {
     const response = await ai.models.generateContent({
@@ -179,15 +150,17 @@ ${String(subjectName || "").trim() || "Not provided"}`;
 };
 
 export const generateStarterFlashcardsForTopics = async ({ subjectName, topics }) => {
-  const prompt = `SYSTEM INSTRUCTION: You are a senior educator and expert curriculum designer.
-
-TASK: Create exactly 2 starter flashcards for each study topic below.
+const prompt = `You are an expert educator. Create exactly 2 exam-focused flashcards for each topic below.
 
 Subject: ${subjectName}
 Topics:
-${topics.map((topic, index) => `${index + 1}. ${topic.name}`).join("\n")}
+${topics.map((t, i) => `${i + 1}. ${t.name}`).join("\n")}
 
-Return only JSON. Each topic should have short, exam-useful flashcards that test core understanding. Avoid duplicate wording across topics.`;
+Rules:
+- Each card must test a core, examinable idea for that topic.
+- Questions should be direct — no vague "what is" questions unless the definition is itself the key exam point.
+- Answers must be concise but complete. No padding.
+- Don't repeat phrasing across cards.`;
 
   try {
     const response = await ai.models.generateContent({
@@ -237,21 +210,15 @@ Return only JSON. Each topic should have short, exam-useful flashcards that test
 };
 
 export const generateTopicNotes = async ({ subjectName, topicName }) => {
-  const prompt = `SYSTEM INSTRUCTION: You are a senior engineer and expert educator. Explain complex concepts to a smart junior developer who already knows the basics.
+const prompt = `You are a senior engineer explaining to a fellow developer.
 
-TASK: Generate comprehensive, high-quality, and deeply educational study notes for the topic "${topicName}" in the subject "${subjectName}".
+Write exam-oriented study notes for: "${topicName}" (${subjectName})
 
-Rules:
-- Lead with the "WHY" before the "WHAT" — explain why this concept matters in the real world.
-- Provide deep, conceptual explanations. Do not just list shallow facts.
-- Use analogies and practical examples to make abstract ideas concrete.
-- Include code snippets, specific formulas, or step-by-step logic where applicable.
-- No fluff, no filler sentences, and NO robotic templates like "Quick Revision Checklist" or "Common Exam Pitfalls".
-- Structure the notes logically with natural, descriptive Markdown headings (e.g., ## The Problem it Solves, ## How it Works, ## Real-World Implementation).
-- Writing style: Direct, professional, engaging, and clear.
-- Use Markdown formatting (bolding, lists, code blocks) to maximize readability.
-- Do not mention that you are an AI.
-- Do not wrap the entire answer in markdown code fences (\`\`\`).`;
+- Get straight to the point. No motivational openers, no "why this matters" preamble.
+- Use examples and code snippets where they make things clearer.
+- Use markdown: headings, bold for key terms, code blocks for code. Keep it scannable.
+- Write like you're explaining to someone who needs to pass an exam tomorrow, not someone learning from scratch.
+- No filler. No "great question" energy. No AI disclaimer at the end.`;
 
   try {
     const response = await ai.models.generateContent({
@@ -267,21 +234,18 @@ Rules:
 };
 
 export const generateWeaknessSupport = async ({ subjectName, topicName, question, answer }) => {
-  const prompt = `SYSTEM INSTRUCTION: You are a senior engineer and expert tutor.
-
-TASK: Help a student who is struggling with a specific concept by providing a simpler explanation and confidence-building flashcards.
+const prompt = `A student got this flashcard wrong. Help them understand it.
 
 Subject: ${subjectName}
 Topic: ${topicName}
-Card they missed:
-Question: ${question}
-Answer: ${answer}
+Question they missed: ${question}
+Correct answer: ${answer}
 
-Return only JSON with:
-- simpler_explanation: a much easier explanation in plain language, leading with "why" it works.
-- easier_flashcards: exactly 2 easier flashcards for rebuilding confidence.
+Return JSON with:
+- simpler_explanation: explain the concept in plain language, as simply as possible. One short paragraph.
+- easier_flashcards: exactly 2 easier cards that rebuild confidence before attempting the original again.
 
-Keep everything concise, clear, and exam-oriented.`;
+Be concise. No padding. Focus only on what they need to get unstuck.`;
 
   try {
     const response = await ai.models.generateContent({
