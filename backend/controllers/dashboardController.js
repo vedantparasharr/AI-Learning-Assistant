@@ -11,54 +11,90 @@ export const getDashboardSummary = async (req, res, next) => {
     const userId = req.user._id;
     const now = new Date();
 
-    // Fetch all relevant data in parallel
-    const [plans, activeCards, reviewLogs] = await Promise.all([
+    // Fetch relevant data using Aggregation Pipelines to prevent OOM errors on large datasets
+    const [plans, flashcardAgg, reviewLogsAgg] = await Promise.all([
       StudyPlan.find({ userId }).sort({ examDate: 1, createdAt: -1 }).lean(),
-      Flashcard.find({ userId, status: "active" }).lean(),
-      ReviewLog.find({ userId }).select("reviewedAt").lean(),
+      
+      // Aggregate Flashcards directly in DB
+      Flashcard.aggregate([
+        { $match: { userId, status: "active" } },
+        {
+          $facet: {
+            topicStats: [
+              {
+                $group: {
+                  _id: "$topic_key",
+                  totalCards: { $sum: 1 },
+                  dueCount: {
+                    $sum: { $cond: [{ $lte: ["$due", now] }, 1, 0] },
+                  },
+                },
+              },
+            ],
+            globalStats: [
+              { $match: { due: { $lte: now } } },
+              {
+                $group: {
+                  _id: "$state",
+                  count: { $sum: 1 },
+                },
+              },
+            ],
+          },
+        },
+      ]),
+
+      // Aggregate ReviewLogs to get counts per day
+      ReviewLog.aggregate([
+        { $match: { userId } },
+        {
+          $group: {
+            _id: { $dateToString: { format: "%Y-%m-%d", date: "$reviewedAt" } },
+            count: { $sum: 1 },
+          },
+        },
+        { $sort: { _id: -1 } },
+      ]),
     ]);
 
-    // 1. Map cards by topic_key for O(1) lookups during subject aggregation
+    // 1. Process Flashcard Aggregation Results
+    const topicStats = flashcardAgg[0]?.topicStats || [];
+    const globalStats = flashcardAgg[0]?.globalStats || [];
+
     const topicCardMap = new Map();
-    for (const card of activeCards) {
-      const list = topicCardMap.get(card.topic_key) || [];
-      list.push(card);
-      topicCardMap.set(card.topic_key, list);
-    }
+    topicStats.forEach((stat) => {
+      topicCardMap.set(stat._id, { totalCards: stat.totalCards, dueCount: stat.dueCount });
+    });
 
-    // 2. Calculate Review Breakdown (FSRS States)
-    const dueCards = [];
     const reviewBreakdown = { learn: 0, review: 0, new: 0 };
+    let totalDueCards = 0;
 
-    for (const card of activeCards) {
-      if (new Date(card.due) <= now) {
-        dueCards.push(card);
-        if (card.state === State.New) reviewBreakdown.new++;
-        else if (card.state === State.Review) reviewBreakdown.review++;
-        else reviewBreakdown.learn++;
-      }
-    }
+    globalStats.forEach((stat) => {
+      totalDueCards += stat.count;
+      if (stat._id === State.New) reviewBreakdown.new += stat.count;
+      else if (stat._id === State.Review) reviewBreakdown.review += stat.count;
+      else reviewBreakdown.learn += stat.count;
+    });
 
-    // 3. Aggregate Subject Summaries
+    // 2. Aggregate Subject Summaries
     const subjects = plans.map((plan) => {
       let totalCards = 0;
       let dueCount = 0;
       let completedTopics = 0;
 
       const topics = (plan.topics || []).map((topic) => {
-        const cards = topicCardMap.get(topic.topic_key) || [];
-        const topicDue = cards.filter((c) => new Date(c.due) <= now).length;
+        const stats = topicCardMap.get(topic.topic_key) || { totalCards: 0, dueCount: 0 };
 
-        totalCards += cards.length;
-        dueCount += topicDue;
+        totalCards += stats.totalCards;
+        dueCount += stats.dueCount;
         if (topic.completionStatus === "completed") completedTopics++;
 
         return {
           topic_key: topic.topic_key,
           name: topic.name,
           completionStatus: topic.completionStatus,
-          totalCards: cards.length,
-          dueCount: topicDue,
+          totalCards: stats.totalCards,
+          dueCount: stats.dueCount,
         };
       });
 
@@ -78,28 +114,23 @@ export const getDashboardSummary = async (req, res, next) => {
       };
     }).sort((a, b) => new Date(a.examDate) - new Date(b.examDate));
 
-    // 4. Aggregate Heatmap Data from ReviewLogs
+    // 3. Process Heatmap Data and Streaks from ReviewLog Aggregation
     const heatmapData = {};
-    const reviewCountsByDay = new Map();
+    const uniqueReviewDays = reviewLogsAgg.map((log) => log._id).sort((a, b) => b.localeCompare(a));
 
-    for (const log of reviewLogs) {
-      const key = new Date(log.reviewedAt).toISOString().slice(0, 10);
-      reviewCountsByDay.set(key, (reviewCountsByDay.get(key) || 0) + 1);
-      heatmapData[key] = reviewCountsByDay.get(key);
-    }
-
-    // 5. Calculate Streak & Stats from aggregated counts
-    const uniqueReviewDays = Array.from(reviewCountsByDay.keys()).sort((a, b) => b.localeCompare(a));
+    reviewLogsAgg.forEach((log) => {
+      heatmapData[log._id] = log.count;
+    });
 
     let currentStreak = 0;
     let maxStreak = 0;
     let tempStreak = 0;
 
-    // Calculate current streak
     if (uniqueReviewDays.length > 0) {
       const cursor = new Date(now);
       cursor.setHours(0, 0, 0, 0);
 
+      // Current Streak
       for (const dayKey of uniqueReviewDays) {
         const expected = cursor.toISOString().slice(0, 10);
         if (dayKey !== expected) {
@@ -113,11 +144,8 @@ export const getDashboardSummary = async (req, res, next) => {
         currentStreak++;
         cursor.setDate(cursor.getDate() - 1);
       }
-    }
 
-    // Calculate max streak
-    if (uniqueReviewDays.length > 0) {
-      // Sort in ascending order to find gaps
+      // Max Streak
       const sortedAsc = [...uniqueReviewDays].sort((a, b) => a.localeCompare(b));
       let prevDate = null;
 
@@ -142,15 +170,15 @@ export const getDashboardSummary = async (req, res, next) => {
       maxStreak = Math.max(maxStreak, tempStreak);
     }
 
-    // 6. Final Dashboard Data Structure
-    const estimatedReviewMinutes = dueCards.length === 0
+    // 4. Final Dashboard Data Structure
+    const estimatedReviewMinutes = totalDueCards === 0
       ? 0
-      : Math.max(5, Math.round((dueCards.length * 0.5) / 5) * 5);
+      : Math.max(5, Math.round((totalDueCards * 0.5) / 5) * 5);
 
     return res.status(200).json({
       success: true,
       data: {
-        dueCards: dueCards.length,
+        dueCards: totalDueCards,
         streak: currentStreak,
         maxStreak,
         totalActiveDays: uniqueReviewDays.length,
