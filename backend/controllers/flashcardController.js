@@ -1,6 +1,7 @@
 import Flashcard from "../models/Flashcard.js";
 import StudyPlan from "../models/StudyPlan.js";
 import TopicContent from "../models/TopicContent.js";
+import ReviewLog from "../models/ReviewLog.js";
 import { fsrs, Rating } from "ts-fsrs";
 import {
   filterNewFlashcards,
@@ -157,6 +158,8 @@ export const reviewFlashcard = async (req, res, next) => {
     }
 
     const now = new Date();
+    const initialState = flashcard.state; // Capture state before review
+
     const result = scheduler.next(
       {
         due: flashcard.due,
@@ -175,7 +178,18 @@ export const reviewFlashcard = async (req, res, next) => {
     );
 
     Object.assign(flashcard, serializeFsrsCard(result.card));
-    await flashcard.save();
+    
+    // Log the review for historical tracking (GitHub heatmap)
+    await Promise.all([
+      flashcard.save(),
+      ReviewLog.create({
+        userId: req.user._id,
+        cardId: flashcard._id,
+        rating: rating,
+        state: initialState, // Log the state BEFORE it was updated
+        reviewedAt: now,
+      }),
+    ]);
 
     return res.status(200).json({
       success: true,

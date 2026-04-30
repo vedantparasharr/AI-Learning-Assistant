@@ -1,17 +1,27 @@
 import axiosInstance from "../utils/axiosInstance";
 import { API_PATHS } from "../utils/apiPaths";
 
-const getDashboard = async () => {
+const getDashboardSummary = async () => {
   try {
-    const response = await axiosInstance.get(API_PATHS.PROGRESS.GET_DASHBOARD);
+    const response = await axiosInstance.get(API_PATHS.DASHBOARD.GET_SUMMARY);
     return response.data;
   } catch (error) {
     throw error.response?.data || { message: "Failed to fetch dashboard" };
   }
 };
 
-const progressService = {
-  getDashboard,
+const getActivityByDate = async (date) => {
+  try {
+    const response = await axiosInstance.get(API_PATHS.DASHBOARD.GET_ACTIVITY_BY_DATE(date));
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { message: "Failed to fetch daily activity" };
+  }
 };
 
-export default progressService;
+const dashboardService = {
+  getDashboardSummary,
+  getActivityByDate,
+};
+
+export default dashboardService;

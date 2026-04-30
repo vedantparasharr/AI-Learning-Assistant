@@ -35,7 +35,8 @@ export const API_PATHS = {
     REVIEW_CARD: (cardId) => `/api/flashcards/review/${cardId}`,
   },
 
-  PROGRESS: {
-    GET_DASHBOARD: "/api/progress/dashboard",
+  DASHBOARD: {
+    GET_SUMMARY: "/api/dashboard/summary",
+    GET_ACTIVITY_BY_DATE: (date) => `/api/dashboard/activity/${date}`,
   },
 };
