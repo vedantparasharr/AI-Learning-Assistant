@@ -1,91 +1,74 @@
-# DistillLearn (AI Learning Assistant)
+# DistillLearn - AI-Powered Spaced Repetition Platform
 
-DistillLearn is an AI-powered study platform designed to optimize long-term memory retention through the **FSRS (Free Spaced Repetition Scheduler)** algorithm. It enables students to generate structured study roadmaps from raw materials (such as PDFs or prompts), automatically generates flashcard decks, and manages a daily review queue to ensure efficient learning.
+DistillLearn is a high-performance learning environment that bridges the gap between passive reading and active recall. By leveraging Gemini's advanced AI and the scientifically proven FSRS (Free Spaced Repetition Scheduler) algorithm, DistillLearn transforms dense study materials into actionable, structured learning paths.
 
-## 🌟 Key Features
+## 🚀 The Core Philosophy
 
-- **Automated Study Roadmaps**: Upload a syllabus (PDF) or provide a text prompt to let the AI instantly extract and generate a structured, multi-topic study plan.
-- **FSRS Spaced Repetition Engine**: Employs the `ts-fsrs` algorithm to dynamically schedule flashcard reviews, maximizing memory retention and minimizing study time.
-- **AI-Powered Flashcards & Notes**: Automatically generates starter flashcard decks and comprehensive exam-oriented markdown notes for individual topics using Google's Gemini AI.
-- **Daily Review Queue**: A focused, distraction-free dashboard that presents users with their due flashcards for the day based on their individualized FSRS parameters.
-- **Curated Video Resources**: Integrates YouTube search and video scoring to supplement topic notes with highly relevant educational videos.
-- **Secure Authentication**: Robust user authentication, including JWT-based session management, bcrypt password hashing, and email verification.
+Most learning apps suffer from two problems: they either force you to manually create every single flashcard (too much friction), or they use primitive "box-style" scheduling (too inefficient).
+
+DistillLearn solves both. It uses AI to **distill** your PDFs and notes into topics and starter flashcards, then uses the **FSRS algorithm** to schedule your reviews at the mathematically optimal time to ensure long-term retention.
 
 ## 🛠️ Tech Stack
 
-### Frontend
-- **Framework**: React 19, Vite
-- **Routing**: React Router v7
-- **Styling**: Tailwind CSS v4
-- **Icons**: Lucide React
-- **Markdown & HTTP**: React Markdown, Axios
+- **Frontend:** React 19, Vite, Tailwind CSS, React Router 7.
+- **Backend:** Node.js (Express 5), MongoDB (Mongoose), JWT Auth.
+- **AI Engine:** Google Gemini (Generative AI) with structured JSON output.
+- **Algorithm:** [ts-fsrs](https://github.com/open-spaced-repetition/ts-fsrs) (The modern gold standard for Spaced Repetition).
+- **Video Intelligence:** `yt-search` with a custom ranking & scoring engine.
+- **Processing:** PDF-parse for document extraction, Multer for file handling.
 
-### Backend
-- **Runtime Environment**: Node.js, Express
-- **Database**: MongoDB (Mongoose)
-- **AI Integrations**: Google GenAI (Gemini 2.5 Flash-Lite)
-- **Spaced Repetition Engine**: `ts-fsrs`
-- **File Parsing & Uploads**: Multer, PDF-Parse
-- **External Integrations**: YouTube Search API (`yt-search`)
-- **Authentication**: JWT, bcryptjs
+## ✨ Key Features
 
-## 🚀 Getting Started
+- **Multi-Source Ingestion:** Generate study plans from PDFs, raw text syllabi, or AI prompts.
+- **Smart Video Curation:** Automatically finds and ranks the best YouTube explanations for every topic using a custom **Video Scoring Engine** that considers keyword relevance, view count, video duration, and trusted educational channels.
+- **FSRS-Driven Reviews:** Study cards using the "Again, Hard, Good, Easy" rating system, with intervals calculated by the latest memory science research.
+- **Optimized Dashboard:** A clean, data-driven dashboard featuring a GitHub-style activity heatmap, streak tracking, and a prioritized daily review queue.
+- **Interactive Syllabus Builder:** Review and edit AI-generated topics, adjust estimated study hours, and manage your learning roadmap before committing.
+- **Collaborative Learning:** Share your study plans with a single click or clone plans created by others in the community.
+
+## 🏗️ Technical Architecture Highlights
+
+- **Video Scoring Engine:** A sophisticated utility (`videoScoring.js`) that ranks educational content by cross-referencing topic keywords with video metadata to ensure you only see the highest-quality explanations.
+- **Optimized Aggregations:** The dashboard uses MongoDB Aggregation Pipelines to calculate streaks and metrics directly at the database level, ensuring scalability to millions of records.
+- **Stateless PDF Processing:** Efficient text extraction with smart truncation to prevent payload bloating while preserving AI grounding.
+- **Robust Security:** HTTP-only cookies, password hashing with bcrypt, and OTP email verification.
+
+## 🏃 Getting Started
 
 ### Prerequisites
-- Node.js (v18+ recommended)
-- MongoDB (running locally or a MongoDB Atlas connection string)
-- A Google Gemini API Key
+- Node.js v18+
+- MongoDB instance
+- Google Gemini API Key
 
 ### Installation
 
-1. **Clone the repository:**
+1. **Clone the repo:**
    ```bash
-   git clone <repository-url>
-   cd "AI Learning Assistant"
+   git clone https://github.com/yourusername/distilllearn.git
+   cd distilllearn
    ```
 
 2. **Backend Setup:**
    ```bash
    cd backend
    npm install
+   # Create a .env file (JWT_SECRET, GEMINI_API_KEY, MONGO_URI, etc.)
+   npm run dev
    ```
-   - Create a `.env` file in the `backend` directory with the following variables:
-     ```env
-     PORT=8000
-     MONGO_URI=your_mongodb_connection_string
-     JWT_SECRET=your_jwt_secret
-     GEMINI_API_KEY=your_gemini_api_key
-     ```
-   - Start the backend server in development mode:
-     ```bash
-     npm run dev
-     ```
 
 3. **Frontend Setup:**
    ```bash
    cd ../frontend
    npm install
+   npm run dev
    ```
-   - Start the frontend Vite development server:
-     ```bash
-     npm run dev
-     ```
 
-4. **Access the application:**
-   Open your browser and navigate to `http://localhost:5173`.
+## 📈 Roadmap (SaaS-Ready)
 
-## 📂 Project Structure
+- [ ] Stripe/Lemon Squeezy integration for Pro subscriptions.
+- [ ] User credit system for AI-intensive tasks.
+- [ ] Direct PDF-to-Notes generation using RAG.
+- [ ] Mobile-native application using React Native.
 
-- `/backend` 
-  - `controllers/` - API route logic (auth, study plans, flashcards, topics, progress).
-  - `models/` - Mongoose schemas (User, StudyPlan, TopicContent, Flashcard).
-  - `routes/` - Express route definitions.
-  - `utils/` - Core services including `geminiService`, `pdfParser`, and `videoScoring`.
-- `/frontend`
-  - `src/pages/` - Core UI views (Dashboard, Flashcards queue, StudyPlan builder, Topic study).
-  - `src/components/` - Reusable UI components.
-  - `src/services/` - Axios API integration layer.
-
-## 📝 License
-
-This project is licensed under the ISC License.
+---
+*Built for scholars who value their time.*

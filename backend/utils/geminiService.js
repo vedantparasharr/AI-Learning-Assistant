@@ -72,7 +72,9 @@ const weaknessSupportSchema = {
 };
 
 export const parseSyllabusTopics = async (text) => {
-  const prompt = `You are extracting a syllabus into study topics for an exam planner.
+  const prompt = `SYSTEM INSTRUCTION: You are a senior educator and expert curriculum designer.
+
+TASK: Extract a syllabus into specific, actionable study topics for an exam planner.
 
 Return ONLY a flat JSON array. Do not include markdown, commentary, or code fences.
 
@@ -80,11 +82,15 @@ Each array item must contain:
 - "name": the topic name
 - "estimated_hours": a realistic number of study hours for that topic
 
-Rules:
-- Preserve the original syllabus wording as much as possible.
-- Do not invent topics that are not supported by the syllabus text.
+RULES FOR TOPIC GENERATION:
+- Every topic must be a single, specific, unambiguous concept.
+- Never use slashes (e.g., React/Vue, HTML/CSS) — pick the most relevant or split into two topics.
+- Never use parenthetical alternatives like "A Framework (React)".
+- Topics must be learnable in isolation.
+- Bad: "A JS Framework (React/Vue)" | Good: "React Components & Props"
+- Bad: "HTML/CSS Basics" | Good: "CSS Flexbox and Grid"
+- Preserve original wording where possible, but prioritize search-friendliness for YouTube/Google.
 - Merge obvious duplicates.
-- Keep the array flat. No nesting, modules, units, or metadata outside the array.
 - estimated_hours must be a positive number.
 
 Syllabus text:
@@ -117,7 +123,9 @@ ${text.substring(0, 25000)}`;
 };
 
 export const generateRoadmapTopicsFromPrompt = async ({ prompt, subjectName = "" }) => {
-  const roadmapPrompt = `You are designing a practical study roadmap.
+  const roadmapPrompt = `SYSTEM INSTRUCTION: You are a senior educator and expert curriculum designer.
+
+TASK: Design a practical, progressive study roadmap based on the learner's goal.
 
 Return ONLY a flat JSON array. Do not include markdown, commentary, or code fences.
 
@@ -125,7 +133,13 @@ Each array item must contain:
 - "name": the topic name
 - "estimated_hours": a realistic number of study hours for that topic
 
-Rules:
+RULES FOR TOPIC GENERATION:
+- Every topic must be a single, specific, unambiguous concept.
+- Never use slashes (e.g., React/Vue, HTML/CSS) — pick the most relevant or split into two topics.
+- Never use parenthetical alternatives like "A Framework (React)".
+- Topics must be learnable in isolation.
+- Bad: "A JS Framework (React/Vue)" | Good: "React Components & Props"
+- Bad: "HTML/CSS Basics" | Good: "CSS Flexbox and Grid"
 - Build a progressive roadmap from fundamentals to advanced topics.
 - Keep topic names concise and actionable.
 - Avoid duplicates and near-duplicates.
@@ -165,13 +179,15 @@ ${String(subjectName || "").trim() || "Not provided"}`;
 };
 
 export const generateStarterFlashcardsForTopics = async ({ subjectName, topics }) => {
-  const prompt = `Create exactly 2 starter flashcards for each study topic below.
+  const prompt = `SYSTEM INSTRUCTION: You are a senior educator and expert curriculum designer.
+
+TASK: Create exactly 2 starter flashcards for each study topic below.
 
 Subject: ${subjectName}
 Topics:
 ${topics.map((topic, index) => `${index + 1}. ${topic.name}`).join("\n")}
 
-Return only JSON. Each topic should have short, exam-useful flashcards. Avoid duplicate wording across topics.`;
+Return only JSON. Each topic should have short, exam-useful flashcards that test core understanding. Avoid duplicate wording across topics.`;
 
   try {
     const response = await ai.models.generateContent({
@@ -221,24 +237,21 @@ Return only JSON. Each topic should have short, exam-useful flashcards. Avoid du
 };
 
 export const generateTopicNotes = async ({ subjectName, topicName }) => {
-  const prompt = `Create exam-oriented Markdown notes for the topic "${topicName}" in the subject "${subjectName}".
+  const prompt = `SYSTEM INSTRUCTION: You are a senior engineer and expert educator. Explain complex concepts to a smart junior developer who already knows the basics.
 
-Write for a student preparing under a deadline.
-
-Required structure:
-- ## Topic Overview
-- ## Core Concepts
-- ## Important Formulas / Facts (only if relevant)
-- ## Common Exam Pitfalls
-- ## Quick Revision Checklist
+TASK: Generate comprehensive, high-quality, and deeply educational study notes for the topic "${topicName}" in the subject "${subjectName}".
 
 Rules:
-- Stay focused on this topic only.
-- Keep explanations clear, accurate, and concise.
-- Prefer bullet points and short examples over long paragraphs.
-- Use Markdown only.
+- Lead with the "WHY" before the "WHAT" — explain why this concept matters in the real world.
+- Provide deep, conceptual explanations. Do not just list shallow facts.
+- Use analogies and practical examples to make abstract ideas concrete.
+- Include code snippets, specific formulas, or step-by-step logic where applicable.
+- No fluff, no filler sentences, and NO robotic templates like "Quick Revision Checklist" or "Common Exam Pitfalls".
+- Structure the notes logically with natural, descriptive Markdown headings (e.g., ## The Problem it Solves, ## How it Works, ## Real-World Implementation).
+- Writing style: Direct, professional, engaging, and clear.
+- Use Markdown formatting (bolding, lists, code blocks) to maximize readability.
 - Do not mention that you are an AI.
-- Do not wrap the answer in code fences.`;
+- Do not wrap the entire answer in markdown code fences (\`\`\`).`;
 
   try {
     const response = await ai.models.generateContent({
@@ -254,7 +267,9 @@ Rules:
 };
 
 export const generateWeaknessSupport = async ({ subjectName, topicName, question, answer }) => {
-  const prompt = `A student is struggling with this topic.
+  const prompt = `SYSTEM INSTRUCTION: You are a senior engineer and expert tutor.
+
+TASK: Help a student who is struggling with a specific concept by providing a simpler explanation and confidence-building flashcards.
 
 Subject: ${subjectName}
 Topic: ${topicName}
@@ -263,8 +278,8 @@ Question: ${question}
 Answer: ${answer}
 
 Return only JSON with:
-- simpler_explanation: a much easier explanation in plain language
-- easier_flashcards: exactly 2 easier flashcards for rebuilding confidence
+- simpler_explanation: a much easier explanation in plain language, leading with "why" it works.
+- easier_flashcards: exactly 2 easier flashcards for rebuilding confidence.
 
 Keep everything concise, clear, and exam-oriented.`;
 
