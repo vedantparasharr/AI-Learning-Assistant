@@ -14,6 +14,7 @@ export const buildTopicMetrics = ({ plan, flashcards, now = new Date() }) => {
   const topics = (plan.topics || []).map((topic) => {
     const topicCards = topicCardMap.get(topic.topic_key) || [];
     const dueCount = topicCards.filter((c) => c.status === "active" && new Date(c.due) <= now).length;
+    const reviewedCount = topicCards.filter((c) => c.reps > 0).length;
 
     return {
       topic_key: topic.topic_key,
@@ -22,6 +23,7 @@ export const buildTopicMetrics = ({ plan, flashcards, now = new Date() }) => {
       completionStatus: topic.completionStatus,
       totalCards: topicCards.length,
       dueCount,
+      reviewedCount,
     };
   });
 

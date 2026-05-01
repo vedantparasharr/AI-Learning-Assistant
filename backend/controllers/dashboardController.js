@@ -28,6 +28,9 @@ export const getDashboardSummary = async (req, res, next) => {
                   dueCount: {
                     $sum: { $cond: [{ $lte: ["$due", now] }, 1, 0] },
                   },
+                  reviewedCount: {
+                    $sum: { $cond: [{ $gt: ["$reps", 0] }, 1, 0] },
+                  },
                 },
               },
             ],
@@ -63,7 +66,11 @@ export const getDashboardSummary = async (req, res, next) => {
 
     const topicCardMap = new Map();
     topicStats.forEach((stat) => {
-      topicCardMap.set(stat._id, { totalCards: stat.totalCards, dueCount: stat.dueCount });
+      topicCardMap.set(stat._id, {
+        totalCards: stat.totalCards,
+        dueCount: stat.dueCount,
+        reviewedCount: stat.reviewedCount,
+      });
     });
 
     const reviewBreakdown = { learn: 0, review: 0, new: 0 };
@@ -83,7 +90,11 @@ export const getDashboardSummary = async (req, res, next) => {
       let completedTopics = 0;
 
       const topics = (plan.topics || []).map((topic) => {
-        const stats = topicCardMap.get(topic.topic_key) || { totalCards: 0, dueCount: 0 };
+        const stats = topicCardMap.get(topic.topic_key) || {
+          totalCards: 0,
+          dueCount: 0,
+          reviewedCount: 0,
+        };
 
         totalCards += stats.totalCards;
         dueCount += stats.dueCount;
@@ -95,6 +106,7 @@ export const getDashboardSummary = async (req, res, next) => {
           completionStatus: topic.completionStatus,
           totalCards: stats.totalCards,
           dueCount: stats.dueCount,
+          reviewedCount: stats.reviewedCount,
         };
       });
 

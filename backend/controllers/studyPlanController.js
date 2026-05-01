@@ -351,11 +351,11 @@ export const getStudyPlanOverview = async (req, res, next) => {
       const rawTopic = topicByKey.get(metric.topic_key);
       const completionStatus = rawTopic?.completionStatus || "pending";
       const isCompleted = completionStatus === "completed";
-      const hasActivity = metric.totalCards > 0 && metric.dueCount < metric.totalCards;
+      const hasActivity = metric.reviewedCount > 0;
       const stage = isCompleted ? "completed" : (hasActivity ? "in_progress" : "not_started");
       const lessonsCompleted = isCompleted
         ? metric.totalCards
-        : Math.max(0, metric.totalCards - metric.dueCount);
+        : metric.reviewedCount;
 
       return {
         ...metric,

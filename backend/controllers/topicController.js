@@ -164,9 +164,10 @@ const buildTopicPayload = ({ studyPlan, topic, flashcards, content }) => {
   const notesSections = splitNotesSections(content?.notes || "");
   const curatedVideos = buildCuratedVideos(content || {});
   const completionStatus = topic.completionStatus || "pending";
+  const hasActivity = (topicMetric?.reviewedCount || 0) > 0;
   const masteryStatus = completionStatus === "completed"
     ? "completed"
-    : (retentionRate > 0 ? "in_progress" : "not_started");
+    : (hasActivity ? "in_progress" : "not_started");
 
   return {
     topic: {
