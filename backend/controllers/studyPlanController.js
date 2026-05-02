@@ -261,28 +261,47 @@ export const getStudyPlans = async (req, res, next) => {
         userId: req.user._id,
         status: "active",
         topic_key: { $in: topicKeys },
-      }).select("topic_key")
+      }).select("topic_key reps")
       : [];
 
-    const cardCountByTopic = flashcards.reduce((accumulator, card) => {
+    const statsByTopic = flashcards.reduce((accumulator, card) => {
       const key = String(card.topic_key || "");
       if (!key) {
         return accumulator;
       }
 
-      accumulator.set(key, (accumulator.get(key) || 0) + 1);
+      const stats = accumulator.get(key) || { total: 0, reviewed: 0 };
+      stats.total += 1;
+      if (card.reps > 0) {
+        stats.reviewed += 1;
+      }
+
+      accumulator.set(key, stats);
       return accumulator;
     }, new Map());
 
     const galleryPlans = plans.map((plan) => {
       const topicCount = (plan.topics || []).length;
-      const completedTopicCount = (plan.topics || []).filter((topic) => topic.completionStatus === "completed").length;
-      const progressPercentage = topicCount > 0
-        ? Math.round((completedTopicCount / topicCount) * 100)
+
+      let planTotalCards = 0;
+      let planReviewedCards = 0;
+
+      const completedTopicCount = (plan.topics || []).filter((topic) => {
+        const stats = statsByTopic.get(topic.topic_key) || { total: 0, reviewed: 0 };
+        const isCompleted = topic.completionStatus === "completed";
+
+        planTotalCards += stats.total || Math.round((topic.estimated_hours || 1) * 2);
+        planReviewedCards += isCompleted ? (stats.total || Math.round((topic.estimated_hours || 1) * 2)) : stats.reviewed;
+
+        return isCompleted;
+      }).length;
+
+      const progressPercentage = planTotalCards > 0
+        ? Math.round((planReviewedCards / planTotalCards) * 100)
         : 0;
 
       const cardCount = (plan.topics || []).reduce(
-        (total, topic) => total + (cardCountByTopic.get(topic.topic_key) || 0),
+        (total, topic) => total + (statsByTopic.get(topic.topic_key)?.total || 0),
         0,
       );
 
@@ -339,12 +358,6 @@ export const getStudyPlanOverview = async (req, res, next) => {
     });
 
     const now = new Date();
-    const completedTopicCount = (plan.topics || []).filter((topic) => topic.completionStatus === "completed").length;
-    const topicCount = (plan.topics || []).length;
-    const progressPercentage = topicCount > 0
-      ? Math.round((completedTopicCount / topicCount) * 100)
-      : 0;
-
     const topicByKey = new Map((plan.topics || []).map((topic) => [topic.topic_key, topic]));
 
     const topicOverview = topicMetrics.map((metric, index) => {
@@ -366,6 +379,15 @@ export const getStudyPlanOverview = async (req, res, next) => {
         completionStatus,
       };
     });
+
+    const totalLessonCount = topicOverview.reduce((sum, t) => sum + t.lessonCount, 0);
+    const totalLessonsCompleted = topicOverview.reduce((sum, t) => sum + t.lessonsCompleted, 0);
+    const progressPercentage = totalLessonCount > 0
+      ? Math.round((totalLessonsCompleted / totalLessonCount) * 100)
+      : 0;
+
+    const completedTopicCount = (plan.topics || []).filter((topic) => topic.completionStatus === "completed").length;
+    const topicCount = (plan.topics || []).length;
 
     const totalEstimatedHours = (plan.topics || []).reduce(
       (sum, topic) => sum + (Number(topic.estimated_hours) > 0 ? Number(topic.estimated_hours) : 1),
