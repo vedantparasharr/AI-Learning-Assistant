@@ -11,7 +11,7 @@ export const getDashboardSummary = async (req, res, next) => {
     const userId = req.user._id;
     const now = new Date();
 
-    // Fetch relevant data using Aggregation Pipelines to prevent OOM errors on large datasets
+    // Fetch relevant data using Aggregation Pipelines
     const [plans, flashcardAgg, reviewLogsAgg] = await Promise.all([
       StudyPlan.find({ userId }).sort({ examDate: 1, createdAt: -1 }).lean(),
       
