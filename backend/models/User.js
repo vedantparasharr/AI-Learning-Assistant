@@ -58,14 +58,20 @@ userSchema.pre("save", async function () {
     this.password = await bcrypt.hash(this.password, 10);
   }
 
-  if (this.isModified("otpHash")) {
-    this.otpHash = await bcrypt.hash(this.otpHash, 10);
+  if (this.isModified("otpHash") && this.otpHash) {
+    this.otpHash = await bcrypt.hash(
+      this.otpHash.toString(),
+      10
+    );
   }
 });
 
 // Compare entered OTP with hased OTP
 userSchema.methods.matchOtp = async function (otp) {
-  return await bcrypt.compare(otp, this.otpHash);
+  return await bcrypt.compare(
+  otp.toString(),
+  this.otpHash
+);
 };
 
 // Compare entered password with hashed password
