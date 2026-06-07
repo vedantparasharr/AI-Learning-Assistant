@@ -186,9 +186,9 @@ const RegisterPage = () => {
 
             <div className="mt-xl text-center border-t border-outline-variant/30 pt-lg">
               <p className="font-body-sm text-body-sm text-on-surface-variant">
-                Already a member?
+                Already a member?{" "}
                 <Link className="font-label-md text-label-md text-primary hover:text-surface-tint underline decoration-primary/30 underline-offset-4 transition-colors" to={`/login${location.search || ""}`}>
-                  Sign in to your account
+                   Sign in to your account
                 </Link>
               </p>
             </div>
