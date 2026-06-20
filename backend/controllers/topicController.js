@@ -2,8 +2,7 @@ import StudyPlan from "../models/StudyPlan.js";
 import TopicContent from "../models/TopicContent.js";
 import Flashcard from "../models/Flashcard.js";
 import { createEmptyCard } from "ts-fsrs";
-import { generateTopicNotes } from "../utils/geminiService.js";
-import { extractFlashcardsFromNotes } from "../utils/openRouterService.js";
+import { generateTopicNotes, extractFlashcardsFromNotes } from "../utils/geminiService.js";
 import { getTopTopicVideos } from "../utils/videoScoring.js";
 import { buildTopicMetrics } from "../utils/studyMetrics.js";
 import { filterNewFlashcards, seedUserFlashcards } from "../utils/flashcardHelpers.js";
@@ -281,7 +280,7 @@ export const generateTopicContent = async (req, res, next) => {
         notes,
       });
     } catch (error) {
-      console.error("OpenRouter flashcard extraction failed:", error.message);
+      console.error("Gemini flashcard extraction failed:", error.message);
     }
 
     const updatedCache = await TopicContent.findOneAndUpdate(

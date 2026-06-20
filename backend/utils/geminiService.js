@@ -71,6 +71,19 @@ const weaknessSupportSchema = {
   required: ["simpler_explanation", "easier_flashcards"],
 };
 
+const flashcardExtractionSchema = {
+  type: "array",
+  items: {
+    type: "object",
+    properties: {
+      question: { type: "string" },
+      answer: { type: "string" },
+    },
+    required: ["question", "answer"],
+  },
+};
+
+
 export const parseSyllabusTopics = async (text) => {
 const prompt = `You are an expert curriculum designer. Extract the following syllabus into a flat list of specific, searchable study topics.
 
@@ -285,4 +298,43 @@ Be concise. No padding. Focus only on what they need to get unstuck.`;
     };
   }
 };
+
+export const extractFlashcardsFromNotes = async ({
+  subjectName,
+  topicName,
+  notes,
+}) => {
+  const prompt = `You are an expert educator. Convert these notes into a concise flashcard deck for revision.
+
+Subject: ${subjectName}
+Topic: ${topicName}
+
+Create up to 10 high-value cards. Avoid duplicates and keep answers concise.
+
+Notes:
+${notes}`;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: MODEL,
+      contents: prompt,
+      config: jsonConfig(flashcardExtractionSchema),
+    });
+
+    const parsed = parseJsonResponse(response.text);
+
+    return Array.isArray(parsed)
+      ? parsed
+          .map((card) => ({
+            question: String(card?.question || "").trim(),
+            answer: String(card?.answer || "").trim(),
+          }))
+          .filter((card) => card.question && card.answer)
+      : [];
+  } catch (error) {
+    console.error("Gemini flashcard extraction error:", error);
+    return [];
+  }
+};
+
 

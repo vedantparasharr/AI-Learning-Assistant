@@ -77,7 +77,6 @@ const studyPlanSchema = new mongoose.Schema(
 );
 
 studyPlanSchema.index({ userId: 1, "topics.topic_key": 1 });
-studyPlanSchema.index({ shareSlug: 1 }, { unique: true, sparse: true });
 
 const StudyPlan = mongoose.model("StudyPlan", studyPlanSchema);
 
