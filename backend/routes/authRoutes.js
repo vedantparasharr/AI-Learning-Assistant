@@ -32,7 +32,6 @@ router.post("/resend-otp", emailValidation, validateRequest, resendOtp);
 
 // Protected routes
 router.get("/profile", protect, getProfile);
-router.put("/updateProfile", protect, updateProfileValidation, validateRequest, updateProfile);
 router.put("/profile", protect, updateProfileValidation, validateRequest, updateProfile);
 router.post("/change-password", protect, changePasswordValidation, validateRequest, changePassword);
 

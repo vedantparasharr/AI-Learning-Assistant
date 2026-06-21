@@ -1,29 +1,38 @@
 import express from "express";
 import upload from "../config/multer.js";
 import protect from "../middleware/auth.js";
+import validateRequest from "../middleware/validateRequest.js";
 import {
-  cloneSharedStudyPlan,
   createStudyPlan,
   deleteStudyPlan,
-  getSharedStudyPlan,
   getStudyPlanOverview,
   getStudyPlans,
   parseStudyPlan,
-  shareStudyPlan,
 } from "../controllers/studyPlanController.js";
+import {
+  createStudyPlanValidation,
+  parseStudyPlanValidation,
+} from "../validators/studyPlanValidators.js";
 
 const router = express.Router();
-
-router.get("/shared/:shareSlug", getSharedStudyPlan);
 
 router.use(protect);
 
 router.get("/", getStudyPlans);
-router.post("/shared/:shareSlug/clone", cloneSharedStudyPlan);
-router.post("/:planId/share", shareStudyPlan);
 router.get("/:planId", getStudyPlanOverview);
 router.delete("/:planId", deleteStudyPlan);
-router.post("/parse", upload.single("file"), parseStudyPlan);
-router.post("/create", createStudyPlan);
+router.post(
+  "/parse",
+  upload.single("file"),
+  parseStudyPlanValidation,
+  validateRequest,
+  parseStudyPlan
+);
+router.post(
+  "/create",
+  createStudyPlanValidation,
+  validateRequest,
+  createStudyPlan
+);
 
 export default router;

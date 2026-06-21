@@ -4,7 +4,6 @@ import { PDFParse } from "pdf-parse";
 export const extractTextFromPDF = async (buffer) => {
   try {
     const parser = new PDFParse(new Uint8Array(buffer));
-
     const data = await parser.getText();
 
     return {
@@ -13,7 +12,9 @@ export const extractTextFromPDF = async (buffer) => {
       info: data.info,
     };
   } catch (error) {
-    console.error("PDF Parsing Error", error);
-    throw new Error("Failed to extract text from PDF");
+    console.error("PDF Parsing Error:", error);
+    const err = new Error("Failed to extract text from PDF");
+    err.statusCode = 400;
+    throw err;
   }
 };

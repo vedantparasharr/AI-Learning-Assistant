@@ -14,7 +14,6 @@ import authRoutes from "./routes/authRoutes.js";
 import studyPlanRoutes from "./routes/studyPlanRoutes.js";
 import topicRoutes from "./routes/topicRoutes.js";
 import flashcardRoutes from "./routes/flashcardRoutes.js";
-import dashboardRoutes from "./routes/dashboardRoutes.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -46,7 +45,6 @@ app.use("/api/auth", authRoutes);
 app.use("/api/study-plan", studyPlanRoutes);
 app.use("/api/topics", topicRoutes);
 app.use("/api/flashcards", flashcardRoutes);
-app.use("/api/dashboard", dashboardRoutes);
 
 app.use((req, res) => {
   res.status(404).json({

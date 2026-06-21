@@ -62,30 +62,35 @@ const serializeVideo = (video, score) => ({
 });
 
 export const getTopTopicVideos = async (topicName, subjectName) => {
-  const query = `${topicName} ${subjectName}`.trim();
-  const searchResults = await ytSearch(query);
-  const videos = Array.isArray(searchResults?.videos)
-    ? searchResults.videos.slice(0, 15)
-    : [];
+  try {
+    const query = `${topicName} ${subjectName}`.trim();
+    const searchResults = await ytSearch(query);
+    const videos = Array.isArray(searchResults?.videos)
+      ? searchResults.videos.slice(0, 15)
+      : [];
 
-  if (videos.length === 0) {
+    if (videos.length === 0) {
+      return [];
+    }
+
+    return videos
+      .map((video) => {
+        const keywordScore = getKeywordScore(topicName, video.title);
+        const viewsScore = getViewsScore(video.views);
+        const durationScore = getDurationScore(video.seconds);
+        const whitelistBoost = getWhitelistBoost(video.author?.name);
+        const finalScore =
+          keywordScore * 0.5 +
+          viewsScore * 0.3 +
+          durationScore * 0.2 +
+          whitelistBoost;
+
+        return serializeVideo(video, finalScore);
+      })
+      .sort((left, right) => right.score - left.score)
+      .slice(0, 3);
+  } catch (error) {
+    console.error("YouTube search error:", error);
     return [];
   }
-
-  return videos
-    .map((video) => {
-      const keywordScore = getKeywordScore(topicName, video.title);
-      const viewsScore = getViewsScore(video.views);
-      const durationScore = getDurationScore(video.seconds);
-      const whitelistBoost = getWhitelistBoost(video.author?.name);
-      const finalScore =
-        keywordScore * 0.5 +
-        viewsScore * 0.3 +
-        durationScore * 0.2 +
-        whitelistBoost;
-
-      return serializeVideo(video, finalScore);
-    })
-    .sort((left, right) => right.score - left.score)
-    .slice(0, 3);
 };

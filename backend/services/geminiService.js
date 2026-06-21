@@ -1,7 +1,5 @@
 import dotenv from "dotenv";
 import { GoogleGenAI } from "@google/genai";
-import { parseJsonResponse } from "./parseJsonResponse.js";
-import { buildStarterFlashcardsFallback } from "./flashcardHelpers.js";
 
 dotenv.config();
 
@@ -83,9 +81,8 @@ const flashcardExtractionSchema = {
   },
 };
 
-
 export const parseSyllabusTopics = async (text) => {
-const prompt = `You are an expert curriculum designer. Extract the following syllabus into a flat list of specific, searchable study topics.
+  const prompt = `You are an expert curriculum designer. Extract the following syllabus into a flat list of specific, searchable study topics.
 
 Rules:
 - Each topic must be a single, standalone concept a student can study in one sitting.
@@ -104,7 +101,7 @@ ${text.substring(0, 25000)}`;
       config: jsonConfig(syllabusTopicSchema),
     });
 
-    const topics = parseJsonResponse(response.text);
+    const topics = JSON.parse(response.text.trim());
 
     return Array.isArray(topics)
       ? topics
@@ -118,13 +115,13 @@ ${text.substring(0, 25000)}`;
           .filter((topic) => topic.name)
       : [];
   } catch (error) {
-    console.error("Gemini API error:", error);
+    console.error("Gemini API error parsing syllabus:", error);
     throw new Error("Failed to parse syllabus topics");
   }
 };
 
 export const generateRoadmapTopicsFromPrompt = async ({ prompt, subjectName = "" }) => {
-const roadmapPrompt = `You are an expert curriculum designer. Generate a progressive study roadmap for this learner goal.
+  const roadmapPrompt = `You are an expert curriculum designer. Generate a progressive study roadmap for this learner goal.
 
 Rules:
 - Start from fundamentals, build toward advanced topics.
@@ -143,7 +140,7 @@ ${subjectName ? `Subject: ${subjectName}` : ""}`;
       config: jsonConfig(syllabusTopicSchema),
     });
 
-    const topics = parseJsonResponse(response.text);
+    const topics = JSON.parse(response.text.trim());
 
     return Array.isArray(topics)
       ? topics
@@ -163,7 +160,7 @@ ${subjectName ? `Subject: ${subjectName}` : ""}`;
 };
 
 export const generateStarterFlashcardsForTopics = async ({ subjectName, topics }) => {
-const prompt = `You are an expert educator. Create exactly 2 exam-focused flashcards for each topic below.
+  const prompt = `You are an expert educator. Create exactly 2 exam-focused flashcards for each topic below.
 
 Subject: ${subjectName}
 Topics:
@@ -182,12 +179,12 @@ Rules:
       config: jsonConfig(starterDeckSchema),
     });
 
-    const parsed = parseJsonResponse(response.text);
+    const parsed = JSON.parse(response.text.trim());
 
     if (!Array.isArray(parsed)) {
       return topics.map((topic) => ({
         name: topic.name,
-        flashcards: buildStarterFlashcardsFallback(subjectName, topic.name),
+        flashcards: [],
       }));
     }
 
@@ -208,22 +205,20 @@ Rules:
 
       return {
         name: topic.name,
-        flashcards: flashcards.length > 0
-          ? flashcards
-          : buildStarterFlashcardsFallback(subjectName, topic.name),
+        flashcards,
       };
     });
   } catch (error) {
     console.error("Gemini starter flashcards error:", error);
     return topics.map((topic) => ({
       name: topic.name,
-      flashcards: buildStarterFlashcardsFallback(subjectName, topic.name),
+      flashcards: [],
     }));
   }
 };
 
 export const generateTopicNotes = async ({ subjectName, topicName }) => {
-const prompt = `You are a senior engineer explaining to a fellow developer.
+  const prompt = `You are a senior engineer explaining to a fellow developer.
 
 Write exam-oriented study notes for: "${topicName}" (${subjectName})
 
@@ -241,13 +236,13 @@ Write exam-oriented study notes for: "${topicName}" (${subjectName})
 
     return response.text.trim();
   } catch (error) {
-    console.error("Gemini API error:", error);
+    console.error("Gemini API error generating notes:", error);
     throw new Error("Failed to generate topic notes");
   }
 };
 
 export const generateWeaknessSupport = async ({ subjectName, topicName, question, answer }) => {
-const prompt = `A student got this flashcard wrong. Help them understand it.
+  const prompt = `A student got this flashcard wrong. Help them understand it.
 
 Subject: ${subjectName}
 Topic: ${topicName}
@@ -267,7 +262,7 @@ Be concise. No padding. Focus only on what they need to get unstuck.`;
       config: jsonConfig(weaknessSupportSchema),
     });
 
-    const parsed = parseJsonResponse(response.text);
+    const parsed = JSON.parse(response.text.trim());
 
     return {
       simpler_explanation: String(parsed?.simpler_explanation || "").trim(),
@@ -321,7 +316,7 @@ ${notes}`;
       config: jsonConfig(flashcardExtractionSchema),
     });
 
-    const parsed = parseJsonResponse(response.text);
+    const parsed = JSON.parse(response.text.trim());
 
     return Array.isArray(parsed)
       ? parsed
@@ -336,5 +331,3 @@ ${notes}`;
     return [];
   }
 };
-
-
