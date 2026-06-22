@@ -6,19 +6,8 @@ import {
   generateStarterFlashcardsForTopics,
   parseSyllabusTopics,
 } from "./geminiService.js";
-import { buildTopicKey } from "../utils/topicKey.js";
+import { buildTopicKey, sanitizeTopics } from "../utils/topicKey.js";
 import { seedUserFlashcards } from "./flashcardService.js";
-
-const sanitizeTopics = (topics) =>
-  (Array.isArray(topics) ? topics : [])
-    .map((topic) => ({
-      name: String(topic?.name || "").trim(),
-      estimated_hours:
-        Number(topic?.estimated_hours) > 0
-          ? Number(topic.estimated_hours)
-          : 1,
-    }))
-    .filter((topic) => topic.name);
 
 const buildPlanTopics = (topics, subjectName) => {
   const usedKeys = new Set();
@@ -43,90 +32,8 @@ const buildPlanTopics = (topics, subjectName) => {
   });
 };
 
-const buildSubjectTag = (subjectName) => {
-  const clean = String(subjectName || "").trim();
-  if (!clean) {
-    return "General";
-  }
-  const [firstWord] = clean.split(/\s+/);
-  return firstWord || clean;
-};
-
-const buildPlanSnippet = (plan) => {
-  const source = String(plan?.sourceText || "").replace(/\s+/g, " ").trim();
-  if (source.length > 0) {
-    return source.slice(0, 140);
-  }
-
-  const topicNames = (plan?.topics || [])
-    .map((topic) => String(topic?.name || "").trim())
-    .filter(Boolean)
-    .slice(0, 3);
-
-  if (topicNames.length > 0) {
-    return topicNames.join(", ");
-  }
-
-  return "Compile a new curriculum and start learning.";
-};
-
-const buildOverviewDescription = (plan) => {
-  const source = String(plan?.sourceText || "").replace(/\s+/g, " ").trim();
-  if (source.length > 0) {
-    return source.slice(0, 260);
-  }
-
-  return `An in-depth learning path for ${plan.subjectName}, focusing on key modules, active recall, and spaced repetition.`;
-};
-
 export const getStudyPlansList = async (userId) => {
-  const plans = await StudyPlan.find({ userId }).sort({ examDate: 1, createdAt: -1 });
-
-  const topicKeys = plans.flatMap((plan) => (plan.topics || []).map((topic) => topic.topic_key));
-  const flashcards = topicKeys.length > 0
-    ? await Flashcard.find({
-        userId,
-        status: "active",
-        topic_key: { $in: topicKeys },
-      }).select("topic_key reps due")
-    : [];
-
-  return plans.map((plan) => {
-    const topicCount = (plan.topics || []).length;
-    const completedTopicCount = (plan.topics || []).filter(
-      (t) => t.completionStatus === "completed",
-    ).length;
-
-    // Progress is simply completed topics divided by total topics
-    const progressPercentage = topicCount > 0
-      ? Math.round((completedTopicCount / topicCount) * 100)
-      : 0;
-
-    // Filter cards belonging to this study plan's topics
-    const planTopicKeys = new Set((plan.topics || []).map((t) => t.topic_key));
-    const planCards = flashcards.filter((c) => planTopicKeys.has(c.topic_key));
-
-    const cardCount = planCards.length;
-    const dueCount = planCards.filter((c) => new Date(c.due) <= new Date()).length;
-
-    return {
-      id: plan._id,
-      subjectName: plan.subjectName,
-      examDate: plan.examDate,
-      sourceType: plan.sourceType,
-      sourceText: plan.sourceText,
-      subjectTag: buildSubjectTag(plan.subjectName),
-      snippet: buildPlanSnippet(plan),
-      topicCount,
-      cardCount,
-      dueCount,
-      completedTopicCount,
-      progressPercentage,
-      topics: plan.topics,
-      createdAt: plan.createdAt,
-      updatedAt: plan.updatedAt,
-    };
-  });
+  return StudyPlan.find({ userId }).sort({ examDate: 1, createdAt: -1 });
 };
 
 export const getStudyPlanOverviewService = async (userId, planId) => {
@@ -136,77 +43,7 @@ export const getStudyPlanOverviewService = async (userId, planId) => {
     error.statusCode = 404;
     throw error;
   }
-
-  const flashcards = await Flashcard.find({
-    userId,
-    topic_key: { $in: plan.topics.map((t) => t.topic_key) },
-  });
-
-  const now = new Date();
-
-  // Map card stats per topic directly
-  const topicOverview = plan.topics.map((topic, index) => {
-    const topicCards = flashcards.filter((c) => c.topic_key === topic.topic_key);
-
-    const totalCards = topicCards.length;
-    const dueCount = topicCards.filter(
-      (c) => c.status === "active" && new Date(c.due) <= now,
-    ).length;
-    const reviewedCount = topicCards.filter((c) => c.reps > 0).length;
-
-    const completionStatus = topic.completionStatus || "pending";
-    const isCompleted = completionStatus === "completed";
-    const hasActivity = reviewedCount > 0;
-    const stage = isCompleted ? "completed" : (hasActivity ? "in_progress" : "not_started");
-
-    return {
-      topic_key: topic.topic_key,
-      name: topic.name,
-      estimated_hours: topic.estimated_hours || 1,
-      completionStatus,
-      totalCards,
-      dueCount,
-      reviewedCount,
-      moduleNumber: index + 1,
-      lessonCount: Math.max(1, totalCards),
-      lessonsCompleted: isCompleted ? totalCards : reviewedCount,
-      stage,
-    };
-  });
-
-  const topicCount = plan.topics.length;
-  const completedTopicCount = plan.topics.filter(
-    (t) => t.completionStatus === "completed",
-  ).length;
-  const progressPercentage = topicCount > 0
-    ? Math.round((completedTopicCount / topicCount) * 100)
-    : 0;
-
-  const dueTopicCount = topicOverview.filter((t) => t.dueCount > 0).length;
-
-  const totalEstimatedHours = plan.topics.reduce((sum, t) => sum + (t.estimated_hours || 1), 0);
-  const remainingHours = plan.topics
-    .filter((t) => t.completionStatus !== "completed")
-    .reduce((sum, t) => sum + (t.estimated_hours || 1), 0);
-
-  const nextTopic = topicOverview.find((t) => t.completionStatus !== "completed") || null;
-
-  return {
-    id: plan._id,
-    subjectName: plan.subjectName,
-    description: buildOverviewDescription(plan),
-    examDate: plan.examDate,
-    sourceType: plan.sourceType,
-    dueTopicCount,
-    topicCount,
-    completedTopicCount,
-    progressPercentage,
-    totalEstimatedHours,
-    remainingEstimatedHours: remainingHours,
-    nextTopicKey: nextTopic?.topic_key || null,
-    topics: topicOverview,
-    generatedAt: now,
-  };
+  return plan;
 };
 
 export const parseStudyPlanService = async ({ file, sourceMode, outlineText, learningPrompt, subjectName }) => {

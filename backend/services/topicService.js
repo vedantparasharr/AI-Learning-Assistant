@@ -3,7 +3,7 @@ import TopicContent from "../models/TopicContent.js";
 import Flashcard from "../models/Flashcard.js";
 import { generateTopicNotes, extractFlashcardsFromNotes } from "./geminiService.js";
 import { getTopTopicVideos } from "./youtubeService.js";
-import { filterNewFlashcards, seedUserFlashcards } from "./flashcardService.js";
+import { syncTopicCardsForUser } from "./flashcardService.js";
 
 const findTopicInPlan = async (userId, topicKey) => {
   const studyPlan = await StudyPlan.findOne({
@@ -58,30 +58,6 @@ const acquireTopicLock = async ({ topicKey, subject }) => {
     }
     throw error;
   }
-};
-
-const syncTopicCardsForUser = async ({ userId, topicKey, cacheFlashcards }) => {
-  const cards = await Flashcard.find({ userId, topic_key: topicKey }).sort({ due: 1, createdAt: 1 });
-  const newCards = filterNewFlashcards({
-    existingCards: cards,
-    incomingCards: cacheFlashcards,
-  });
-
-  if (newCards.length === 0) {
-    return cards;
-  }
-
-  const seededCards = seedUserFlashcards({
-    userId,
-    topicKey,
-    cards: newCards,
-    source: "topic",
-    now: new Date(),
-  });
-
-  await Flashcard.insertMany(seededCards);
-
-  return Flashcard.find({ userId, topic_key: topicKey }).sort({ due: 1, createdAt: 1 });
 };
 
 const buildCuratedVideos = (content) => {

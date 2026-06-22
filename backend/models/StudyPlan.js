@@ -17,10 +17,6 @@ const studyPlanTopicSchema = new mongoose.Schema(
       default: 1,
       min: 0,
     },
-    scheduledDate: {
-      type: Date,
-      default: null,
-    },
     completionStatus: {
       type: String,
       enum: ["pending", "completed"],

@@ -61,6 +61,27 @@ export const filterNewFlashcards = ({ existingCards, incomingCards }) => {
   });
 };
 
+export const syncTopicCardsForUser = async ({ userId, topicKey, cacheFlashcards }) => {
+  const cards = await Flashcard.find({ userId, topic_key: topicKey }).select("question answer");
+  const newCards = filterNewFlashcards({
+    existingCards: cards,
+    incomingCards: cacheFlashcards,
+  });
+
+  if (newCards.length > 0) {
+    const seededCards = seedUserFlashcards({
+      userId,
+      topicKey,
+      cards: newCards,
+      source: "topic",
+      now: new Date(),
+    });
+    await Flashcard.insertMany(seededCards);
+  }
+
+  return Flashcard.find({ userId, topic_key: topicKey }).sort({ due: 1, createdAt: 1 });
+};
+
 export const activateTopicCardsService = async (userId, topicKey) => {
   const [topicContent, plan] = await Promise.all([
     TopicContent.findOne({ topic_key: topicKey, status: "ready" }),
@@ -82,31 +103,11 @@ export const activateTopicCardsService = async (userId, topicKey) => {
     throw error;
   }
 
-  const existingCards = await Flashcard.find({
+  return syncTopicCardsForUser({
     userId,
-    topic_key: topicKey,
-  }).select("question answer");
-
-  const newCards = filterNewFlashcards({
-    existingCards,
-    incomingCards: topicContent.flashcards || [],
+    topicKey,
+    cacheFlashcards: topicContent.flashcards || [],
   });
-
-  if (newCards.length > 0) {
-    await Flashcard.insertMany(
-      seedUserFlashcards({
-        userId,
-        topicKey,
-        cards: newCards,
-        source: "topic",
-      }),
-    );
-  }
-
-  return Flashcard.find({
-    userId,
-    topic_key: topicKey,
-  }).sort({ due: 1, createdAt: 1 });
 };
 
 export const getReviewQueueService = async (userId, topicKey = "") => {

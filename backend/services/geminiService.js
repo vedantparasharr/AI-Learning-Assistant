@@ -1,5 +1,6 @@
 import dotenv from "dotenv";
 import { GoogleGenAI } from "@google/genai";
+import { sanitizeTopics } from "../utils/topicKey.js";
 
 dotenv.config();
 
@@ -50,25 +51,6 @@ const starterDeckSchema = {
   },
 };
 
-const weaknessSupportSchema = {
-  type: "object",
-  properties: {
-    simpler_explanation: { type: "string" },
-    easier_flashcards: {
-      type: "array",
-      items: {
-        type: "object",
-        properties: {
-          question: { type: "string" },
-          answer: { type: "string" },
-        },
-        required: ["question", "answer"],
-      },
-    },
-  },
-  required: ["simpler_explanation", "easier_flashcards"],
-};
-
 const flashcardExtractionSchema = {
   type: "array",
   items: {
@@ -103,17 +85,7 @@ ${text.substring(0, 25000)}`;
 
     const topics = JSON.parse(response.text.trim());
 
-    return Array.isArray(topics)
-      ? topics
-          .map((topic) => ({
-            name: String(topic?.name || "").trim(),
-            estimated_hours:
-              Number(topic?.estimated_hours) > 0
-                ? Number(topic.estimated_hours)
-                : 1,
-          }))
-          .filter((topic) => topic.name)
-      : [];
+    return sanitizeTopics(topics);
   } catch (error) {
     console.error("Gemini API error parsing syllabus:", error);
     throw new Error("Failed to parse syllabus topics");
@@ -142,17 +114,7 @@ ${subjectName ? `Subject: ${subjectName}` : ""}`;
 
     const topics = JSON.parse(response.text.trim());
 
-    return Array.isArray(topics)
-      ? topics
-          .map((topic) => ({
-            name: String(topic?.name || "").trim(),
-            estimated_hours:
-              Number(topic?.estimated_hours) > 0
-                ? Number(topic.estimated_hours)
-                : 1,
-          }))
-          .filter((topic) => topic.name)
-      : [];
+    return sanitizeTopics(topics);
   } catch (error) {
     console.error("Gemini roadmap generation error:", error);
     throw new Error("Failed to generate roadmap topics");
@@ -238,59 +200,6 @@ Write exam-oriented study notes for: "${topicName}" (${subjectName})
   } catch (error) {
     console.error("Gemini API error generating notes:", error);
     throw new Error("Failed to generate topic notes");
-  }
-};
-
-export const generateWeaknessSupport = async ({ subjectName, topicName, question, answer }) => {
-  const prompt = `A student got this flashcard wrong. Help them understand it.
-
-Subject: ${subjectName}
-Topic: ${topicName}
-Question they missed: ${question}
-Correct answer: ${answer}
-
-Return JSON with:
-- simpler_explanation: explain the concept in plain language, as simply as possible. One short paragraph.
-- easier_flashcards: exactly 2 easier cards that rebuild confidence before attempting the original again.
-
-Be concise. No padding. Focus only on what they need to get unstuck.`;
-
-  try {
-    const response = await ai.models.generateContent({
-      model: MODEL,
-      contents: prompt,
-      config: jsonConfig(weaknessSupportSchema),
-    });
-
-    const parsed = JSON.parse(response.text.trim());
-
-    return {
-      simpler_explanation: String(parsed?.simpler_explanation || "").trim(),
-      easier_flashcards: Array.isArray(parsed?.easier_flashcards)
-        ? parsed.easier_flashcards
-            .map((card) => ({
-              question: String(card?.question || "").trim(),
-              answer: String(card?.answer || "").trim(),
-            }))
-            .filter((card) => card.question && card.answer)
-            .slice(0, 2)
-        : [],
-    };
-  } catch (error) {
-    console.error("Gemini weakness support error:", error);
-    return {
-      simpler_explanation: `${topicName} becomes easier if you first focus on the basic idea, one small example, and the most common exam trap before attempting harder questions.`,
-      easier_flashcards: [
-        {
-          question: `What is the simplest way to describe ${topicName}?`,
-          answer: `${topicName} is easiest to learn by understanding its main goal, its simplest example, and when to use it.`,
-        },
-        {
-          question: `What should you remember first about ${topicName}?`,
-          answer: `Remember the core definition, one worked example, and the most common mistake students make.`,
-        },
-      ],
-    };
   }
 };
 

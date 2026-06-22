@@ -11,3 +11,14 @@ export const buildTopicKey = (subjectName, topicName, suffix = 0) => {
   const base = slugify(`${subjectName}-${topicName}`) || "topic";
   return suffix > 0 ? `${base}-${suffix}` : base;
 };
+
+export const sanitizeTopics = (topics) =>
+  (Array.isArray(topics) ? topics : [])
+    .map((topic) => ({
+      name: String(topic?.name || "").trim(),
+      estimated_hours:
+        Number(topic?.estimated_hours) > 0
+          ? Number(topic.estimated_hours)
+          : 1,
+    }))
+    .filter((topic) => topic.name);
