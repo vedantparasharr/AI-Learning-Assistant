@@ -1,5 +1,9 @@
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
+
+const hashOtp = (otp) =>
+  crypto.createHash("sha256").update(String(otp)).digest("hex");
 
 const userSchema = new mongoose.Schema(
   {
@@ -59,19 +63,13 @@ userSchema.pre("save", async function () {
   }
 
   if (this.isModified("otpHash") && this.otpHash) {
-    this.otpHash = await bcrypt.hash(
-      this.otpHash.toString(),
-      10
-    );
+    this.otpHash = hashOtp(this.otpHash);
   }
 });
 
-// Compare entered OTP with hased OTP
+// Compare entered OTP with hashed OTP
 userSchema.methods.matchOtp = async function (otp) {
-  return await bcrypt.compare(
-  otp.toString(),
-  this.otpHash
-);
+  return this.otpHash === hashOtp(otp);
 };
 
 // Compare entered password with hashed password

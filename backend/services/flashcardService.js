@@ -13,10 +13,6 @@ const RATING_MAP = {
   easy: Rating.Easy,
 };
 
-
-
-
-
 /**
  * Serializes a ts-fsrs Card object for storage in MongoDB.
  */

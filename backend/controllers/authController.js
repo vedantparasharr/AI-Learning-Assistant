@@ -75,7 +75,7 @@ export const logout = (req, res) => {
 // @access private
 export const getProfile = async (req, res, next) => {
   try {
-    const user = await authService.updateUserProfile(req.user._id, {});
+    const user = req.user;
     return res.status(200).json({
       success: true,
       data: {
