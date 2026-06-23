@@ -3,7 +3,7 @@ import toast from "react-hot-toast";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import authService from "../../services/authService";
-
+import { PrimaryButton } from "../../components/common/ui";
 const RESEND_COOLDOWN_SECONDS = 30;
 
 const getCooldownStorageKey = (email) => `otp-resend-cooldown-until:${(email || "").toLowerCase()}`;
@@ -163,7 +163,7 @@ const VerifyEmailPage = () => {
           <p className="font-body-lg text-body-lg text-on-surface-variant">Verify your email</p>
         </div>
 
-        <div className="bg-surface-container-lowest rounded-xl border border-outline-variant/30 p-xl shadow-[0_8px_30px_rgba(26,20,107,0.04)] flex flex-col items-center">
+        <div className="bg-surface-container-lowest rounded-xl border border-outline-variant/30 p-xl flex flex-col items-center">
           <div className="w-20 h-20 bg-surface-container-low rounded-full flex items-center justify-center mb-lg border border-outline-variant/30">
             <span className="material-symbols-outlined text-primary text-4xl" style={{ fontVariationSettings: "'FILL' 0, 'wght' 300" }}>
               mark_email_read
@@ -194,13 +194,13 @@ const VerifyEmailPage = () => {
               ))}
             </div>
 
-            <button
-              className="w-full flex justify-center items-center py-2.5 px-lg border border-transparent rounded-lg bg-primary font-label-md text-label-md text-on-primary hover:bg-primary-container focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-all duration-150 cursor-pointer"
+            <PrimaryButton
               type="submit"
               disabled={submitting}
+              className="w-full flex justify-center"
             >
               {submitting ? "Verifying..." : "Verify OTP"}
-            </button>
+            </PrimaryButton>
           </form>
 
           <div className="mt-lg">

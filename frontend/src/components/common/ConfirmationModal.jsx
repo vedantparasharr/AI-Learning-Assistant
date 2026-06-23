@@ -35,7 +35,7 @@ const ConfirmationModal = ({
       />
 
       {/* Modal Dialog Card */}
-      <div className="relative w-full max-w-md overflow-hidden rounded-xl border border-outline-variant/60 bg-surface-container-lowest p-6 shadow-[0_12px_24px_-20px_rgba(13,28,46,0.28)] animate-in fade-in zoom-in duration-200">
+      <div className="relative w-full max-w-md overflow-hidden rounded-xl border border-outline-variant/60 bg-surface-container-lowest p-6 animate-in fade-in zoom-in duration-200">
         <h3 className="font-h3 text-h3 text-on-background">
           {title}
         </h3>

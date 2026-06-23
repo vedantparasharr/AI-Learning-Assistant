@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import { useAuth } from "../../context/AuthContext";
 import authService from "../../services/authService";
+import { Input, PrimaryButton, SecondaryButton } from "../../components/common/ui";
 
 const ProfilePage = () => {
   const { user, updateUser, logout } = useAuth();
@@ -138,7 +138,7 @@ const ProfilePage = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-lg">
         <div className="lg:col-span-2 flex flex-col gap-lg">
           {/* Personal Information */}
-          <section className="bg-surface-container-lowest rounded-xl border border-outline-variant/30 p-xl shadow-[0_8px_30px_rgba(26,20,107,0.03)]">
+          <section className="bg-surface-container-lowest rounded-xl border border-outline-variant/30 p-xl">
             <h2 className="font-h3 text-h3 text-on-background mb-md font-bold">
               Personal Information
             </h2>
@@ -180,129 +180,101 @@ const ProfilePage = () => {
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-md pt-sm">
-                  <div>
-                    <label className="block font-label-md text-label-md text-on-surface-variant mb-xs">
-                      Full Name
-                    </label>
-                    <input
-                      className="w-full bg-surface-container-lowest border border-outline-variant/60 rounded-lg px-sm py-2.5 font-body-md text-body-md text-on-background focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors"
-                      type="text"
-                      value={profileForm.username}
-                      onChange={(event) =>
-                        setProfileForm((current) => ({
-                          ...current,
-                          username: event.target.value,
-                        }))
-                      }
-                    />
-                  </div>
-                  <div>
-                    <label className="block font-label-md text-label-md text-on-surface-variant mb-xs">
-                      Email Address
-                    </label>
-                    <input
-                      className="w-full bg-surface-container-lowest border border-outline-variant/60 rounded-lg px-sm py-2.5 font-body-md text-body-md text-on-background focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors"
-                      type="email"
-                      value={profileForm.email}
-                      onChange={(event) =>
-                        setProfileForm((current) => ({
-                          ...current,
-                          email: event.target.value,
-                        }))
-                      }
-                    />
-                  </div>
+                  <Input
+                    type="text"
+                    label="Full Name"
+                    value={profileForm.username}
+                    onChange={(event) =>
+                      setProfileForm((current) => ({
+                        ...current,
+                        username: event.target.value,
+                      }))
+                    }
+                  />
+                  <Input
+                    type="email"
+                    label="Email Address"
+                    value={profileForm.email}
+                    onChange={(event) =>
+                      setProfileForm((current) => ({
+                        ...current,
+                        email: event.target.value,
+                      }))
+                    }
+                  />
                 </div>
               </div>
             </div>
             <div className="flex justify-end pt-sm">
-              <button
+              <PrimaryButton
                 type="button"
                 onClick={handleProfileSubmit}
                 disabled={savingProfile}
-                className="bg-primary text-on-primary font-label-md text-label-md px-md py-2.5 rounded-lg hover:bg-primary-container transition-all duration-150 disabled:opacity-60 cursor-pointer"
               >
                 {savingProfile ? "Saving..." : "Save Changes"}
-              </button>
+              </PrimaryButton>
             </div>
           </section>
 
           {/* Account Security */}
-          <section className="bg-surface-container-lowest rounded-xl border border-outline-variant/30 p-xl shadow-[0_8px_30px_rgba(26,20,107,0.03)]">
+          <section className="bg-surface-container-lowest rounded-xl border border-outline-variant/30 p-xl">
             <h2 className="font-h3 text-h3 text-on-background mb-md font-bold">
               Account Security
             </h2>
-            <div className="space-y-md">
-              <div>
-                <label className="block font-label-md text-label-md text-on-surface-variant mb-xs" htmlFor="current-pass">
-                  Current Password
-                </label>
-                <input
-                  id="current-pass"
-                  className="w-full max-w-md bg-surface-container-lowest border border-outline-variant/60 rounded-lg px-sm py-2.5 font-body-md text-body-md text-on-background placeholder:text-slate-600/60 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors"
-                  placeholder="••••••••"
-                  type="password"
-                  value={passwordForm.currentPassword}
-                  onChange={(event) =>
-                    setPasswordForm((current) => ({
-                      ...current,
-                      currentPassword: event.target.value,
-                    }))
-                  }
-                />
-              </div>
-              <div>
-                <label className="block font-label-md text-label-md text-on-surface-variant mb-xs" htmlFor="new-pass">
-                  New Password
-                </label>
-                <input
-                  id="new-pass"
-                  className="w-full max-w-md bg-surface-container-lowest border border-outline-variant/60 rounded-lg px-sm py-2.5 font-body-md text-body-md text-on-background placeholder:text-slate-600/60 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors"
-                  placeholder="Enter new password"
-                  type="password"
-                  value={passwordForm.newPassword}
-                  onChange={(event) =>
-                    setPasswordForm((current) => ({
-                      ...current,
-                      newPassword: event.target.value,
-                    }))
-                  }
-                />
-              </div>
-              <div>
-                <label className="block font-label-md text-label-md text-on-surface-variant mb-xs" htmlFor="confirm-pass">
-                  Confirm New Password
-                </label>
-                <input
-                  id="confirm-pass"
-                  className="w-full max-w-md bg-surface-container-lowest border border-outline-variant/60 rounded-lg px-sm py-2.5 font-body-md text-body-md text-on-background placeholder:text-slate-600/60 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors"
-                  placeholder="Confirm new password"
-                  type="password"
-                  value={passwordForm.confirmPassword}
-                  onChange={(event) =>
-                    setPasswordForm((current) => ({
-                      ...current,
-                      confirmPassword: event.target.value,
-                    }))
-                  }
-                />
-              </div>
+            <div className="space-y-md max-w-md">
+              <Input
+                id="current-pass"
+                label="Current Password"
+                placeholder="••••••••"
+                type="password"
+                value={passwordForm.currentPassword}
+                onChange={(event) =>
+                  setPasswordForm((current) => ({
+                    ...current,
+                    currentPassword: event.target.value,
+                  }))
+                }
+              />
+              <Input
+                id="new-pass"
+                label="New Password"
+                placeholder="Enter new password"
+                type="password"
+                value={passwordForm.newPassword}
+                onChange={(event) =>
+                  setPasswordForm((current) => ({
+                    ...current,
+                    newPassword: event.target.value,
+                  }))
+                }
+              />
+              <Input
+                id="confirm-pass"
+                label="Confirm New Password"
+                placeholder="Confirm new password"
+                type="password"
+                value={passwordForm.confirmPassword}
+                onChange={(event) =>
+                  setPasswordForm((current) => ({
+                    ...current,
+                    confirmPassword: event.target.value,
+                  }))
+                }
+              />
               <div className="pt-sm flex flex-wrap gap-3">
-                <button
+                <PrimaryButton
                   type="button"
                   onClick={handlePasswordSubmit}
                   disabled={savingPassword}
-                  className="border border-primary text-primary font-label-md text-label-md px-md py-2.5 rounded-lg hover:bg-surface-container-low transition-all duration-150 disabled:opacity-60 cursor-pointer"
                 >
                   {savingPassword ? "Updating..." : "Update Password"}
-                </button>
-                <button
+                </PrimaryButton>
+                <SecondaryButton
                   type="button"
                   onClick={logout}
-                  className="border border-outline-variant text-on-surface font-label-md text-label-md px-md py-2.5 rounded-lg hover:bg-surface-container-low transition-all duration-150 cursor-pointer"
                 >
                   Sign Out
-                </button>
+                </SecondaryButton>
               </div>
             </div>
           </section>
@@ -310,7 +282,7 @@ const ProfilePage = () => {
 
         {/* Learning Preferences */}
         <div className="flex flex-col gap-lg">
-          <section className="bg-surface-container-lowest rounded-xl border border-outline-variant/30 p-xl shadow-[0_8px_30px_rgba(26,20,107,0.03)] h-full">
+          <section className="bg-surface-container-lowest rounded-xl border border-outline-variant/30 p-xl h-full">
             <h2 className="font-h3 text-h3 text-on-background mb-md font-bold">
               Learning Preferences
             </h2>

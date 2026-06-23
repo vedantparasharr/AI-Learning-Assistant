@@ -178,8 +178,8 @@ const TopicStudyPage = () => {
 
 				<div className="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
 					<div className="lg:col-span-8 flex flex-col gap-gutter">
-						<div className="bg-surface-container-lowest rounded-xl border border-outline-variant/60 p-10 h-full">
-							<div className="flex items-center gap-3 mb-8 pb-4 border-b border-surface-variant">
+						<div className="bg-surface-container-lowest rounded-xl border border-outline-variant/60 p-4 md:p-6 lg:p-10 h-full">
+							<div className="flex items-center gap-3 mb-6 md:mb-8 pb-4 border-b border-surface-variant">
 								<div className="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-primary">
 									<span className="material-symbols-outlined">psychiatry</span>
 								</div>

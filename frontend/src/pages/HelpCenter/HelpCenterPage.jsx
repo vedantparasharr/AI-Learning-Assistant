@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-
+import { Input, PrimaryButton } from "../../components/common/ui";
 const quickActions = [
   {
     icon: "cloud_upload",
@@ -168,20 +168,14 @@ const HelpCenterPage = () => {
         >
           Search help topics
         </label>
-        <div className="relative max-w-2xl">
-          <span
-            className="material-symbols-outlined pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[20px] text-on-surface-variant"
-            aria-hidden="true"
-          >
-            search
-          </span>
-          <input
+        <div className="max-w-2xl">
+          <Input
             id="help-search"
             type="search"
+            icon="search"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder="Search uploads, flashcards, progress, password..."
-            className="w-full rounded-lg border border-outline-variant bg-surface-container-lowest py-3 pl-10 pr-4 font-body-sm text-body-sm text-on-background placeholder:text-on-surface-variant focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
           />
         </div>
       </section>
@@ -311,13 +305,13 @@ const HelpCenterPage = () => {
                 Try a task name like upload, flashcards, password, progress, or
                 study plan.
               </p>
-              <button
+              <PrimaryButton
                 type="button"
                 onClick={() => setQuery("")}
-                className="mt-md inline-flex min-h-11 items-center justify-center rounded-lg bg-primary px-md py-2 font-label-md text-label-md text-on-primary transition-colors hover:bg-primary-container focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
+                className="mt-md"
               >
                 Clear search
-              </button>
+              </PrimaryButton>
             </section>
           )}
         </main>

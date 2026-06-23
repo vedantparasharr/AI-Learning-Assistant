@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import toast from "react-hot-toast";
 import studyPlanService from "../../services/studyPlanService";
+import { Input, Textarea, PrimaryButton } from "../../components/common/ui";
 
 const MAX_PDF_SIZE = 10 * 1024 * 1024;
 
@@ -416,16 +416,9 @@ export default function StudyPlanBuilderPage() {
                 </div>
               ) : (
                 <div className="rounded-xl border border-outline-variant/60 bg-background p-md">
-                  <label
-                    className="block font-label-md text-label-md text-on-surface"
-                    htmlFor="source-text"
-                  >
-                    {inputMode === "text"
-                      ? "Paste syllabus content"
-                      : "Describe the learning goal"}
-                  </label>
-                  <textarea
+                  <Textarea
                     id="source-text"
+                    label={inputMode === "text" ? "Paste syllabus content" : "Describe the learning goal"}
                     value={text}
                     onChange={(event) => {
                       setText(event.target.value);
@@ -437,7 +430,7 @@ export default function StudyPlanBuilderPage() {
                         ? "Paste the course syllabus, lecture list, or topic outline here."
                         : "Example: Build a 6-week study plan for data structures before an interview."
                     }
-                    className="mt-sm h-64 w-full resize-none rounded-lg border border-outline-variant bg-surface-container-lowest p-md font-body-sm text-body-sm text-on-surface placeholder:text-on-surface-variant focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    className="mt-sm h-64 w-full resize-none"
                   />
                 </div>
               )}
@@ -453,50 +446,27 @@ export default function StudyPlanBuilderPage() {
           <section className="rounded-xl border border-outline-variant/60 bg-surface-container-lowest p-lg">
             <h2 className="font-h3 text-h3 text-on-surface">Plan details</h2>
             <div className="mt-md grid gap-md md:grid-cols-2">
-              <div>
-                <label
-                  className="block font-label-md text-label-md text-on-surface"
-                  htmlFor="subject-name"
-                >
-                  Subject name <span className="text-error">*</span>
-                </label>
-                <input
-                  id="subject-name"
-                  type="text"
-                  value={subjectName}
-                  onChange={(event) => {
-                    setSubjectName(event.target.value);
-                    clearFieldError("subjectName");
-                  }}
-                  placeholder="e.g. Data Structures"
-                  className="mt-xs w-full rounded-lg border border-outline-variant bg-background p-md font-body-sm text-body-sm text-on-surface placeholder:text-on-surface-variant focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
-                />
-                {fieldErrors.subjectName ? (
-                  <p
-                    className="mt-xs font-body-sm text-body-sm text-error"
-                    role="alert"
-                  >
-                    {fieldErrors.subjectName}
-                  </p>
-                ) : null}
-              </div>
+              <Input
+                id="subject-name"
+                type="text"
+                label={<span>Subject name <span className="text-error">*</span></span>}
+                value={subjectName}
+                onChange={(event) => {
+                  setSubjectName(event.target.value);
+                  clearFieldError("subjectName");
+                }}
+                error={fieldErrors.subjectName}
+                placeholder="e.g. Data Structures"
+              />
 
-              <div>
-                <label
-                  className="block font-label-md text-label-md text-on-surface"
-                  htmlFor="target-date"
-                >
-                  Target date
-                </label>
-                <input
-                  id="target-date"
-                  type="date"
-                  min={today}
-                  value={examDate}
-                  onChange={(event) => setExamDate(event.target.value)}
-                  className="mt-xs w-full rounded-lg border border-outline-variant bg-background p-md font-body-sm text-body-sm text-on-surface focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
-                />
-              </div>
+              <Input
+                id="target-date"
+                type="date"
+                label="Target date"
+                min={today}
+                value={examDate}
+                onChange={(event) => setExamDate(event.target.value)}
+              />
             </div>
           </section>
 
@@ -524,11 +494,11 @@ export default function StudyPlanBuilderPage() {
                 </div>
               </div>
 
-              <button
+              <PrimaryButton
                 type="button"
                 onClick={handleProcess}
                 disabled={loading || !subjectName.trim()}
-                className="inline-flex min-h-12 items-center justify-center gap-sm rounded-lg bg-primary px-lg py-3 font-body-md text-body-md font-semibold text-on-primary transition-colors hover:bg-primary-container disabled:cursor-not-allowed disabled:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
+                className="min-h-12"
               >
                 {loading ? "Generating topics..." : "Generate topics"}
                 <span
@@ -537,7 +507,7 @@ export default function StudyPlanBuilderPage() {
                 >
                   arrow_forward
                 </span>
-              </button>
+              </PrimaryButton>
             </div>
 
             {generationError ? (
@@ -630,7 +600,7 @@ export default function StudyPlanBuilderPage() {
               </div>
             </div>
           ) : (
-            <div className="flex flex-col rounded-xl border border-outline-variant/60 bg-surface-container-low overflow-hidden">
+            <div className="flex flex-col rounded-xl border border-outline-variant/60 bg-surface-container-low overflow-x-auto">
               {/* Table Header */}
               <div className="hidden lg:grid grid-cols-[minmax(0,1fr)_140px_44px] gap-sm bg-surface-container-lowest px-md py-sm border-b border-outline-variant/60">
                 <span className="font-label-sm text-[11px] text-on-surface-variant uppercase tracking-wider">
@@ -761,11 +731,10 @@ export default function StudyPlanBuilderPage() {
               Back
             </button>
             <div className="flex-1" />
-            <button
+            <PrimaryButton
               type="button"
               onClick={handleCreate}
               disabled={loading || hasInvalidTopics}
-              className="inline-flex min-h-11 items-center gap-xs rounded-lg bg-primary px-lg py-2 font-body-md text-body-md font-semibold text-on-primary transition-colors hover:bg-primary-container disabled:cursor-not-allowed disabled:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
             >
               {loading ? "Creating..." : "Create study plan"}
               <span
@@ -774,7 +743,7 @@ export default function StudyPlanBuilderPage() {
               >
                 check_circle
               </span>
-            </button>
+            </PrimaryButton>
           </div>
         </section>
       )}

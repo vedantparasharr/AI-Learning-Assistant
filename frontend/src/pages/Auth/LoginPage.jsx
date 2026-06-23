@@ -3,6 +3,7 @@ import toast from "react-hot-toast";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import authService from "../../services/authService";
+import { Input, Checkbox, PrimaryButton } from "../../components/common/ui";
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -38,81 +39,59 @@ const LoginPage = () => {
           <p className="font-body-lg text-body-lg text-on-surface-variant">Sign in to your account</p>
         </div>
 
-        <div className="bg-surface-container-lowest rounded-xl border border-outline-variant/30 p-xl shadow-[0_8px_30px_rgba(26,20,107,0.04)]">
+        <div className="bg-surface-container-lowest rounded-xl border border-outline-variant/30 p-xl">
           <form onSubmit={handleSubmit} className="space-y-lg">
-            <div>
-              <label className="block font-label-md text-label-md text-on-surface-variant mb-xs" htmlFor="email">
-                Email address
-              </label>
-              <div className="relative">
-                <span className="material-symbols-outlined absolute inset-y-0 left-0 pl-sm flex items-center text-outline pointer-events-none" style={{ fontVariationSettings: "'FILL' 0" }}>
-                  mail
-                </span>
-                <input
-                  autoComplete="email"
-                  className="block w-full pl-xl pr-sm py-2.5 bg-surface-container-lowest border border-outline-variant/60 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary font-body-md text-body-md text-on-surface placeholder:text-slate-600/60 outline-none transition-colors"
-                  id="email"
-                  name="email"
-                  placeholder="you@example.com"
-                  required
-                  type="email"
-                  value={form.email}
-                  onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))}
-                />
-              </div>
-            </div>
+            <Input
+              id="email"
+              name="email"
+              type="email"
+              label="Email address"
+              icon="mail"
+              placeholder="you@example.com"
+              required
+              autoComplete="email"
+              value={form.email}
+              onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))}
+            />
 
             <div>
               <div className="flex items-center justify-between mb-xs">
-                <label className="block font-label-md text-label-md text-on-surface-variant" htmlFor="password">
+                <label className="block font-label-md text-label-md text-on-surface" htmlFor="password">
                   Password
                 </label>
                 <Link className="font-label-md text-label-md text-primary hover:text-primary-container transition-colors" to="/help-center">
                   Forgot password?
                 </Link>
               </div>
-              <div className="relative">
-                <span className="material-symbols-outlined absolute inset-y-0 left-0 pl-sm flex items-center text-outline pointer-events-none" style={{ fontVariationSettings: "'FILL' 0" }}>
-                  lock
-                </span>
-                <input
-                  autoComplete="current-password"
-                  className="block w-full pl-xl pr-sm py-2.5 bg-surface-container-lowest border border-outline-variant/60 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary font-body-md text-body-md text-on-surface placeholder:text-slate-600/60 outline-none transition-colors"
-                  id="password"
-                  name="password"
-                  placeholder="••••••••"
-                  required
-                  type="password"
-                  value={form.password}
-                  onChange={(event) => setForm((current) => ({ ...current, password: event.target.value }))}
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center">
-              <input
-                className="h-4 w-4 text-primary focus:ring-primary border-outline-variant rounded cursor-pointer"
-                id="remember-me"
-                name="remember-me"
-                type="checkbox"
+              <Input
+                id="password"
+                name="password"
+                type="password"
+                icon="lock"
+                placeholder="••••••••"
+                required
+                autoComplete="current-password"
+                value={form.password}
+                onChange={(event) => setForm((current) => ({ ...current, password: event.target.value }))}
               />
-              <label className="ml-sm block font-body-sm text-body-sm text-on-surface-variant cursor-pointer" htmlFor="remember-me">
-                Remember me
-              </label>
             </div>
 
-            <div>
-              <button
-                className="w-full flex justify-center items-center py-2.5 px-lg border border-transparent rounded-lg bg-primary font-label-md text-label-md text-on-primary hover:bg-primary-container focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-all duration-150 cursor-pointer"
-                type="submit"
-                disabled={submitting}
-              >
-                {submitting ? "Signing In..." : "Sign In"}
-                <span className="material-symbols-outlined ml-xs text-[18px]" style={{ fontVariationSettings: "'FILL' 0" }}>
-                  arrow_forward
-                </span>
-              </button>
-            </div>
+            <Checkbox
+              id="remember-me"
+              name="remember-me"
+              label="Remember me"
+            />
+
+            <PrimaryButton
+              type="submit"
+              disabled={submitting}
+              className="w-full flex justify-center"
+            >
+              {submitting ? "Signing In..." : "Sign In"}
+              <span className="material-symbols-outlined ml-xs text-[18px]" style={{ fontVariationSettings: "'FILL' 0" }}>
+                arrow_forward
+              </span>
+            </PrimaryButton>
           </form>
         </div>
 

@@ -45,7 +45,7 @@ export default function TopNavbar() {
   };
 
   return (
-    <header className="fixed right-0 top-0 z-40 flex h-16 w-[calc(100%-16rem)] items-center justify-between border-b border-outline-variant/60 bg-background/90 px-6 text-on-background backdrop-blur-md">
+    <header className="fixed top-0 z-40 flex h-16 left-0 md:left-64 right-0 items-center justify-between gap-4 border-b border-outline-variant/60 bg-background/90 px-4 md:px-6 lg:px-8 text-on-background backdrop-blur-md">
       <form className="flex flex-1 items-center gap-4" onSubmit={handleSearchSubmit}>
         <div className="relative w-full max-w-sm">
           <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[20px]">
@@ -64,7 +64,7 @@ export default function TopNavbar() {
 
       <div className="flex items-center gap-2">
         {/* Streak Pill */}
-        <div className="flex items-center gap-1.5 border border-primary-container/20 text-on-primary-fixed-variant bg-primary-fixed/20 font-label-sm text-[12px] px-3.5 py-1.5 rounded-full font-semibold select-none mr-2">
+        <div className="hidden sm:flex items-center gap-1.5 border border-primary-container/20 text-on-primary-fixed-variant bg-primary-fixed/20 font-label-sm text-[12px] px-3.5 py-1.5 rounded-full font-semibold select-none mr-2">
           <span className="material-symbols-outlined text-[16px] text-primary leading-none">local_fire_department</span>
           {streak}-day streak
         </div>
@@ -72,7 +72,7 @@ export default function TopNavbar() {
         <button
           type="button"
           aria-label="Notifications"
-          className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-on-surface-variant transition-colors hover:bg-surface-container-low hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
+          className="hidden sm:inline-flex h-10 w-10 items-center justify-center rounded-lg text-on-surface-variant transition-colors hover:bg-surface-container-low hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
         >
           <span className="material-symbols-outlined">notifications</span>
         </button>
@@ -80,7 +80,7 @@ export default function TopNavbar() {
         <button
           type="button"
           aria-label="Settings"
-          className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-on-surface-variant transition-colors hover:bg-surface-container-low hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
+          className="hidden sm:inline-flex h-10 w-10 items-center justify-center rounded-lg text-on-surface-variant transition-colors hover:bg-surface-container-low hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
         >
           <span className="material-symbols-outlined">settings</span>
         </button>

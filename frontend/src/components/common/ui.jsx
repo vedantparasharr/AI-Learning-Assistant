@@ -21,7 +21,7 @@ export const PageShell = ({ title, description, actions, children }) => (
 
 export const SectionCard = ({ title, description, action, children, className = "" }) => (
   <section
-    className={`overflow-hidden rounded-xl border border-outline-variant/60 bg-surface-container-lowest p-lg shadow-[0_12px_24px_-20px_rgba(13,28,46,0.28)] ${className}`.trim()}
+    className={`overflow-hidden rounded-xl border border-outline-variant/60 bg-surface-container-lowest p-lg ${className}`.trim()}
   >
     {(title || description || action) && (
       <div className="mb-md flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -43,7 +43,7 @@ export const SectionCard = ({ title, description, action, children, className = 
 );
 
 export const StatCard = ({ label, value, hint }) => (
-  <div className="rounded-xl border border-outline-variant/60 bg-surface-container-lowest p-lg shadow-[0_12px_24px_-20px_rgba(13,28,46,0.22)]">
+  <div className="rounded-xl border border-outline-variant/60 bg-surface-container-lowest p-lg">
     <p className="font-body-sm text-body-sm text-on-surface-variant">{label}</p>
     <p className="mt-sm font-h2 text-h2 text-on-background">{value}</p>
     {hint ? <p className="mt-xs font-body-sm text-body-sm text-on-surface-variant">{hint}</p> : null}
@@ -92,7 +92,7 @@ export const LoadingState = ({ label = "Loading", fullScreen = false }) => (
     className={`flex items-center justify-center ${fullScreen ? "min-h-screen" : "min-h-60"}`}
   >
     <div
-      className="flex items-center gap-3 rounded-full border border-outline-variant/60 bg-surface-container-lowest px-5 py-3 font-body-sm text-body-sm text-on-surface-variant shadow-[0_8px_18px_-16px_rgba(13,28,46,0.28)]"
+      className="flex items-center gap-3 rounded-full border border-outline-variant/60 bg-surface-container-lowest px-5 py-3 font-body-sm text-body-sm text-on-surface-variant"
       aria-live="polite"
     >
       <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-secondary motion-reduce:animate-none" />
@@ -144,6 +144,124 @@ export const InlineLinkButton = ({ to, className = "", children }) => (
     {children}
   </Link>
 );
+
+export const Input = ({
+  id,
+  label,
+  error,
+  icon,
+  className = "",
+  containerClassName = "",
+  ...props
+}) => {
+  const inputId = id || Math.random().toString(36).substring(7);
+
+  return (
+    <div className={`w-full ${containerClassName}`.trim()}>
+      {label && (
+        <label
+          htmlFor={inputId}
+          className="block font-label-md text-label-md text-on-surface mb-xs"
+        >
+          {label}
+        </label>
+      )}
+      <div className="relative">
+        {icon && (
+          <span
+            className="material-symbols-outlined pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[20px] text-on-surface-variant"
+            aria-hidden="true"
+          >
+            {icon}
+          </span>
+        )}
+        <input
+          id={inputId}
+          className={`block w-full py-2.5 bg-surface-container-lowest border rounded-lg font-body-md text-body-md text-on-surface placeholder:text-on-surface-variant/60 outline-none transition-colors focus:ring-2 ${
+            icon ? "pl-10 pr-4" : "px-sm"
+          } ${
+            error 
+              ? "border-error focus:border-error focus:ring-error/20" 
+              : "border-outline-variant/60 focus:border-primary focus:ring-primary/20"
+          } ${className}`.trim()}
+          {...props}
+        />
+      </div>
+      {error && (
+        <p className="mt-xs font-label-sm text-label-sm text-error" role="alert">
+          {error}
+        </p>
+      )}
+    </div>
+  );
+};
+
+export const Textarea = ({
+  id,
+  label,
+  error,
+  className = "",
+  containerClassName = "",
+  ...props
+}) => {
+  const inputId = id || Math.random().toString(36).substring(7);
+
+  return (
+    <div className={`w-full ${containerClassName}`.trim()}>
+      {label && (
+        <label
+          htmlFor={inputId}
+          className="block font-label-md text-label-md text-on-surface mb-xs"
+        >
+          {label}
+        </label>
+      )}
+      <textarea
+        id={inputId}
+        className={`block w-full px-sm py-2.5 bg-surface-container-lowest border rounded-lg font-body-md text-body-md text-on-surface placeholder:text-on-surface-variant/60 outline-none transition-colors focus:ring-2 resize-y min-h-[100px] ${
+          error 
+            ? "border-error focus:border-error focus:ring-error/20" 
+            : "border-outline-variant/60 focus:border-primary focus:ring-primary/20"
+        } ${className}`.trim()}
+        {...props}
+      />
+      {error && (
+        <p className="mt-xs font-label-sm text-label-sm text-error" role="alert">
+          {error}
+        </p>
+      )}
+    </div>
+  );
+};
+
+export const Checkbox = ({
+  id,
+  label,
+  className = "",
+  containerClassName = "",
+  ...props
+}) => {
+  const inputId = id || Math.random().toString(36).substring(7);
+
+  return (
+    <div className={`flex items-center gap-2 ${containerClassName}`.trim()}>
+      <input
+        id={inputId}
+        type="checkbox"
+        className={`h-4 w-4 rounded border border-outline-variant/60 text-primary focus:ring-primary/20 focus:ring-2 bg-surface-container-lowest ${className}`.trim()}
+        {...props}
+      />
+      {label && (
+        <label
+          htmlFor={inputId}
+          className="font-label-md text-label-md text-on-surface select-none cursor-pointer"
+        >
+          {label}
+        </label>
+      )}
+    </div>
+  );
+};
 
 export { default as ConfirmationModal } from "./ConfirmationModal";
 

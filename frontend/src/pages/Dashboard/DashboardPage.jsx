@@ -166,11 +166,11 @@ const DashboardPage = () => {
           </p>
         </div>
         
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto mt-2 sm:mt-0">
           {/* Review Cards Button */}
           <Link
             to="/flashcards"
-            className="bg-primary hover:bg-primary-container text-on-primary font-label-md text-label-md px-5 py-2.5 rounded-lg transition-colors flex items-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
+            className="bg-primary hover:bg-primary-container text-on-primary font-label-md text-label-md px-5 py-3 sm:py-2.5 rounded-lg transition-colors flex items-center justify-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
           >
             <span className="material-symbols-outlined text-[18px]">psychology</span>
             Review cards
@@ -179,7 +179,7 @@ const DashboardPage = () => {
           {/* New Plan Button */}
           <Link
             to="/study-plan/new"
-            className="border border-outline-variant bg-surface-container-lowest hover:bg-surface-container-low text-on-surface font-label-md text-label-md px-5 py-2.5 rounded-lg transition-colors flex items-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
+            className="border border-outline-variant bg-surface-container-lowest hover:bg-surface-container-low text-on-surface font-label-md text-label-md px-5 py-3 sm:py-2.5 rounded-lg transition-colors flex items-center justify-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
           >
             <span className="material-symbols-outlined text-[18px]">add</span>
             New plan
@@ -311,16 +311,18 @@ const DashboardPage = () => {
 
         {/* Heatmap Section */}
         <div className="col-span-12 md:col-span-4 flex flex-col gap-4">
-          <div className="mb-1">
+          <div className="mb-1 hidden md:block">
             <h2 className="font-h2 text-h2 text-on-surface invisible">Activity</h2>
           </div>
-          <ActivityHeatmap 
-            heatmapData={heatmapData} 
-            streak={streak} 
-            maxStreak={dashboardData?.maxStreak ?? 0} 
-            totalActiveDays={totalActiveDays} 
-            joinedAt={joinedAt}
-          />
+          <div className="overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0">
+            <ActivityHeatmap 
+              heatmapData={heatmapData} 
+              streak={streak} 
+              maxStreak={dashboardData?.maxStreak ?? 0} 
+              totalActiveDays={totalActiveDays} 
+              joinedAt={joinedAt}
+            />
+          </div>
         </div>
 
       </div>
