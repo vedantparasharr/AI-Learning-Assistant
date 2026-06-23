@@ -527,7 +527,7 @@ export default function StudyPlanBuilderPage() {
               <button
                 type="button"
                 onClick={handleProcess}
-                disabled={loading}
+                disabled={loading || !subjectName.trim()}
                 className="inline-flex min-h-12 items-center justify-center gap-sm rounded-lg bg-primary px-lg py-3 font-body-md text-body-md font-semibold text-on-primary transition-colors hover:bg-primary-container disabled:cursor-not-allowed disabled:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
               >
                 {loading ? "Generating topics..." : "Generate topics"}
@@ -630,92 +630,109 @@ export default function StudyPlanBuilderPage() {
               </div>
             </div>
           ) : (
-            <div className="space-y-sm">
-              {topics.map((topic, index) => {
-                const missingName = !String(topic.name || "").trim();
-                const invalidHours = !(Number(topic.estimated_hours) > 0);
+            <div className="flex flex-col rounded-xl border border-outline-variant/60 bg-surface-container-low overflow-hidden">
+              {/* Table Header */}
+              <div className="hidden lg:grid grid-cols-[minmax(0,1fr)_140px_44px] gap-sm bg-surface-container-lowest px-md py-sm border-b border-outline-variant/60">
+                <span className="font-label-sm text-[11px] text-on-surface-variant uppercase tracking-wider">
+                  Topic name
+                </span>
+                <span className="font-label-sm text-[11px] text-on-surface-variant uppercase tracking-wider">
+                  Total Hours
+                </span>
+                <span></span>
+              </div>
+              
+              <div className="divide-y divide-outline-variant/60">
+                {topics.map((topic, index) => {
+                  const missingName = !String(topic.name || "").trim();
+                  const invalidHours = !(Number(topic.estimated_hours) > 0);
 
-                return (
-                  <div
-                    key={index}
-                    className="grid gap-sm rounded-lg border border-outline-variant bg-surface-container-low p-md lg:grid-cols-[minmax(0,1fr)_140px_44px] lg:items-start"
-                  >
-                    <div>
+                  return (
+                    <div
+                      key={index}
+                      className="grid gap-sm p-sm lg:px-md lg:py-xs lg:grid-cols-[minmax(0,1fr)_140px_44px] lg:items-center hover:bg-surface-container-lowest transition-colors"
+                    >
+                      {/* Mobile Label */}
                       <label
-                        className="block font-label-sm text-label-sm text-on-surface-variant"
+                        className="lg:hidden block font-label-sm text-label-sm text-on-surface-variant mb-1"
                         htmlFor={`topic-name-${index}`}
                       >
                         Topic name
                       </label>
-                      <input
-                        id={`topic-name-${index}`}
-                        value={topic.name}
-                        onChange={(event) =>
-                          updateTopic(index, "name", event.target.value)
-                        }
-                        placeholder="Topic name"
-                        className={`mt-xs w-full rounded-lg border bg-background p-md font-body-sm text-body-sm text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:ring-2 focus:ring-primary/20 ${
-                          missingName
-                            ? "border-error focus:border-error"
-                            : "border-outline-variant focus:border-primary"
-                        }`}
-                      />
-                      {missingName ? (
-                        <p className="mt-xs font-body-sm text-body-sm text-error">
-                          Add a topic name.
-                        </p>
-                      ) : null}
-                    </div>
+                      <div className="flex flex-col">
+                        <input
+                          id={`topic-name-${index}`}
+                          value={topic.name}
+                          onChange={(event) =>
+                            updateTopic(index, "name", event.target.value)
+                          }
+                          placeholder="Topic name"
+                          className={`w-full rounded-lg border bg-background px-3 py-2 font-body-sm text-body-sm text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:ring-2 focus:ring-primary/20 ${
+                            missingName
+                              ? "border-error focus:border-error"
+                              : "border-outline-variant focus:border-primary"
+                          }`}
+                        />
+                        {missingName ? (
+                          <p className="mt-1 font-label-sm text-label-sm text-error">
+                            Required
+                          </p>
+                        ) : null}
+                      </div>
 
-                    <div>
-                      <label
-                        className="block font-label-sm text-label-sm text-on-surface-variant"
-                        htmlFor={`topic-hours-${index}`}
-                      >
-                        Hours
-                      </label>
-                      <input
-                        id={`topic-hours-${index}`}
-                        type="number"
-                        min="0.5"
-                        step="0.5"
-                        value={topic.estimated_hours}
-                        onChange={(event) =>
-                          updateTopic(
-                            index,
-                            "estimated_hours",
-                            Number(event.target.value),
-                          )
-                        }
-                        className={`mt-xs w-full rounded-lg border bg-background p-md font-body-sm text-body-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 ${
-                          invalidHours
-                            ? "border-error focus:border-error"
-                            : "border-outline-variant focus:border-primary"
-                        }`}
-                      />
-                      {invalidHours ? (
-                        <p className="mt-xs font-body-sm text-body-sm text-error">
-                          Use a positive estimate.
-                        </p>
-                      ) : null}
-                    </div>
+                      {/* Mobile Label */}
+                      <div className="flex items-center gap-sm lg:block">
+                        <label
+                          className="lg:hidden block w-24 font-label-sm text-label-sm text-on-surface-variant"
+                          htmlFor={`topic-hours-${index}`}
+                        >
+                          Total Hours
+                        </label>
+                        <div className="flex-1 flex flex-col">
+                          <input
+                            id={`topic-hours-${index}`}
+                            type="number"
+                            min="0.5"
+                            step="0.5"
+                            value={topic.estimated_hours}
+                            onChange={(event) =>
+                              updateTopic(
+                                index,
+                                "estimated_hours",
+                                Number(event.target.value),
+                              )
+                            }
+                            className={`w-full rounded-lg border bg-background px-3 py-2 font-body-sm text-body-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 ${
+                              invalidHours
+                                ? "border-error focus:border-error"
+                                : "border-outline-variant focus:border-primary"
+                            }`}
+                          />
+                          {invalidHours ? (
+                            <p className="mt-1 font-label-sm text-label-sm text-error">
+                              Invalid
+                            </p>
+                          ) : null}
+                        </div>
+                      </div>
 
-                    <button
-                      type="button"
-                      onClick={() => removeTopic(index)}
-                      className="flex h-11 w-11 items-center justify-center rounded-lg text-outline transition-colors hover:bg-error-container hover:text-error focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-error/20"
-                      aria-label={`Remove topic ${index + 1}`}
-                    >
-                      <span
-                        className="material-symbols-outlined text-[20px]"
-                        aria-hidden="true"
+                      <button
+                        type="button"
+                        onClick={() => removeTopic(index)}
+                        className="flex h-9 w-9 items-center justify-center rounded-lg text-outline transition-colors hover:bg-error-container hover:text-error focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-error/20 place-self-end lg:place-self-center"
+                        aria-label={`Remove topic ${index + 1}`}
                       >
-                        delete
-                      </span>
-                    </button>
-                  </div>
-                );
-              })}
+                        <span
+                          className="material-symbols-outlined text-[20px]"
+                          aria-hidden="true"
+                        >
+                          delete
+                        </span>
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           )}
 
