@@ -78,6 +78,12 @@ export const getOrGenerateTopicContentService = async (userId, topicKey) => {
   }
 
   const { studyPlan, topic } = topicContext;
+
+  if (topic.completionStatus === "pending") {
+    topic.completionStatus = "in_progress";
+    await studyPlan.save();
+  }
+
   const lockState = await acquireTopicLock({ topicKey, subject: studyPlan.subjectName });
 
   if (lockState.type === "generating") {
@@ -161,10 +167,10 @@ export const getOrGenerateTopicContentService = async (userId, topicKey) => {
   };
 };
 
-export const markTopicCompletedService = async (userId, topicKey) => {
+export const markTopicCompletedService = async (userId, topicKey, completionStatus = "completed") => {
   const plan = await StudyPlan.findOneAndUpdate(
     { userId, "topics.topic_key": topicKey },
-    { $set: { "topics.$.completionStatus": "completed" } },
+    { $set: { "topics.$.completionStatus": completionStatus } },
     { new: true }
   );
 
@@ -179,7 +185,7 @@ export const markTopicCompletedService = async (userId, topicKey) => {
 
   return {
     topic_key: topicKey,
-    completionStatus: "completed",
+    completionStatus,
     progressPercentage,
   };
 };

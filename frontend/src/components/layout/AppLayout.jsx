@@ -5,10 +5,9 @@ const AppLayout = ({ children }) => {
   return (
     <div className="antialiased min-h-screen flex selection:bg-primary-container selection:text-on-primary-container">
       <Sidebar />
-      {/* Main wrapper */}
-      <div className="flex-1 ml-64 flex flex-col relative min-h-screen">
+      <div className="relative ml-64 flex min-h-screen flex-1 flex-col bg-background">
         <TopNavbar />
-        <main className="flex-1 pt-24 px-8 pb-xxl max-w-[1280px] w-full mx-auto">
+        <main className="mx-auto flex-1 w-full max-w-[1280px] px-6 pb-xxl pt-24 lg:px-8">
           {children}
         </main>
       </div>

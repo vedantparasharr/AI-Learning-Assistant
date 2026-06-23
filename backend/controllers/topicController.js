@@ -34,12 +34,13 @@ export const generateTopicContent = async (req, res, next) => {
 export const markTopicCompleted = async (req, res, next) => {
   try {
     const { topicKey } = req.params;
-    const data = await topicService.markTopicCompletedService(req.user._id, topicKey);
+    const { completionStatus = "completed" } = req.body;
+    const data = await topicService.markTopicCompletedService(req.user._id, topicKey, completionStatus);
 
     return res.status(200).json({
       success: true,
       data,
-      message: "Topic marked as completed",
+      message: `Topic marked as ${completionStatus}`,
       statusCode: 200,
     });
   } catch (error) {

@@ -1,74 +1,203 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import studyPlanService from "../../services/studyPlanService";
+import { useMemo, useRef, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
+import studyPlanService from "../../services/studyPlanService";
 
-export default function UploadMain() {
+const MAX_PDF_SIZE = 10 * 1024 * 1024;
+
+const SOURCE_MODES = [
+  {
+    id: "document",
+    label: "Upload PDF",
+    icon: "cloud_upload",
+    helper: "Best when your course material is already collected in one file.",
+  },
+  {
+    id: "text",
+    label: "Paste syllabus",
+    icon: "article",
+    helper: "Best for exact topic extraction from a syllabus or lecture list.",
+  },
+  {
+    id: "prompt",
+    label: "Describe a goal",
+    icon: "psychology",
+    helper: "Best when you want a new plan from a learning objective.",
+  },
+];
+
+const NEXT_STEPS = [
+  "AI analyzes your source",
+  "Topics are drafted",
+  "You review before saving",
+];
+
+const validatePdf = (candidate) => {
+  if (!candidate) return "Upload a PDF file before generating topics.";
+  if (candidate.type && candidate.type !== "application/pdf") {
+    return "Only PDF files are supported for document upload.";
+  }
+  if (!candidate.name.toLowerCase().endsWith(".pdf")) {
+    return "Choose a file with a .pdf extension.";
+  }
+  if (candidate.size > MAX_PDF_SIZE) {
+    return "PDF must be less than 10MB.";
+  }
+  return "";
+};
+
+const normalizeTopic = (topic) => ({
+  name: String(topic?.name || "").trim(),
+  estimated_hours:
+    Number(topic?.estimated_hours) > 0 ? Number(topic.estimated_hours) : 1,
+});
+
+export default function StudyPlanBuilderPage() {
   const navigate = useNavigate();
+  const fileInputRef = useRef(null);
+
   const [file, setFile] = useState(null);
   const [text, setText] = useState("");
-  const [inputMode, setInputMode] = useState("document"); // "document", "text", "prompt"
+  const [inputMode, setInputMode] = useState("document");
   const [subjectName, setSubjectName] = useState("");
   const [examDate, setExamDate] = useState("");
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1);
   const [topics, setTopics] = useState([]);
   const [sourceText, setSourceText] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [generationError, setGenerationError] = useState("");
+  const [createError, setCreateError] = useState("");
+  const [isDragging, setIsDragging] = useState(false);
 
   const today = new Date().toISOString().split("T")[0];
+  const currentMode = SOURCE_MODES.find((mode) => mode.id === inputMode);
+
+  const hasInvalidTopics = useMemo(
+    () =>
+      topics.length === 0 ||
+      topics.some(
+        (topic) =>
+          !String(topic.name || "").trim() ||
+          !(Number(topic.estimated_hours) > 0),
+      ),
+    [topics],
+  );
+
+  const setFieldError = (field, message) => {
+    setFieldErrors((current) => ({ ...current, [field]: message }));
+  };
+
+  const clearFieldError = (field) => {
+    setFieldErrors((current) => {
+      const next = { ...current };
+      delete next[field];
+      return next;
+    });
+  };
+
+  const handleModeChange = (mode) => {
+    setInputMode(mode);
+    setGenerationError("");
+    clearFieldError("source");
+  };
+
+  const handleFileCandidate = (candidate) => {
+    const error = validatePdf(candidate);
+    if (error) {
+      setFile(null);
+      setFieldError("source", error);
+      return;
+    }
+
+    setFile(candidate);
+    clearFieldError("source");
+    setGenerationError("");
+  };
+
+  const handleDrop = (event) => {
+    event.preventDefault();
+    setIsDragging(false);
+    handleFileCandidate(event.dataTransfer.files?.[0]);
+  };
+
+  const validateSourceStep = () => {
+    const nextErrors = {};
+
+    if (!subjectName.trim()) {
+      nextErrors.subjectName = "Enter a subject name before generating topics.";
+    }
+
+    if (inputMode === "document") {
+      const fileError = validatePdf(file);
+      if (fileError) nextErrors.source = fileError;
+    } else if (!text.trim()) {
+      nextErrors.source =
+        inputMode === "text"
+          ? "Paste syllabus content before generating topics."
+          : "Describe the learning goal before generating topics.";
+    }
+
+    setFieldErrors(nextErrors);
+    return Object.keys(nextErrors).length === 0;
+  };
 
   const handleProcess = async () => {
-    if (!subjectName.trim()) {
-      return toast.error("Subject Name is required");
-    }
-
-    if (inputMode === "document" && !file) {
-      return toast.error("Upload a PDF file");
-    }
-
-    if (inputMode !== "document" && !text.trim()) {
-      return toast.error("Provide some text or a prompt");
-    }
-
-    if (file && file.size > 10 * 1024 * 1024) {
-      return toast.error("PDF must be less than 10MB");
-    }
+    if (!validateSourceStep()) return;
 
     try {
       setLoading(true);
+      setGenerationError("");
 
       const res = await studyPlanService.parseStudyPlan({
         file,
         outlineText: inputMode === "text" ? text : "",
         learningPrompt: inputMode === "prompt" ? text : "",
         sourceMode: inputMode,
-        subjectName,
+        subjectName: subjectName.trim(),
       });
 
       const payload = res.data || {};
-      const normalized = (payload.topics || []).map((t) => ({
-        name: String(t?.name || "").trim(),
-        estimated_hours:
-          Number(t?.estimated_hours) > 0 ? Number(t.estimated_hours) : 1,
-      }));
+      const normalized = (payload.topics || [])
+        .map(normalizeTopic)
+        .filter((topic) => topic.name);
+
+      if (normalized.length === 0) {
+        setTopics([]);
+        setGenerationError(
+          "No usable topics were generated. Try a more specific source, paste the key sections, or describe the goal in more detail.",
+        );
+        return;
+      }
 
       setTopics(normalized);
       setSourceText(payload.sourceText || text);
-      toast.success("Topics Generated");
+      toast.success("Topics generated");
       setStep(2);
     } catch (err) {
-      toast.error(err.message || "Failed");
+      setGenerationError(
+        err.message ||
+          "Topics could not be generated. Check the source and try again.",
+      );
     } finally {
       setLoading(false);
     }
   };
 
   const handleCreate = async () => {
+    if (hasInvalidTopics) {
+      setCreateError(
+        "Every topic needs a name and an estimate greater than zero before saving.",
+      );
+      return;
+    }
+
     try {
       setLoading(true);
+      setCreateError("");
 
       const res = await studyPlanService.createStudyPlan({
-        subjectName,
+        subjectName: subjectName.trim(),
         examDate,
         topics,
         sourceText,
@@ -78,59 +207,119 @@ export default function UploadMain() {
       toast.success("Study plan created");
       navigate(`/plans/${res.data.studyPlan._id}`);
     } catch (err) {
-      toast.error(err.message || "Failed to create plan");
+      setCreateError(
+        err.message ||
+          "The study plan could not be created. Review the topics and try again.",
+      );
     } finally {
       setLoading(false);
     }
   };
 
-  const updateTopic = (index, field, value) =>
-    setTopics(
-      topics.map((t, i) => (i === index ? { ...t, [field]: value } : t)),
+  const updateTopic = (index, field, value) => {
+    setCreateError("");
+    setTopics((current) =>
+      current.map((topic, topicIndex) =>
+        topicIndex === index ? { ...topic, [field]: value } : topic,
+      ),
     );
+  };
 
-  const removeTopic = (index) =>
-    setTopics(topics.filter((_, i) => i !== index));
+  const removeTopic = (index) => {
+    setCreateError("");
+    setTopics((current) => current.filter((_, topicIndex) => topicIndex !== index));
+  };
 
-  const addTopic = () =>
-    setTopics([...topics, { name: "", estimated_hours: 1 }]);
+  const addTopic = () => {
+    setCreateError("");
+    setTopics((current) => [...current, { name: "", estimated_hours: 1 }]);
+  };
 
   return (
     <div className="w-full">
-      {/* Page Header */}
       <div className="mb-lg">
-        <h1 className="font-h1 text-h1 text-on-background mb-xs">
+        <h1 className="font-h1 text-h1 text-on-background">
           {step === 1 ? "Source Material" : "Review Topics"}
         </h1>
-        <p className="font-body-lg text-body-lg text-on-surface-variant">
+        <p className="mt-xs max-w-3xl font-body-lg text-body-lg text-on-surface-variant">
           {step === 1
-            ? "Provide the foundational content for your study session."
-            : "Adjust the generated topics and estimated hours for your study plan."}
+            ? "Choose one source, add plan details, then generate topics you can verify before saving."
+            : "Clean up the generated outline before it becomes your study plan."}
         </p>
       </div>
 
-      {/* Main Layout Grid */}
+      <ol className="mb-lg grid gap-sm sm:grid-cols-2">
+        {[
+          { number: 1, label: "Provide source material" },
+          { number: 2, label: "Review and create plan" },
+        ].map((item) => {
+          const isActive = step === item.number;
+          const isComplete = step > item.number;
+
+          return (
+            <li
+              key={item.number}
+              className={`flex items-center gap-sm rounded-xl border px-md py-sm ${
+                isActive || isComplete
+                  ? "border-primary bg-primary-fixed text-primary"
+                  : "border-outline-variant bg-surface-container-lowest text-on-surface-variant"
+              }`}
+            >
+              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-surface-container-lowest font-label-md text-label-md">
+                {isComplete ? (
+                  <span
+                    className="material-symbols-outlined text-[18px]"
+                    aria-hidden="true"
+                  >
+                    check
+                  </span>
+                ) : (
+                  item.number
+                )}
+              </span>
+              <span className="font-body-sm text-body-sm font-semibold">
+                {item.label}
+              </span>
+            </li>
+          );
+        })}
+      </ol>
+
       {step === 1 ? (
-        <div className="grid grid-cols-12 gap-gutter">
-          {/* Left Column: Upload Area */}
-          <div className="col-span-12 lg:col-span-7 flex flex-col gap-lg">
-            {/* Mode Selection Tabs */}
-            <div className="flex bg-surface-container-low p-1 rounded-xl border border-outline-variant">
-              {[
-                { id: "document", label: "Upload PDF", icon: "cloud_upload" },
-                { id: "text", label: "Paste Syllabus", icon: "article" },
-                { id: "prompt", label: "AI Prompt", icon: "psychology" },
-              ].map((mode) => (
+        <div className="space-y-lg">
+          <section className="rounded-xl border border-outline-variant/60 bg-surface-container-lowest p-lg">
+            <div className="mb-md">
+              <h2 className="font-h3 text-h3 text-on-surface">
+                Choose a source
+              </h2>
+              <p className="mt-xs max-w-2xl font-body-sm text-body-sm text-on-surface-variant">
+                Pick the format that matches what you have now. You can switch
+                modes without losing text already entered.
+              </p>
+            </div>
+
+            <div
+              className="grid gap-sm rounded-xl border border-outline-variant bg-surface-container-low p-xs md:grid-cols-3"
+              role="tablist"
+              aria-label="Source type"
+            >
+              {SOURCE_MODES.map((mode) => (
                 <button
                   key={mode.id}
-                  onClick={() => setInputMode(mode.id)}
-                  className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg font-label-md text-label-md transition-all ${
+                  type="button"
+                  role="tab"
+                  aria-selected={inputMode === mode.id}
+                  onClick={() => handleModeChange(mode.id)}
+                  className={`flex min-h-12 items-center justify-center gap-xs rounded-lg px-sm py-2 font-label-md text-label-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 ${
                     inputMode === mode.id
-                      ? "bg-surface-container-lowest text-primary shadow-sm border border-outline-variant"
-                      : "text-on-surface-variant hover:text-on-surface"
+                      ? "border border-outline-variant bg-surface-container-lowest text-primary"
+                      : "text-on-surface-variant hover:bg-surface-container-lowest hover:text-on-surface"
                   }`}
                 >
-                  <span className="material-symbols-outlined text-[20px]">
+                  <span
+                    className="material-symbols-outlined text-[20px]"
+                    aria-hidden="true"
+                  >
                     {mode.icon}
                   </span>
                   {mode.label}
@@ -138,299 +327,439 @@ export default function UploadMain() {
               ))}
             </div>
 
-            {inputMode === "document" && (
-              <div
-                className="border-2 border-dashed border-outline-variant rounded-xl bg-surface-container-lowest hover:border-primary transition-colors duration-300 flex flex-col items-center justify-center py-xxl px-lg text-center cursor-pointer shadow-[0_4px_20px_-4px_rgba(26,20,107,0.04)]"
-                onClick={() => document.getElementById("fileUpload").click()}
-              >
-                <div className="w-16 h-16 rounded-full bg-surface-container-low flex items-center justify-center mb-md">
+            <p className="mt-sm font-body-sm text-body-sm text-on-surface-variant">
+              {currentMode.helper}
+            </p>
+
+            <div className="mt-md">
+              {inputMode === "document" ? (
+                <div
+                  className={`rounded-xl border border-dashed p-xl text-center transition-colors ${
+                    isDragging
+                      ? "border-primary bg-primary-fixed"
+                      : "border-outline-variant bg-background"
+                  }`}
+                  onDragOver={(event) => {
+                    event.preventDefault();
+                    setIsDragging(true);
+                  }}
+                  onDragLeave={() => setIsDragging(false)}
+                  onDrop={handleDrop}
+                >
                   <span
-                    className="material-symbols-outlined text-primary"
-                    style={{ fontSize: "32px" }}
+                    className="material-symbols-outlined mx-auto mb-sm flex h-12 w-12 items-center justify-center rounded-lg bg-surface-container-low text-[28px] text-primary"
+                    aria-hidden="true"
                   >
                     cloud_upload
                   </span>
-                </div>
+                  <h3 className="font-h3 text-h3 text-on-surface">
+                    Upload PDF material
+                  </h3>
+                  <p className="mx-auto mt-xs max-w-lg font-body-sm text-body-sm text-on-surface-variant">
+                    Drag a PDF here, or use the button to choose one. Files must
+                    be under 10MB.
+                  </p>
 
-                <h3 className="font-h3 text-h3 text-on-surface mb-xs">
-                  Upload Document
-                </h3>
+                  <input
+                    ref={fileInputRef}
+                    id="fileUpload"
+                    type="file"
+                    accept=".pdf,application/pdf"
+                    className="sr-only"
+                    onChange={(event) =>
+                      handleFileCandidate(event.target.files?.[0])
+                    }
+                  />
 
-                <p className="font-body-md text-body-md text-on-surface-variant max-w-sm mb-lg">
-                  Drag and drop your PDF file here, or click to browse.
-                </p>
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="mt-md inline-flex min-h-11 items-center justify-center rounded-lg border border-primary px-md py-2 font-label-md text-label-md text-primary transition-colors hover:bg-primary hover:text-on-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
+                  >
+                    Select PDF file
+                  </button>
 
-                <input
-                  type="file"
-                  id="fileUpload"
-                  accept=".pdf"
-                  className="hidden"
-                  onChange={(e) => setFile(e.target.files[0])}
-                />
-
-                <div className="border border-primary text-primary hover:bg-surface-container-low font-label-md text-label-md py-2 px-6 rounded-lg transition-colors cursor-pointer">
-                  Select PDF File
-                </div>
-              </div>
-            )}
-
-            {inputMode === "text" && (
-              <div className="bg-surface-container-lowest rounded-xl shadow-[0_4px_20px_-4px_rgba(26,20,107,0.04)] p-lg border border-surface-variant">
-                <label className="block font-label-md text-label-md text-on-surface mb-sm">
-                  Paste Syllabus Content
-                </label>
-                <textarea
-                  value={text}
-                  onChange={(e) => setText(e.target.value)}
-                  placeholder="Paste your course syllabus, lecture list, or detailed topics here..."
-                  className="w-full h-64 bg-background border border-outline-variant rounded-lg p-md font-body-sm text-body-sm text-on-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all resize-none"
-                />
-                <p className="mt-xs text-label-sm text-on-surface-variant italic">
-                  Best for: Existing syllabi where you want exact topic
-                  extraction.
-                </p>
-              </div>
-            )}
-
-            {inputMode === "prompt" && (
-              <div className="bg-surface-container-lowest rounded-xl shadow-[0_4px_20px_-4px_rgba(26,20,107,0.04)] p-lg border border-surface-variant">
-                <label className="block font-label-md text-label-md text-on-surface mb-sm">
-                  Ask AI for a Roadmap
-                </label>
-                <textarea
-                  value={text}
-                  onChange={(e) => setText(e.target.value)}
-                  placeholder="e.g. Create a 10-step roadmap for learning Frontend Development from scratch..."
-                  className="w-full h-64 bg-background border border-outline-variant rounded-lg p-md font-body-sm text-body-sm text-on-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all resize-none"
-                />
-                <p className="mt-xs text-label-sm text-on-surface-variant italic">
-                  Best for: Generating a new study plan from a simple
-                  instruction or goal.
-                </p>
-              </div>
-            )}
-          </div>
-
-          {/* Right Column: Processing State & Options */}
-          <div className="col-span-12 lg:col-span-5 flex flex-col">
-            <div className="bg-surface-container-lowest rounded-xl shadow-[0_4px_20px_-4px_rgba(26,20,107,0.08)] p-xl border-t-2 border-primary h-full flex flex-col">
-              {/* Plan Details */}
-              <div className="mb-xl">
-                <h2 className="font-h3 text-h3 text-on-surface mb-md">
-                  Plan Details
-                </h2>
-
-                <div className="flex flex-col gap-md">
-                  <div>
-                    <label className="block font-label-md text-label-md text-on-surface mb-xs">
-                      Subject Name <span className="text-error">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={subjectName}
-                      onChange={(e) => setSubjectName(e.target.value)}
-                      placeholder="e.g. Data Structures"
-                      className="w-full bg-background border border-outline-variant rounded-lg p-md font-body-sm text-body-sm text-on-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block font-label-md text-label-md text-on-surface mb-xs">
-                      Target Date (Optional)
-                    </label>
-                    <input
-                      type="date"
-                      min={today}
-                      value={examDate}
-                      onChange={(e) => setExamDate(e.target.value)}
-                      className="w-full bg-background border border-outline-variant rounded-lg p-md font-body-sm text-body-sm text-on-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* File State */}
-              {file && (
-                <div className="mb-xl">
-                  <h2 className="font-label-md text-label-md text-on-surface-variant uppercase mb-md tracking-widest">
-                    Current Document
-                  </h2>
-                  <div className="flex items-center gap-md p-md bg-surface-container-low rounded-lg border border-outline-variant">
-                    <span
-                      className="material-symbols-outlined text-primary"
-                      style={{ fontVariationSettings: "'FILL' 1" }}
-                    >
-                      description
-                    </span>
-
-                    <div className="flex-1 min-w-0">
-                      <p className="font-body-sm text-body-sm text-on-surface font-semibold truncate">
-                        {file.name}
-                      </p>
-                      <p className="font-label-sm text-label-sm text-on-surface-variant">
-                        {(file.size / 1024 / 1024).toFixed(2)} MB
-                      </p>
-                    </div>
-
-                    <button
-                      onClick={() => setFile(null)}
-                      className="text-outline hover:text-error transition-colors"
-                    >
+                  {file ? (
+                    <div className="mx-auto mt-md flex max-w-xl items-center gap-sm rounded-lg border border-outline-variant bg-surface-container-lowest p-sm text-left">
                       <span
-                        className="material-symbols-outlined"
-                        style={{ fontSize: "20px" }}
+                        className="material-symbols-outlined text-[20px] text-primary"
+                        aria-hidden="true"
                       >
-                        close
+                        description
                       </span>
-                    </button>
-                  </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate font-body-sm text-body-sm font-semibold text-on-surface">
+                          {file.name}
+                        </p>
+                        <p className="font-label-sm text-label-sm text-on-surface-variant">
+                          {(file.size / 1024 / 1024).toFixed(2)} MB
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFile(null);
+                          if (fileInputRef.current) fileInputRef.current.value = "";
+                        }}
+                        className="flex h-10 w-10 items-center justify-center rounded-lg text-outline transition-colors hover:bg-error-container hover:text-error focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-error/20"
+                        aria-label="Remove selected PDF"
+                      >
+                        <span
+                          className="material-symbols-outlined text-[20px]"
+                          aria-hidden="true"
+                        >
+                          close
+                        </span>
+                      </button>
+                    </div>
+                  ) : null}
+                </div>
+              ) : (
+                <div className="rounded-xl border border-outline-variant/60 bg-background p-md">
+                  <label
+                    className="block font-label-md text-label-md text-on-surface"
+                    htmlFor="source-text"
+                  >
+                    {inputMode === "text"
+                      ? "Paste syllabus content"
+                      : "Describe the learning goal"}
+                  </label>
+                  <textarea
+                    id="source-text"
+                    value={text}
+                    onChange={(event) => {
+                      setText(event.target.value);
+                      clearFieldError("source");
+                      setGenerationError("");
+                    }}
+                    placeholder={
+                      inputMode === "text"
+                        ? "Paste the course syllabus, lecture list, or topic outline here."
+                        : "Example: Build a 6-week study plan for data structures before an interview."
+                    }
+                    className="mt-sm h-64 w-full resize-none rounded-lg border border-outline-variant bg-surface-container-lowest p-md font-body-sm text-body-sm text-on-surface placeholder:text-on-surface-variant focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  />
                 </div>
               )}
 
-              {/* Processing Actions */}
-              <div className="flex-1 flex flex-col">
-                <h2 className="font-label-md text-label-md text-on-surface-variant uppercase mb-md tracking-widest">
-                  What Happens Next
-                </h2>
+              {fieldErrors.source ? (
+                <p className="mt-sm font-body-sm text-body-sm text-error" role="alert">
+                  {fieldErrors.source}
+                </p>
+              ) : null}
+            </div>
+          </section>
 
-                <div className="flex flex-col gap-sm bg-surface-container-low p-md rounded-xl border border-outline-variant">
-                  {[
-                    "AI analyzes your material",
-                    "Breaks down into topics",
-                    "You review and edit",
-                  ].map((item) => (
-                    <div
+          <section className="rounded-xl border border-outline-variant/60 bg-surface-container-lowest p-lg">
+            <h2 className="font-h3 text-h3 text-on-surface">Plan details</h2>
+            <div className="mt-md grid gap-md md:grid-cols-2">
+              <div>
+                <label
+                  className="block font-label-md text-label-md text-on-surface"
+                  htmlFor="subject-name"
+                >
+                  Subject name <span className="text-error">*</span>
+                </label>
+                <input
+                  id="subject-name"
+                  type="text"
+                  value={subjectName}
+                  onChange={(event) => {
+                    setSubjectName(event.target.value);
+                    clearFieldError("subjectName");
+                  }}
+                  placeholder="e.g. Data Structures"
+                  className="mt-xs w-full rounded-lg border border-outline-variant bg-background p-md font-body-sm text-body-sm text-on-surface placeholder:text-on-surface-variant focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                />
+                {fieldErrors.subjectName ? (
+                  <p
+                    className="mt-xs font-body-sm text-body-sm text-error"
+                    role="alert"
+                  >
+                    {fieldErrors.subjectName}
+                  </p>
+                ) : null}
+              </div>
+
+              <div>
+                <label
+                  className="block font-label-md text-label-md text-on-surface"
+                  htmlFor="target-date"
+                >
+                  Target date
+                </label>
+                <input
+                  id="target-date"
+                  type="date"
+                  min={today}
+                  value={examDate}
+                  onChange={(event) => setExamDate(event.target.value)}
+                  className="mt-xs w-full rounded-lg border border-outline-variant bg-background p-md font-body-sm text-body-sm text-on-surface focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+            </div>
+          </section>
+
+          <section className="rounded-xl border border-outline-variant/60 bg-surface-container-low p-lg">
+            <div className="grid gap-lg lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+              <div>
+                <h2 className="font-label-md text-label-md text-on-surface-variant">
+                  What happens next
+                </h2>
+                <div className="mt-sm flex flex-wrap gap-sm">
+                  {NEXT_STEPS.map((item) => (
+                    <span
                       key={item}
-                      className="flex items-center gap-3 text-on-surface"
+                      className="inline-flex items-center gap-xs rounded-lg border border-outline-variant bg-surface-container-lowest px-sm py-xs font-body-sm text-body-sm text-on-surface"
                     >
                       <span
-                        className="material-symbols-outlined text-primary"
-                        style={{ fontSize: "20px" }}
+                        className="material-symbols-outlined text-[18px] text-primary"
+                        aria-hidden="true"
                       >
                         check_circle
                       </span>
-                      <span className="font-body-sm">{item}</span>
-                    </div>
+                      {item}
+                    </span>
                   ))}
                 </div>
               </div>
 
-              {/* Proceed Button */}
-              <div className="mt-xl pt-lg border-t border-surface-variant">
-                <button
-                  onClick={handleProcess}
-                  disabled={loading}
-                  className="w-full bg-secondary hover:bg-on-secondary-container text-on-secondary py-3 rounded-lg font-body-md text-body-md font-semibold transition-colors flex justify-center items-center gap-sm disabled:opacity-70 disabled:cursor-not-allowed"
+              <button
+                type="button"
+                onClick={handleProcess}
+                disabled={loading}
+                className="inline-flex min-h-12 items-center justify-center gap-sm rounded-lg bg-primary px-lg py-3 font-body-md text-body-md font-semibold text-on-primary transition-colors hover:bg-primary-container disabled:cursor-not-allowed disabled:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
+              >
+                {loading ? "Generating topics..." : "Generate topics"}
+                <span
+                  className="material-symbols-outlined text-[20px]"
+                  aria-hidden="true"
                 >
-                  {loading ? "Processing..." : "Generate Topics"}
-                  <span
-                    className="material-symbols-outlined"
-                    style={{ fontSize: "20px" }}
+                  arrow_forward
+                </span>
+              </button>
+            </div>
+
+            {generationError ? (
+              <div
+                className="mt-md rounded-lg border border-error bg-error-container p-md text-on-error-container"
+                role="alert"
+              >
+                <p className="font-body-sm text-body-sm font-semibold">
+                  {generationError}
+                </p>
+                <div className="mt-sm flex flex-wrap gap-sm">
+                  <button
+                    type="button"
+                    onClick={handleProcess}
+                    disabled={loading}
+                    className="rounded-lg bg-surface-container-lowest px-sm py-2 font-label-md text-label-md text-error transition-colors hover:bg-error-container disabled:opacity-70"
                   >
-                    arrow_forward
-                  </span>
+                    Try again
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      handleModeChange(inputMode === "document" ? "text" : "document")
+                    }
+                    className="rounded-lg border border-error px-sm py-2 font-label-md text-label-md text-error transition-colors hover:bg-surface-container-lowest"
+                  >
+                    Switch source mode
+                  </button>
+                  <Link
+                    to="/help-center"
+                    className="rounded-lg border border-error px-sm py-2 font-label-md text-label-md text-error transition-colors hover:bg-surface-container-lowest"
+                  >
+                    Open Help Center
+                  </Link>
+                </div>
+              </div>
+            ) : null}
+          </section>
+        </div>
+      ) : (
+        <section className="rounded-xl border border-outline-variant/60 bg-surface-container-lowest p-lg">
+          <div className="mb-lg flex flex-col gap-md sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <h2 className="font-h3 text-h3 text-on-surface">
+                Topics to study
+              </h2>
+              <p className="mt-xs max-w-2xl font-body-sm text-body-sm text-on-surface-variant">
+                Edit unclear names and time estimates before saving. Blank
+                topics cannot be created.
+              </p>
+            </div>
+            <span className="inline-flex w-fit items-center rounded-lg bg-surface-container px-sm py-xs font-label-md text-label-md text-on-surface-variant">
+              {topics.length} {topics.length === 1 ? "topic" : "topics"}
+            </span>
+          </div>
+
+          {createError ? (
+            <div
+              className="mb-md rounded-lg border border-error bg-error-container p-md font-body-sm text-body-sm text-on-error-container"
+              role="alert"
+            >
+              {createError}
+            </div>
+          ) : null}
+
+          {topics.length === 0 ? (
+            <div className="rounded-lg border border-outline-variant bg-surface-container-low p-lg text-center">
+              <h3 className="font-body-md text-body-md font-semibold text-on-surface">
+                No usable topics yet
+              </h3>
+              <p className="mx-auto mt-xs max-w-lg font-body-sm text-body-sm text-on-surface-variant">
+                Go back and provide a more specific source, or add a topic
+                manually to start the plan.
+              </p>
+              <div className="mt-md flex flex-wrap justify-center gap-sm">
+                <button
+                  type="button"
+                  onClick={() => setStep(1)}
+                  className="rounded-lg border border-outline-variant px-md py-2 font-label-md text-label-md text-on-surface transition-colors hover:bg-surface-container-lowest"
+                >
+                  Back to source
+                </button>
+                <button
+                  type="button"
+                  onClick={addTopic}
+                  className="rounded-lg bg-primary px-md py-2 font-label-md text-label-md text-on-primary transition-colors hover:bg-primary-container"
+                >
+                  Add topic
                 </button>
               </div>
             </div>
-          </div>
-        </div>
-      ) : (
-        <div className="bg-surface-container-lowest rounded-xl shadow-[0_4px_20px_-4px_rgba(26,20,107,0.08)] p-xl border-t-2 border-primary">
-          <div className="flex items-center justify-between mb-lg">
-            <h2 className="font-h3 text-h3 text-on-surface">Topics to Study</h2>
-            <div className="text-sm font-label-md text-on-surface-variant bg-surface-container px-sm py-xs rounded-md">
-              {topics.length} topics
-            </div>
-          </div>
-
-          {topics.length === 0 ? (
-            <p className="text-on-surface-variant text-center py-xl">
-              No topics generated.
-            </p>
           ) : (
-            <div className="flex flex-col gap-sm">
-              {topics.map((t, i) => (
-                <div
-                  key={i}
-                  className="flex flex-col sm:flex-row gap-md items-center bg-surface-container-low p-md rounded-lg border border-outline-variant"
-                >
-                  <input
-                    value={t.name}
-                    onChange={(e) => updateTopic(i, "name", e.target.value)}
-                    placeholder="Topic name"
-                    className="flex-1 w-full bg-background border border-outline-variant rounded-lg p-md font-body-sm text-body-sm text-on-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
-                  />
-                  <div className="flex items-center gap-sm w-full sm:w-auto">
-                    <span className="font-label-sm text-on-surface-variant hidden sm:inline-block">
-                      Hours:
-                    </span>
-                    <input
-                      type="number"
-                      min="1"
-                      step="0.5"
-                      value={t.estimated_hours}
-                      onChange={(e) =>
-                        updateTopic(
-                          i,
-                          "estimated_hours",
-                          Number(e.target.value) || 1,
-                        )
-                      }
-                      className="w-24 bg-background border border-outline-variant rounded-lg p-md font-body-sm text-body-sm text-on-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
-                    />
+            <div className="space-y-sm">
+              {topics.map((topic, index) => {
+                const missingName = !String(topic.name || "").trim();
+                const invalidHours = !(Number(topic.estimated_hours) > 0);
+
+                return (
+                  <div
+                    key={index}
+                    className="grid gap-sm rounded-lg border border-outline-variant bg-surface-container-low p-md lg:grid-cols-[minmax(0,1fr)_140px_44px] lg:items-start"
+                  >
+                    <div>
+                      <label
+                        className="block font-label-sm text-label-sm text-on-surface-variant"
+                        htmlFor={`topic-name-${index}`}
+                      >
+                        Topic name
+                      </label>
+                      <input
+                        id={`topic-name-${index}`}
+                        value={topic.name}
+                        onChange={(event) =>
+                          updateTopic(index, "name", event.target.value)
+                        }
+                        placeholder="Topic name"
+                        className={`mt-xs w-full rounded-lg border bg-background p-md font-body-sm text-body-sm text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:ring-2 focus:ring-primary/20 ${
+                          missingName
+                            ? "border-error focus:border-error"
+                            : "border-outline-variant focus:border-primary"
+                        }`}
+                      />
+                      {missingName ? (
+                        <p className="mt-xs font-body-sm text-body-sm text-error">
+                          Add a topic name.
+                        </p>
+                      ) : null}
+                    </div>
+
+                    <div>
+                      <label
+                        className="block font-label-sm text-label-sm text-on-surface-variant"
+                        htmlFor={`topic-hours-${index}`}
+                      >
+                        Hours
+                      </label>
+                      <input
+                        id={`topic-hours-${index}`}
+                        type="number"
+                        min="0.5"
+                        step="0.5"
+                        value={topic.estimated_hours}
+                        onChange={(event) =>
+                          updateTopic(
+                            index,
+                            "estimated_hours",
+                            Number(event.target.value),
+                          )
+                        }
+                        className={`mt-xs w-full rounded-lg border bg-background p-md font-body-sm text-body-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 ${
+                          invalidHours
+                            ? "border-error focus:border-error"
+                            : "border-outline-variant focus:border-primary"
+                        }`}
+                      />
+                      {invalidHours ? (
+                        <p className="mt-xs font-body-sm text-body-sm text-error">
+                          Use a positive estimate.
+                        </p>
+                      ) : null}
+                    </div>
+
                     <button
-                      onClick={() => removeTopic(i)}
-                      className="p-sm text-outline hover:text-error transition-colors"
-                      title="Remove Topic"
+                      type="button"
+                      onClick={() => removeTopic(index)}
+                      className="flex h-11 w-11 items-center justify-center rounded-lg text-outline transition-colors hover:bg-error-container hover:text-error focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-error/20"
+                      aria-label={`Remove topic ${index + 1}`}
                     >
                       <span
-                        className="material-symbols-outlined"
-                        style={{ fontSize: "20px" }}
+                        className="material-symbols-outlined text-[20px]"
+                        aria-hidden="true"
                       >
                         delete
                       </span>
                     </button>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
 
-          <div className="mt-xl flex flex-wrap gap-md items-center pt-lg border-t border-surface-variant">
+          <div className="mt-lg flex flex-wrap items-center gap-md border-t border-outline-variant/60 pt-lg">
             <button
+              type="button"
               onClick={addTopic}
-              className="border border-outline-variant text-on-surface hover:bg-surface-container-low font-label-md text-label-md py-2 px-4 rounded-lg transition-colors flex items-center gap-2"
+              className="inline-flex min-h-11 items-center gap-xs rounded-lg border border-outline-variant px-md py-2 font-label-md text-label-md text-on-surface transition-colors hover:bg-surface-container-low"
             >
               <span
-                className="material-symbols-outlined"
-                style={{ fontSize: "20px" }}
+                className="material-symbols-outlined text-[20px]"
+                aria-hidden="true"
               >
                 add
               </span>
-              Add Topic
+              Add topic
             </button>
             <button
-              onClick={() => setStep(1)}
-              className="border border-outline-variant text-on-surface hover:bg-surface-container-low font-label-md text-label-md py-2 px-4 rounded-lg transition-colors"
+              type="button"
+              onClick={() => {
+                setCreateError("");
+                setStep(1);
+              }}
+              className="min-h-11 rounded-lg border border-outline-variant px-md py-2 font-label-md text-label-md text-on-surface transition-colors hover:bg-surface-container-low"
             >
               Back
             </button>
             <div className="flex-1" />
             <button
+              type="button"
               onClick={handleCreate}
-              disabled={loading || topics.length === 0}
-              className="bg-primary hover:bg-primary-dark text-on-primary py-2 px-6 rounded-lg font-body-md text-body-md font-semibold transition-colors disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-2"
+              disabled={loading || hasInvalidTopics}
+              className="inline-flex min-h-11 items-center gap-xs rounded-lg bg-primary px-lg py-2 font-body-md text-body-md font-semibold text-on-primary transition-colors hover:bg-primary-container disabled:cursor-not-allowed disabled:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
             >
-              {loading ? "Creating..." : "Create Study Plan"}
+              {loading ? "Creating..." : "Create study plan"}
               <span
-                className="material-symbols-outlined"
-                style={{ fontSize: "20px" }}
+                className="material-symbols-outlined text-[20px]"
+                aria-hidden="true"
               >
                 check_circle
               </span>
             </button>
           </div>
-        </div>
+        </section>
       )}
     </div>
   );

@@ -18,6 +18,23 @@ const ProfilePage = () => {
   const [savingProfile, setSavingProfile] = useState(false);
   const [savingPassword, setSavingPassword] = useState(false);
 
+  // Preference settings state
+  const [studyGoal, setStudyGoal] = useState(() => {
+    return localStorage.getItem("distilllearn-preferences-studygoal") || "30 Minutes";
+  });
+  const [notifications, setNotifications] = useState(() => {
+    try {
+      const stored = localStorage.getItem("distilllearn-preferences-notifications");
+      return stored ? JSON.parse(stored) : { dailyReminders: true, courseUpdates: true, communityMentions: false };
+    } catch {
+      return { dailyReminders: true, courseUpdates: true, communityMentions: false };
+    }
+  });
+  const [deepFocusMode, setDeepFocusMode] = useState(() => {
+    const stored = localStorage.getItem("distilllearn-preferences-deepfocus");
+    return stored === null ? true : stored === "true";
+  });
+
   useEffect(() => {
     setProfileForm({
       username: user?.username || "",
@@ -25,6 +42,42 @@ const ProfilePage = () => {
       profileImage: user?.profileImage || "",
     });
   }, [user]);
+
+  const handleFileChange = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("Profile photo must be under 2MB");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setProfileForm((current) => ({
+        ...current,
+        profileImage: reader.result,
+      }));
+      toast.success("Photo uploaded. Save changes to persist.");
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const toggleNotification = (key) => {
+    setNotifications((current) => {
+      const next = { ...current, [key]: !current[key] };
+      localStorage.setItem("distilllearn-preferences-notifications", JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const toggleDeepFocus = () => {
+    setDeepFocusMode((current) => {
+      const next = !current;
+      localStorage.setItem("distilllearn-preferences-deepfocus", String(next));
+      return next;
+    });
+  };
 
   const handleProfileSubmit = async (event) => {
     event.preventDefault();
@@ -76,7 +129,7 @@ const ProfilePage = () => {
   return (
     <div className="bg-background text-on-background min-h-screen flex flex-col pb-safe">
       <div className="mb-margin">
-        <h1 className="font-h1 text-h1 text-on-background">Profile Settings</h1>
+        <h1 className="font-h1 text-h1 text-on-background tracking-tight font-black">Profile Settings</h1>
         <p className="font-body-md text-body-md text-on-surface-variant mt-xs">
           Manage your account details and learning preferences.
         </p>
@@ -84,95 +137,109 @@ const ProfilePage = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-lg">
         <div className="lg:col-span-2 flex flex-col gap-lg">
-          <section className="bg-surface-container-lowest rounded-xl shadow-[0_4px_10px_rgba(26,20,107,0.15)] p-md border-t-2 border-primary">
-            <h2 className="font-h3 text-h3 text-on-background mb-md">
+          {/* Personal Information */}
+          <section className="bg-surface-container-lowest rounded-xl border border-outline-variant/30 p-xl shadow-[0_8px_30px_rgba(26,20,107,0.03)]">
+            <h2 className="font-h3 text-h3 text-on-background mb-md font-bold">
               Personal Information
             </h2>
             <div className="flex flex-col sm:flex-row gap-gutter items-start sm:items-center mb-md">
               <div className="relative group">
-                <img
-                  alt="Profile Picture"
-                  className="w-24 h-24 rounded-full object-cover"
-                  src={
-                    user?.profileImage ||
-                    "https://lh3.googleusercontent.com/aida-public/AB6AXuBwqtVkCUmFAkIW03CmRpsmlIWaT-Nfh4ahNBAdKqEmmP2pZSVECCbBdBdXZ6gIinCH3AwEkHIkLCODKRWgFoLyDB1yK93tLcsW0JgOHQrLsJVZu14-flkuxoHDVpBjT7TFo96wZmBmtwa6hlNqF0udbS66ka7BrV8gGNOfLwwdYWxfnZL_5h_l-iQs40OMHgwTb6PMDRo3dsjX7m_q_2WkmNwUcDomzPW1vXK-HHQRusmojn1nBHpbdQciv_ReZs867kddbFIC-7rY"
-                  }
-                />
+                {profileForm.profileImage ? (
+                  <img
+                    alt="Profile Picture"
+                    className="w-24 h-24 rounded-full object-cover border border-outline-variant/30 shadow-sm"
+                    src={profileForm.profileImage}
+                  />
+                ) : (
+                  <div className="w-24 h-24 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-bold text-3xl border border-outline-variant/30 select-none shadow-sm">
+                    {(profileForm.username || user?.username || "?").slice(0, 1).toUpperCase()}
+                  </div>
+                )}
               </div>
-              <div className="flex-1 w-full space-y-sm">
-                <div>
-                  <label className="block font-label-md text-label-md text-on-surface-variant mb-xs">
-                    Full Name
+              <div className="flex-1 w-full space-y-md">
+                <div className="flex flex-wrap gap-sm items-center">
+                  <label className="cursor-pointer bg-surface border border-outline-variant/60 hover:border-slate-400 text-slate-700 font-label-md text-label-md px-md py-2.5 rounded-lg transition-colors inline-flex items-center gap-xs">
+                    <span className="material-symbols-outlined text-[16px]">upload</span>
+                    Choose Photo
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleFileChange}
+                    />
                   </label>
-                  <input
-                    className="w-full bg-transparent border border-outline-variant rounded-DEFAULT px-sm py-2 font-body-md text-body-md text-on-background focus:outline-none focus:border-primary focus:border-2 transition-all"
-                    type="text"
-                    value={profileForm.username}
-                    onChange={(event) =>
-                      setProfileForm((current) => ({
-                        ...current,
-                        username: event.target.value,
-                      }))
-                    }
-                  />
+                  {profileForm.profileImage && (
+                    <button
+                      type="button"
+                      onClick={() => setProfileForm((current) => ({ ...current, profileImage: "" }))}
+                      className="border border-rose-200 text-rose-700 font-label-md text-label-md px-md py-2.5 rounded-lg hover:bg-rose-50/50 transition-colors"
+                    >
+                      Remove Photo
+                    </button>
+                  )}
                 </div>
-                <div>
-                  <label className="block font-label-md text-label-md text-on-surface-variant mb-xs">
-                    Email Address
-                  </label>
-                  <input
-                    className="w-full bg-transparent border border-outline-variant rounded-DEFAULT px-sm py-2 font-body-md text-body-md text-on-background focus:outline-none focus:border-primary focus:border-2 transition-all"
-                    type="email"
-                    value={profileForm.email}
-                    onChange={(event) =>
-                      setProfileForm((current) => ({
-                        ...current,
-                        email: event.target.value,
-                      }))
-                    }
-                  />
-                </div>
-                <div>
-                  <label className="block font-label-md text-label-md text-on-surface-variant mb-xs">
-                    Profile Image URL
-                  </label>
-                  <input
-                    className="w-full bg-transparent border border-outline-variant rounded-DEFAULT px-sm py-2 font-body-md text-body-md text-on-background focus:outline-none focus:border-primary focus:border-2 transition-all"
-                    type="text"
-                    value={profileForm.profileImage}
-                    onChange={(event) =>
-                      setProfileForm((current) => ({
-                        ...current,
-                        profileImage: event.target.value,
-                      }))
-                    }
-                  />
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-md pt-sm">
+                  <div>
+                    <label className="block font-label-md text-label-md text-on-surface-variant mb-xs">
+                      Full Name
+                    </label>
+                    <input
+                      className="w-full bg-surface-container-lowest border border-outline-variant/60 rounded-lg px-sm py-2.5 font-body-md text-body-md text-on-background focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors"
+                      type="text"
+                      value={profileForm.username}
+                      onChange={(event) =>
+                        setProfileForm((current) => ({
+                          ...current,
+                          username: event.target.value,
+                        }))
+                      }
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-label-md text-label-md text-on-surface-variant mb-xs">
+                      Email Address
+                    </label>
+                    <input
+                      className="w-full bg-surface-container-lowest border border-outline-variant/60 rounded-lg px-sm py-2.5 font-body-md text-body-md text-on-background focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors"
+                      type="email"
+                      value={profileForm.email}
+                      onChange={(event) =>
+                        setProfileForm((current) => ({
+                          ...current,
+                          email: event.target.value,
+                        }))
+                      }
+                    />
+                  </div>
                 </div>
               </div>
             </div>
-            <div className="flex justify-end">
+            <div className="flex justify-end pt-sm">
               <button
                 type="button"
                 onClick={handleProfileSubmit}
                 disabled={savingProfile}
-                className="bg-primary text-on-primary font-label-md text-label-md px-md py-2 rounded-DEFAULT hover:bg-primary-container transition-colors disabled:opacity-60"
+                className="bg-primary text-on-primary font-label-md text-label-md px-md py-2.5 rounded-lg hover:bg-primary-container transition-all duration-150 disabled:opacity-60 cursor-pointer"
               >
                 {savingProfile ? "Saving..." : "Save Changes"}
               </button>
             </div>
           </section>
 
-          <section className="bg-surface-container-lowest rounded-xl shadow-[0_4px_10px_rgba(26,20,107,0.15)] p-md">
-            <h2 className="font-h3 text-h3 text-on-background mb-md">
+          {/* Account Security */}
+          <section className="bg-surface-container-lowest rounded-xl border border-outline-variant/30 p-xl shadow-[0_8px_30px_rgba(26,20,107,0.03)]">
+            <h2 className="font-h3 text-h3 text-on-background mb-md font-bold">
               Account Security
             </h2>
             <div className="space-y-md">
               <div>
-                <label className="block font-label-md text-label-md text-on-surface-variant mb-xs">
+                <label className="block font-label-md text-label-md text-on-surface-variant mb-xs" htmlFor="current-pass">
                   Current Password
                 </label>
                 <input
-                  className="w-full max-w-md bg-transparent border border-outline-variant rounded-DEFAULT px-sm py-2 font-body-md text-body-md text-on-background focus:outline-none focus:border-primary focus:border-2 transition-all"
+                  id="current-pass"
+                  className="w-full max-w-md bg-surface-container-lowest border border-outline-variant/60 rounded-lg px-sm py-2.5 font-body-md text-body-md text-on-background placeholder:text-slate-600/60 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors"
                   placeholder="••••••••"
                   type="password"
                   value={passwordForm.currentPassword}
@@ -185,11 +252,12 @@ const ProfilePage = () => {
                 />
               </div>
               <div>
-                <label className="block font-label-md text-label-md text-on-surface-variant mb-xs">
+                <label className="block font-label-md text-label-md text-on-surface-variant mb-xs" htmlFor="new-pass">
                   New Password
                 </label>
                 <input
-                  className="w-full max-w-md bg-transparent border border-outline-variant rounded-DEFAULT px-sm py-2 font-body-md text-body-md text-on-background focus:outline-none focus:border-primary focus:border-2 transition-all"
+                  id="new-pass"
+                  className="w-full max-w-md bg-surface-container-lowest border border-outline-variant/60 rounded-lg px-sm py-2.5 font-body-md text-body-md text-on-background placeholder:text-slate-600/60 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors"
                   placeholder="Enter new password"
                   type="password"
                   value={passwordForm.newPassword}
@@ -202,11 +270,12 @@ const ProfilePage = () => {
                 />
               </div>
               <div>
-                <label className="block font-label-md text-label-md text-on-surface-variant mb-xs">
+                <label className="block font-label-md text-label-md text-on-surface-variant mb-xs" htmlFor="confirm-pass">
                   Confirm New Password
                 </label>
                 <input
-                  className="w-full max-w-md bg-transparent border border-outline-variant rounded-DEFAULT px-sm py-2 font-body-md text-body-md text-on-background focus:outline-none focus:border-primary focus:border-2 transition-all"
+                  id="confirm-pass"
+                  className="w-full max-w-md bg-surface-container-lowest border border-outline-variant/60 rounded-lg px-sm py-2.5 font-body-md text-body-md text-on-background placeholder:text-slate-600/60 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors"
                   placeholder="Confirm new password"
                   type="password"
                   value={passwordForm.confirmPassword}
@@ -223,14 +292,14 @@ const ProfilePage = () => {
                   type="button"
                   onClick={handlePasswordSubmit}
                   disabled={savingPassword}
-                  className="border border-primary text-primary font-label-md text-label-md px-md py-2 rounded-DEFAULT hover:bg-surface-container-low transition-colors disabled:opacity-60"
+                  className="border border-primary text-primary font-label-md text-label-md px-md py-2.5 rounded-lg hover:bg-surface-container-low transition-all duration-150 disabled:opacity-60 cursor-pointer"
                 >
                   {savingPassword ? "Updating..." : "Update Password"}
                 </button>
                 <button
                   type="button"
                   onClick={logout}
-                  className="border border-outline-variant text-on-surface font-label-md text-label-md px-md py-2 rounded-DEFAULT hover:bg-surface-container-low transition-colors"
+                  className="border border-outline-variant text-on-surface font-label-md text-label-md px-md py-2.5 rounded-lg hover:bg-surface-container-low transition-all duration-150 cursor-pointer"
                 >
                   Sign Out
                 </button>
@@ -239,83 +308,103 @@ const ProfilePage = () => {
           </section>
         </div>
 
+        {/* Learning Preferences */}
         <div className="flex flex-col gap-lg">
-          <section className="bg-surface-container-lowest rounded-xl shadow-ambient p-md h-full">
-            <h2 className="font-h3 text-h3 text-on-background mb-md">
+          <section className="bg-surface-container-lowest rounded-xl border border-outline-variant/30 p-xl shadow-[0_8px_30px_rgba(26,20,107,0.03)] h-full">
+            <h2 className="font-h3 text-h3 text-on-background mb-md font-bold">
               Learning Preferences
             </h2>
             <div className="space-y-lg">
               <div>
-                <h3 className="font-label-md text-label-md text-on-surface-variant mb-sm uppercase">
+                <h3 className="font-label-md text-label-md text-on-surface-variant mb-sm uppercase tracking-wide">
                   Daily Study Goal
                 </h3>
                 <div className="flex items-center gap-sm">
                   <span className="material-symbols-outlined text-primary">
                     timer
                   </span>
-                  <select className="bg-transparent border border-outline-variant rounded-DEFAULT px-sm py-1 font-body-md text-body-md text-on-background focus:outline-none focus:border-primary focus:border-2 transition-all cursor-pointer">
-                    <option>15 Minutes</option>
-                    <option selected>30 Minutes</option>
-                    <option>60 Minutes</option>
-                    <option>120 Minutes</option>
+                  <select
+                    value={studyGoal}
+                    onChange={(event) => {
+                      const val = event.target.value;
+                      setStudyGoal(val);
+                      localStorage.setItem("distilllearn-preferences-studygoal", val);
+                    }}
+                    className="bg-surface-container-lowest border border-outline-variant/60 rounded-lg px-sm py-2 font-body-md text-body-md text-on-background focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all cursor-pointer"
+                  >
+                    <option value="15 Minutes">15 Minutes</option>
+                    <option value="30 Minutes">30 Minutes</option>
+                    <option value="60 Minutes">60 Minutes</option>
+                    <option value="120 Minutes">120 Minutes</option>
                   </select>
                 </div>
               </div>
 
               <div>
-                <h3 className="font-label-md text-label-md text-on-surface-variant mb-sm uppercase">
+                <h3 className="font-label-md text-label-md text-on-surface-variant mb-sm uppercase tracking-wide">
                   Notifications
                 </h3>
-                <div className="space-y-sm">
-                  <label className="flex items-center gap-sm cursor-pointer">
+                <div className="space-y-md">
+                  {/* Daily Reminders */}
+                  <label className="flex items-center gap-sm cursor-pointer select-none">
                     <div className="relative">
                       <input
-                        checked
-                        readOnly
-                        className="sr-only"
                         type="checkbox"
+                        className="sr-only"
+                        checked={notifications.dailyReminders}
+                        onChange={() => toggleNotification("dailyReminders")}
                       />
-                      <div className="block bg-secondary w-10 h-6 rounded-full" />
-                      <div className="dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition transform translate-x-4" />
+                      <div className={`block w-10 h-6 rounded-full transition-colors ${notifications.dailyReminders ? "bg-secondary" : "bg-outline-variant"}`} />
+                      <div className={`absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform ${notifications.dailyReminders ? "translate-x-4" : "translate-x-0"}`} />
                     </div>
-                    <span className="font-body-sm text-body-sm text-on-background">
+                    <span className="font-body-sm text-body-sm text-on-background font-medium">
                       Daily Reminders
                     </span>
                   </label>
-                  <label className="flex items-center gap-sm cursor-pointer">
+
+                  {/* Course Updates */}
+                  <label className="flex items-center gap-sm cursor-pointer select-none">
                     <div className="relative">
                       <input
-                        checked
-                        readOnly
-                        className="sr-only"
                         type="checkbox"
+                        className="sr-only"
+                        checked={notifications.courseUpdates}
+                        onChange={() => toggleNotification("courseUpdates")}
                       />
-                      <div className="block bg-secondary w-10 h-6 rounded-full" />
-                      <div className="dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition transform translate-x-4" />
+                      <div className={`block w-10 h-6 rounded-full transition-colors ${notifications.courseUpdates ? "bg-secondary" : "bg-outline-variant"}`} />
+                      <div className={`absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform ${notifications.courseUpdates ? "translate-x-4" : "translate-x-0"}`} />
                     </div>
-                    <span className="font-body-sm text-body-sm text-on-background">
+                    <span className="font-body-sm text-body-sm text-on-background font-medium">
                       Course Updates
                     </span>
                   </label>
-                  <label className="flex items-center gap-sm cursor-pointer">
+
+                  {/* Community Mentions */}
+                  <label className="flex items-center gap-sm cursor-pointer select-none">
                     <div className="relative">
-                      <input className="sr-only" type="checkbox" />
-                      <div className="block bg-outline-variant w-10 h-6 rounded-full" />
-                      <div className="dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition" />
+                      <input
+                        type="checkbox"
+                        className="sr-only"
+                        checked={notifications.communityMentions}
+                        onChange={() => toggleNotification("communityMentions")}
+                      />
+                      <div className={`block w-10 h-6 rounded-full transition-colors ${notifications.communityMentions ? "bg-secondary" : "bg-outline-variant"}`} />
+                      <div className={`absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform ${notifications.communityMentions ? "translate-x-4" : "translate-x-0"}`} />
                     </div>
-                    <span className="font-body-sm text-body-sm text-on-background">
+                    <span className="font-body-sm text-body-sm text-on-background font-medium">
                       Community Mentions
                     </span>
                   </label>
                 </div>
               </div>
 
-              <div className="bg-surface-container-low p-sm rounded-lg border border-outline-variant">
+              {/* Deep Focus Mode Info Box */}
+              <div className="bg-surface-container-low p-md rounded-lg border border-outline-variant/60">
                 <div className="flex items-center gap-sm mb-xs">
                   <span className="material-symbols-outlined text-primary">
                     do_not_disturb_on
                   </span>
-                  <h4 className="font-label-md text-label-md text-on-background">
+                  <h4 className="font-label-md text-label-md text-on-background font-bold">
                     Deep Focus Mode
                   </h4>
                 </div>
@@ -323,19 +412,19 @@ const ProfilePage = () => {
                   Automatically silence all notifications while viewing course
                   materials.
                 </p>
-                <label className="flex items-center gap-sm cursor-pointer">
+                <label className="flex items-center gap-sm cursor-pointer select-none">
                   <div className="relative">
                     <input
-                      checked
-                      readOnly
-                      className="sr-only"
                       type="checkbox"
+                      className="sr-only"
+                      checked={deepFocusMode}
+                      onChange={toggleDeepFocus}
                     />
-                    <div className="block bg-secondary w-10 h-6 rounded-full" />
-                    <div className="dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition transform translate-x-4" />
+                    <div className={`block w-10 h-6 rounded-full transition-colors ${deepFocusMode ? "bg-secondary" : "bg-outline-variant"}`} />
+                    <div className={`absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform ${deepFocusMode ? "translate-x-4" : "translate-x-0"}`} />
                   </div>
-                  <span className="font-label-sm text-label-sm text-secondary uppercase">
-                    Enabled
+                  <span className={`font-label-sm text-label-sm uppercase font-bold ${deepFocusMode ? "text-secondary" : "text-slate-500"}`}>
+                    {deepFocusMode ? "Enabled" : "Disabled"}
                   </span>
                 </label>
               </div>

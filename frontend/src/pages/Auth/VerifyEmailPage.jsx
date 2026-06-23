@@ -156,29 +156,34 @@ const VerifyEmailPage = () => {
   };
 
   return (
-    <div className="bg-background min-h-screen flex items-center justify-center p-gutter font-body-md text-on-background">
-      <main className="max-w-md w-full bg-surface-container-lowest rounded-xl shadow-[0_10px_30px_rgba(26,20,107,0.05)] border border-surface-variant p-xl flex flex-col items-center text-center">
-        <div className="w-24 h-24 bg-surface-container-low rounded-full flex items-center justify-center mb-margin border-2 border-surface-variant">
-          <span className="material-symbols-outlined text-primary text-5xl" style={{ fontVariationSettings: "'FILL' 0, 'wght' 200" }}>
-            mark_email_read
-          </span>
+    <div className="flex min-h-screen items-center justify-center bg-background text-on-surface p-md">
+      <main className="w-full max-w-[440px] mx-auto">
+        <div className="text-center mb-xl">
+          <h1 className="font-h1 text-h1 text-primary mb-sm tracking-tight font-black">DistillLearn</h1>
+          <p className="font-body-lg text-body-lg text-on-surface-variant">Verify your email</p>
         </div>
 
-        <h1 className="font-h2 text-h2 text-primary mb-md">Check your inbox</h1>
-        <p className="font-body-lg text-body-lg text-on-surface-variant mb-xl">
-          We&apos;ve sent a 6-digit verification code to your email address. Please enter the code below to verify your account.
-        </p>
+        <div className="bg-surface-container-lowest rounded-xl border border-outline-variant/30 p-xl shadow-[0_8px_30px_rgba(26,20,107,0.04)] flex flex-col items-center">
+          <div className="w-20 h-20 bg-surface-container-low rounded-full flex items-center justify-center mb-lg border border-outline-variant/30">
+            <span className="material-symbols-outlined text-primary text-4xl" style={{ fontVariationSettings: "'FILL' 0, 'wght' 300" }}>
+              mark_email_read
+            </span>
+          </div>
 
-        <form onSubmit={handleSubmit} className="w-full flex flex-col gap-md">
-          <div className="flex flex-col gap-lg w-full mb-md">
-            <div className="flex justify-between gap-sm mx-auto w-full max-w-xs" id="otp-inputs" onPaste={handlePaste}>
+          <h2 className="font-title text-title text-on-surface mb-xs text-center font-bold">Check your inbox</h2>
+          <p className="font-body-sm text-body-sm text-on-surface-variant mb-xl text-center">
+            We&apos;ve sent a 6-digit verification code to your email. Please enter it below.
+          </p>
+
+          <form onSubmit={handleSubmit} className="w-full flex flex-col gap-lg">
+            <div className="flex justify-between gap-2 mx-auto w-full max-w-xs" id="otp-inputs" onPaste={handlePaste}>
               {otp.map((digit, index) => (
                 <input
                   key={index}
                   ref={(element) => {
                     inputRefs.current[index] = element;
                   }}
-                  className="w-12 h-14 text-center text-h3 font-bold border-2 border-surface-variant rounded-lg focus:border-primary focus:ring-1 focus:ring-primary bg-surface-container-lowest"
+                  className="w-11 h-13 text-center text-h2 font-semibold border border-outline-variant/60 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary bg-surface-container-lowest outline-none transition-colors"
                   maxLength={1}
                   type="text"
                   inputMode="numeric"
@@ -190,27 +195,29 @@ const VerifyEmailPage = () => {
             </div>
 
             <button
-              className="w-full bg-primary text-on-primary font-label-md text-label-md py-md px-lg rounded-lg hover:bg-primary-container transition-colors duration-200"
+              className="w-full flex justify-center items-center py-2.5 px-lg border border-transparent rounded-lg bg-primary font-label-md text-label-md text-on-primary hover:bg-primary-container focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-all duration-150 cursor-pointer"
               type="submit"
               disabled={submitting}
             >
               {submitting ? "Verifying..." : "Verify OTP"}
             </button>
+          </form>
+
+          <div className="mt-lg">
+            <Link className="font-label-md text-label-md text-primary hover:text-primary-container transition-colors inline-flex items-center justify-center gap-xs" to={`/login${location.search ? `?${new URLSearchParams({ returnTo }).toString()}` : ""}`}>
+              <span className="material-symbols-outlined text-[16px]">arrow_back</span>
+              Back to Login
+            </Link>
           </div>
-        </form>
+        </div>
 
-        <Link className="w-full bg-transparent text-primary font-label-md text-label-md py-md px-lg rounded-lg hover:bg-surface-container-low transition-colors duration-200 flex items-center justify-center gap-sm" to={`/login${location.search ? `?${new URLSearchParams({ returnTo }).toString()}` : ""}`}>
-          <span className="material-symbols-outlined text-sm">arrow_back</span>
-          Back to Login
-        </Link>
-
-        <p className="font-body-sm text-body-sm text-outline mt-margin">
+        <p className="font-body-sm text-body-sm text-on-surface-variant mt-xl text-center">
           Didn&apos;t receive a code?{" "}
-          <button type="button" className="text-primary font-semibold hover:underline" onClick={handleResendOtp} disabled={resending || cooldown > 0}>
+          <button type="button" className="text-primary font-semibold hover:text-primary-container transition-colors hover:underline" onClick={handleResendOtp} disabled={resending || cooldown > 0}>
             {resending ? "Resending..." : cooldown > 0 ? `Resend in ${formatSeconds(cooldown)}` : "Resend Code"}
           </button>{" "}
           or{" "}
-          <Link className="text-primary hover:underline" to="/help-center">
+          <Link className="text-primary hover:text-primary-container transition-colors hover:underline" to="/help-center">
             contact support
           </Link>.
         </p>

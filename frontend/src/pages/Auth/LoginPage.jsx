@@ -31,26 +31,26 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-surface text-on-surface p-md">
+    <div className="flex min-h-screen items-center justify-center bg-background text-on-surface p-md">
       <main className="w-full max-w-[440px] mx-auto">
         <div className="text-center mb-xl">
-          <h1 className="font-h1 text-h1 text-primary mb-sm">DistillLearn</h1>
+          <h1 className="font-h1 text-h1 text-primary mb-sm tracking-tight font-black">DistillLearn</h1>
           <p className="font-body-lg text-body-lg text-on-surface-variant">Sign in to your account</p>
         </div>
 
-        <div className="bg-surface-container-lowest rounded-xl shadow-[0_4px_24px_-4px_rgba(26,20,107,0.15)] border border-surface-variant p-xl">
-          <form onSubmit={handleSubmit} className="space-y-gutter">
+        <div className="bg-surface-container-lowest rounded-xl border border-outline-variant/30 p-xl shadow-[0_8px_30px_rgba(26,20,107,0.04)]">
+          <form onSubmit={handleSubmit} className="space-y-lg">
             <div>
               <label className="block font-label-md text-label-md text-on-surface-variant mb-xs" htmlFor="email">
                 Email address
               </label>
               <div className="relative">
-                <span className="material-symbols-outlined absolute inset-y-0 left-0 pl-sm flex items-center text-outline-variant pointer-events-none" style={{ fontVariationSettings: "'FILL' 0" }}>
+                <span className="material-symbols-outlined absolute inset-y-0 left-0 pl-sm flex items-center text-outline pointer-events-none" style={{ fontVariationSettings: "'FILL' 0" }}>
                   mail
                 </span>
                 <input
                   autoComplete="email"
-                  className="block w-full pl-xl pr-sm py-sm bg-surface-container-lowest border border-outline-variant rounded focus:ring-2 focus:ring-primary focus:border-primary font-body-md text-body-md text-on-surface placeholder:text-outline outline-none transition-colors"
+                  className="block w-full pl-xl pr-sm py-2.5 bg-surface-container-lowest border border-outline-variant/60 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary font-body-md text-body-md text-on-surface placeholder:text-slate-600/60 outline-none transition-colors"
                   id="email"
                   name="email"
                   placeholder="you@example.com"
@@ -72,12 +72,12 @@ const LoginPage = () => {
                 </Link>
               </div>
               <div className="relative">
-                <span className="material-symbols-outlined absolute inset-y-0 left-0 pl-sm flex items-center text-outline-variant pointer-events-none" style={{ fontVariationSettings: "'FILL' 0" }}>
+                <span className="material-symbols-outlined absolute inset-y-0 left-0 pl-sm flex items-center text-outline pointer-events-none" style={{ fontVariationSettings: "'FILL' 0" }}>
                   lock
                 </span>
                 <input
                   autoComplete="current-password"
-                  className="block w-full pl-xl pr-sm py-sm bg-surface-container-lowest border border-outline-variant rounded focus:ring-2 focus:ring-primary focus:border-primary font-body-md text-body-md text-on-surface placeholder:text-outline outline-none transition-colors"
+                  className="block w-full pl-xl pr-sm py-2.5 bg-surface-container-lowest border border-outline-variant/60 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary font-body-md text-body-md text-on-surface placeholder:text-slate-600/60 outline-none transition-colors"
                   id="password"
                   name="password"
                   placeholder="••••••••"
@@ -103,7 +103,7 @@ const LoginPage = () => {
 
             <div>
               <button
-                className="w-full flex justify-center items-center py-md px-lg border border-transparent rounded bg-primary font-label-md text-label-md text-on-primary hover:bg-primary-container focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors cursor-pointer"
+                className="w-full flex justify-center items-center py-2.5 px-lg border border-transparent rounded-lg bg-primary font-label-md text-label-md text-on-primary hover:bg-primary-container focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-all duration-150 cursor-pointer"
                 type="submit"
                 disabled={submitting}
               >

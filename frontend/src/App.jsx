@@ -18,7 +18,6 @@ import StudyPlans from "./pages/StudyPlans/StudyPlans";
 import TopicStudyPage from "./pages/Study/TopicStudyPage";
 import SyllabusPage from "./pages/Syllabus/SyllabusPage";
 import ProfilePage from "./pages/Profile/ProfilePage";
-import SharedStudyPlanPage from "./pages/Shared/SharedStudyPlanPage";
 import HelpCenterPage from "./pages/HelpCenter/HelpCenterPage";
 import { useAuth } from "./context/AuthContext";
 import { Analytics } from "@vercel/analytics/react";
@@ -77,7 +76,6 @@ const App = () => {
             )
           }
         />
-        <Route path="/shared/:shareSlug" element={<SharedStudyPlanPage />} />
 
         <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<DashboardPage />} />

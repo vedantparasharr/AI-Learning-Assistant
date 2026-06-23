@@ -20,12 +20,15 @@ const generateTopicContent = async (topicKey) => {
   }
 };
 
-const markTopicCompleted = async (topicKey) => {
+const markTopicCompleted = async (topicKey, completionStatus = "completed") => {
   try {
-    const response = await axiosInstance.patch(API_PATHS.TOPICS.COMPLETE(topicKey));
+    const response = await axiosInstance.patch(
+      API_PATHS.TOPICS.COMPLETE(topicKey),
+      { completionStatus }
+    );
     return response.data;
   } catch (error) {
-    throw error.response?.data || { message: "Failed to mark topic completed" };
+    throw error.response?.data || { message: "Failed to update topic completion" };
   }
 };
 

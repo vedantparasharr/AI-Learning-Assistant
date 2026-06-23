@@ -1,223 +1,249 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import studyPlanService from "../../services/studyPlanService";
-
-const topicAccent = (stage) => {
-	if (stage === "completed") {
-		return {
-			icon: "psychiatry",
-			iconWrap: "bg-surface text-secondary",
-			badgeWrap: "bg-secondary-container text-on-secondary-container",
-			badgeIcon: "check_circle",
-			badgeText: "Completed",
-			cardClass:
-				"bg-surface-container-lowest rounded-xl p-lg relative overflow-hidden group border border-surface-variant hover:shadow-[0_15px_30px_-10px_rgba(26,20,107,0.1)] transition-all duration-300",
-			topRule: "bg-secondary-fixed",
-			actionText: "Review",
-			actionClass: "font-label-md text-label-md text-primary hover:text-primary-container transition-colors",
-		};
-	}
-
-	if (stage === "in_progress") {
-		return {
-			icon: "electric_bolt",
-			iconWrap: "bg-primary-fixed text-primary",
-			badgeWrap: "bg-primary-container text-on-primary shadow-sm",
-			badgeIcon: "clock_loader_40",
-			badgeText: "In Progress",
-			cardClass:
-				"bg-surface-container-lowest rounded-xl p-lg relative overflow-hidden group shadow-[0_10px_30px_-15px_rgba(26,20,107,0.15)] border-t-[3px] border-t-primary border-l border-r border-b border-surface-variant transform md:-translate-y-1 transition-all duration-300",
-			topRule: "",
-			actionText: "Resume",
-			actionClass:
-				"flex items-center gap-1 bg-primary text-on-primary px-4 py-2 rounded-lg font-label-md hover:bg-primary-container transition-colors",
-		};
-	}
-
-	return {
-		icon: "science",
-		iconWrap: "bg-surface-variant text-primary",
-		badgeWrap: "bg-primary-fixed text-primary",
-		badgeIcon: "radio_button_unchecked",
-		badgeText: "Not Started",
-		cardClass:
-			"bg-surface-container-lowest rounded-xl p-lg relative overflow-hidden group border border-outline-variant hover:border-primary hover:shadow-[0_15px_30px_-10px_rgba(26,20,107,0.08)] transition-all duration-300",
-		topRule: "",
-		actionText: "Start",
-		actionClass:
-			"flex items-center gap-1 bg-primary text-on-primary px-4 py-2 rounded-lg font-label-md hover:bg-primary-container transition-colors",
-	};
-};
+import topicService from "../../services/topicService";
 
 const SyllabusPage = () => {
-	const { planId } = useParams();
-	const [plan, setPlan] = useState(null);
-	const [loading, setLoading] = useState(true);
-	const [error, setError] = useState("");
+  const { planId } = useParams();
+  const navigate = useNavigate();
+  const [plan, setPlan] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-	useEffect(() => {
-		const fetchOverview = async () => {
-			try {
-				setLoading(true);
-				setError("");
-				const response = await studyPlanService.getStudyPlanOverview(planId);
-				if (response?.success) {
-					setPlan(response.data);
-				} else {
-					setError("Failed to load study plan");
-				}
-			} catch (requestError) {
-				setError(requestError?.message || "Failed to load study plan");
-			} finally {
-				setLoading(false);
-			}
-		};
+  useEffect(() => {
+    const fetchOverview = async () => {
+      try {
+        setLoading(true);
+        setError("");
+        const response = await studyPlanService.getStudyPlanOverview(planId);
+        if (response?.success) {
+          setPlan(response.data);
+        } else {
+          setError("Failed to load study plan");
+        }
+      } catch (requestError) {
+        setError(requestError?.message || "Failed to load study plan");
+      } finally {
+        setLoading(false);
+      }
+    };
 
-		if (planId) {
-			fetchOverview();
-		}
-	}, [planId]);
+    if (planId) {
+      fetchOverview();
+    }
+  }, [planId]);
 
-	const progress = plan?.progressPercentage || 0;
-	const modules = useMemo(() => plan?.topics || [], [plan]);
+  // Compute progress percentage dynamically
+  const progress = useMemo(() => {
+    const topics = Array.isArray(plan?.topics) ? plan.topics : [];
+    if (topics.length === 0) return 0;
+    const completed = topics.filter((t) => t.completionStatus === "completed").length;
+    return Math.round((completed / topics.length) * 100);
+  }, [plan]);
 
-	if (loading) {
-		return <p className="text-on-surface-variant">Loading study plan...</p>;
-	}
+  // Compute remaining estimated study hours dynamically
+  const remainingHours = useMemo(() => {
+    const topics = Array.isArray(plan?.topics) ? plan.topics : [];
+    return topics
+      .filter((t) => t.completionStatus !== "completed")
+      .reduce((sum, t) => sum + (t.estimated_hours || 1), 0);
+  }, [plan]);
 
-	if (error) {
-		return <p className="text-error">{error}</p>;
-	}
+  const toggleTopicCompletion = async (topicKey, currentStatus) => {
+    const nextStatus = currentStatus === "completed" ? "in_progress" : "completed";
 
-	if (!plan) {
-		return <p className="text-on-surface-variant">Study plan not found.</p>;
-	}
+    // Optimistic Update
+    setPlan((currentPlan) => {
+      if (!currentPlan) return currentPlan;
+      const updatedTopics = currentPlan.topics.map((t) =>
+        t.topic_key === topicKey ? { ...t, completionStatus: nextStatus } : t
+      );
+      return {
+        ...currentPlan,
+        topics: updatedTopics,
+      };
+    });
 
-	return (
-		<>
-			<div className="mb-xxl max-w-3xl">
-				<nav className="flex items-center gap-2 text-on-surface-variant font-label-sm text-label-sm uppercase tracking-wider mb-lg">
-					<Link to="/plans" className="hover:text-primary transition-colors">
-						Study Plans
-					</Link>
-					<span className="material-symbols-outlined text-[14px]">chevron_right</span>
-					<span className="text-primary font-semibold">{plan.subjectName}</span>
-				</nav>
+    try {
+      await topicService.markTopicCompleted(topicKey, nextStatus);
+    } catch (err) {
+      console.error("Failed to update topic completion status", err);
+      // Rollback on failure
+      setPlan((currentPlan) => {
+        if (!currentPlan) return currentPlan;
+        const revertedTopics = currentPlan.topics.map((t) =>
+          t.topic_key === topicKey ? { ...t, completionStatus: currentStatus } : t
+        );
+        return {
+          ...currentPlan,
+          topics: revertedTopics,
+        };
+      });
+    }
+  };
 
-				<h1 className="font-display text-display text-on-background mb-unit">
-					{plan.subjectName}
-				</h1>
+  const modules = useMemo(() => plan?.topics || [], [plan]);
 
-				<p className="font-body-lg text-body-lg text-on-surface-variant mb-xl">
-					{plan.description}
-				</p>
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <p className="font-body-md text-on-surface-variant animate-pulse">
+          Loading study plan overview...
+        </p>
+      </div>
+    );
+  }
 
-				<div className="bg-surface-container-lowest p-lg rounded-xl shadow-[0_10px_20px_-10px_rgba(26,20,107,0.05)] border border-surface-variant">
-					<div className="flex justify-between items-end mb-md">
-						<div>
-							<span className="font-label-md text-label-md text-primary tracking-widest uppercase block mb-xs">
-								Overall Progress
-							</span>
-							<span className="font-h3 text-h3 text-on-background">
-								{progress}% Completed
-							</span>
-						</div>
+  if (error) {
+    return (
+      <div className="rounded-xl border border-error/20 bg-error-container p-lg text-on-error-container" role="alert">
+        <h3 className="font-h3 text-h3">We couldn't load your study plan</h3>
+        <p className="mt-xs font-body-sm text-body-sm">{error}</p>
+      </div>
+    );
+  }
 
-						<span className="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-1">
-							<span className="material-symbols-outlined text-[16px]">schedule</span>
-							Est. {Math.round(plan.remainingEstimatedHours || 0)}h remaining
-						</span>
-					</div>
+  if (!plan) {
+    return (
+      <div className="rounded-xl border border-outline-variant bg-surface-container-low p-xl text-center">
+        <h3 className="font-h3 text-h3 text-on-background">Study plan not found</h3>
+      </div>
+    );
+  }
 
-					<div className="h-[8px] w-full bg-tertiary-fixed rounded-full overflow-hidden relative">
-						<div
-							className="absolute top-0 left-0 h-full bg-secondary-fixed rounded-full transition-all duration-500 ease-out"
-							style={{ width: `${progress}%` }}
-						/>
-					</div>
-				</div>
-			</div>
+  return (
+    <div className="max-w-container-max mx-auto space-y-lg">
+      <div className="space-y-sm">
+        <nav className="flex items-center gap-2 text-on-surface-variant font-label-sm text-label-sm uppercase tracking-wider mb-2">
+          <Link to="/plans" className="hover:text-primary transition-colors">
+            Study Plans
+          </Link>
+          <span className="material-symbols-outlined text-[14px]">chevron_right</span>
+          <span className="text-primary font-semibold">{plan.subjectName}</span>
+        </nav>
 
-			<div className="mb-xl">
-				<h2 className="font-h2 text-h2 text-on-background mb-lg flex items-center gap-3">
-					<span className="material-symbols-outlined text-primary text-[28px]">view_cozy</span>
-					Curriculum Modules
-				</h2>
+        <h1 className="font-display text-display text-on-background">
+          {plan.subjectName}
+        </h1>
 
-				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-gutter">
-					{modules.map((topic) => {
-						const accent = topicAccent(topic.stage);
-						const stage = topic.stage === "completed" ? "completed" : (topic.stage === "in_progress" ? "in_progress" : "not_started");
-						const lessonCount = topic.lessonCount || 1;
-						const completed = Math.min(lessonCount, topic.lessonsCompleted || 0);
-						const moduleProgress = lessonCount > 0 ? Math.round((completed / lessonCount) * 100) : 0;
+        <p className="font-body-lg text-body-lg text-on-surface-variant max-w-3xl leading-relaxed">
+          {plan.description || "Review and progress through curriculum modules to hit your learning goals."}
+        </p>
 
-						return (
-							<article key={topic.topic_key} className={accent.cardClass}>
-								{accent.topRule ? <div className={`absolute top-0 left-0 w-full h-[3px] ${accent.topRule}`} /> : null}
+        <div className="bg-surface-container-lowest p-5 rounded-xl border border-outline-variant/60 shadow-[0_4px_15px_-5px_rgba(13,28,46,0.08)] max-w-3xl">
+          <div className="flex justify-between items-end mb-4">
+            <div>
+              <span className="font-label-sm text-label-sm text-primary uppercase tracking-wider block mb-1">
+                Overall Progress
+              </span>
+              <span className="font-h3 text-h3 text-on-background">
+                {progress}% Completed
+              </span>
+            </div>
 
-								<div className="flex justify-between items-start mb-xl">
-									<div className={`w-12 h-12 rounded-lg flex items-center justify-center ${accent.iconWrap}`}>
-										<span className="material-symbols-outlined text-[24px]">{accent.icon}</span>
-									</div>
+            <span className="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-1">
+              <span className="material-symbols-outlined text-[16px]">schedule</span>
+              Est. {Math.round(remainingHours)}h remaining
+            </span>
+          </div>
 
-									<span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full font-label-sm text-label-sm ${accent.badgeWrap}`}>
-										<span className="material-symbols-outlined text-[12px]">{accent.badgeIcon}</span>
-										{accent.badgeText}
-									</span>
-								</div>
+          <div className="h-2 w-full bg-surface-container rounded-full overflow-hidden">
+            <div
+              className="h-full bg-secondary rounded-full transition-all duration-500 ease-out"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+        </div>
+      </div>
 
-								<h3 className="font-h3 text-h3 mb-xs text-on-background">
-									{topic.name}
-								</h3>
+      <div className="space-y-md">
+        <h2 className="font-h2 text-h2 text-on-background flex items-center gap-2">
+          <span className="material-symbols-outlined text-primary text-[28px]">format_list_bulleted</span>
+          Curriculum Modules
+        </h2>
 
-								<p className="font-body-sm text-body-sm mb-lg line-clamp-2 text-on-surface-variant">
-									{topic.name} concepts, key mechanisms, and high-yield revision targets.
-								</p>
+        <div className="space-y-3">
+          {modules.map((topic, index) => (
+            <article
+              key={topic.topic_key}
+              className="bg-surface-container-lowest rounded-xl p-4 shadow-[0_2px_8px_-4px_rgba(13,28,46,0.08)] border border-outline-variant/60 hover:border-primary/40 transition-all flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between group cursor-pointer"
+              onClick={() => navigate(`/study/${topic.topic_key}`)}
+            >
+              <div className="flex items-center gap-3 min-w-0 flex-1">
+                <button
+                  type="button"
+                  className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors shrink-0 ${
+                    topic.completionStatus === "completed"
+                      ? "border-secondary bg-secondary text-white"
+                      : "border-outline hover:border-primary"
+                  }`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleTopicCompletion(topic.topic_key, topic.completionStatus);
+                  }}
+                  aria-label={topic.completionStatus === "completed" ? "Mark incomplete" : "Mark complete"}
+                >
+                  {topic.completionStatus === "completed" && (
+                    <span className="material-symbols-outlined text-[14px] font-bold">check</span>
+                  )}
+                </button>
 
-								{stage !== "completed" ? (
-									<div className="mb-md">
-										<div className="flex justify-between mb-xs">
-											<span className="font-label-sm text-label-sm text-on-surface-variant">
-												Lesson {completed} of {lessonCount}
-											</span>
-											<span className="font-label-sm text-label-sm text-primary">{moduleProgress}%</span>
-										</div>
+                <div className="min-w-0 flex-1">
+                  <h3 className={`font-semibold text-on-background group-hover:text-primary transition-colors ${
+                    topic.completionStatus === "completed" ? "line-through text-on-surface-variant/60" : ""
+                  }`}>
+                    {topic.name}
+                  </h3>
+                  <div className="flex items-center gap-2 mt-0.5 text-xs text-on-surface-variant">
+                    <span>Module {index + 1}</span>
+                    <span>•</span>
+                    <span>{topic.estimated_hours || 1} hrs est.</span>
+                    {topic.completionStatus === "in_progress" && (
+                      <>
+                        <span>•</span>
+                        <span className="text-secondary font-semibold flex items-center gap-1.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse" />
+                          In Progress
+                        </span>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
 
-										<div className="h-[4px] w-full bg-tertiary-fixed rounded-full overflow-hidden">
-											<div className="h-full bg-primary rounded-full" style={{ width: `${moduleProgress}%` }} />
-										</div>
-									</div>
-								) : null}
-
-								<div className="mt-auto pt-md border-t flex items-center justify-between border-surface-variant">
-									<span className="font-label-sm text-label-sm text-on-surface-variant">
-										Module {topic.moduleNumber} • {lessonCount} Lessons
-									</span>
-
-									{stage === "in_progress" ? (
-										<Link to={`/study/${topic.topic_key}`} className={accent.actionClass}>
-											Resume
-											<span className="material-symbols-outlined text-[16px]">arrow_forward</span>
-										</Link>
-									) : stage === "not_started" ? (
-										<Link to={`/study/${topic.topic_key}`} className={accent.actionClass}>
-											Start
-											<span className="material-symbols-outlined text-[16px]">arrow_forward</span>
-										</Link>
-									) : (
-										<Link to={`/study/${topic.topic_key}`} className={accent.actionClass}>
-											Review
-										</Link>
-									)}
-								</div>
-							</article>
-						);
-					})}
-				</div>
-			</div>
-		</>
-	);
+              <div className="flex items-center gap-4 shrink-0 w-full sm:w-auto">
+                <div className="flex items-center gap-2 shrink-0">
+                  <Link
+                    to={`/study/${topic.topic_key}`}
+                    onClick={(e) => e.stopPropagation()}
+                    className={`inline-flex h-9 items-center justify-center gap-1 rounded-lg px-3 py-1 font-label-md text-label-md transition-colors ${
+                      topic.completionStatus === "completed"
+                        ? "border border-outline-variant bg-surface-container-lowest text-on-surface hover:bg-surface-container-low"
+                        : "bg-primary text-on-primary hover:bg-primary-container"
+                    }`}
+                  >
+                    {topic.completionStatus === "completed" ? (
+                      <>Review</>
+                    ) : topic.completionStatus === "in_progress" ? (
+                      <>
+                        Resume
+                        <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+                      </>
+                    ) : (
+                      <>
+                        Start
+                        <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+                      </>
+                    )}
+                  </Link>
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default SyllabusPage;

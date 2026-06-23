@@ -5,6 +5,7 @@ import remarkGfm from "remark-gfm";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 import topicService from "../../services/topicService";
+import { LoadingState, ErrorState, PrimaryButton, SecondaryButton } from "../../components/common/ui";
 
 const TopicStudyPage = () => {
 	const { topicKey } = useParams();
@@ -108,15 +109,27 @@ const TopicStudyPage = () => {
 	};
 
 	if (loading) {
-		return <p className="text-on-surface-variant">Preparing topic content...</p>;
+		return (
+			<div className="flex-1 w-full max-w-container-max mx-auto p-6 flex items-center justify-center min-h-[50vh]">
+				<LoadingState label="Preparing topic content..." />
+			</div>
+		);
 	}
 
 	if (error) {
-		return <p className="text-error">{error}</p>;
+		return (
+			<div className="flex-1 w-full max-w-container-max mx-auto p-6">
+				<ErrorState title="Failed to load topic" description={error} />
+			</div>
+		);
 	}
 
 	if (!payload || !topic) {
-		return <p className="text-on-surface-variant">Topic data unavailable.</p>;
+		return (
+			<div className="flex-1 w-full max-w-container-max mx-auto p-6">
+				<ErrorState title="Topic unavailable" description="The requested topic data could not be retrieved." />
+			</div>
+		);
 	}
 
 	return (
@@ -142,30 +155,30 @@ const TopicStudyPage = () => {
 						) : null}
 					</div>
 
-					<div className="flex-shrink-0 flex flex-wrap gap-3">
-						<button
+					<div className="flex-shrink-0 flex flex-wrap items-center gap-3">
+						<SecondaryButton
 							type="button"
 							onClick={handleMarkCompleted}
 							disabled={topic.completionStatus === "completed" || completing}
-							className="border border-primary text-primary font-label-md text-label-md uppercase tracking-wider px-6 py-4 rounded-lg hover:bg-surface-container-low transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+							className="w-full sm:w-auto text-primary border-primary/40 hover:bg-primary/5 hover:border-primary min-h-11 px-6 font-semibold"
 						>
-							{topic.completionStatus === "completed" ? "Completed" : (completing ? "Saving..." : "Mark as Completed")}
-						</button>
+							{topic.completionStatus === "completed" ? "Completed" : (completing ? "Saving..." : "Mark as completed")}
+						</SecondaryButton>
 
-						<button
+						<PrimaryButton
 							type="button"
 							onClick={() => navigate(`/flashcards?topicKey=${encodeURIComponent(topic.topic_key)}`)}
-							className="bg-primary text-on-primary font-label-md text-label-md uppercase tracking-wider px-8 py-4 rounded-lg shadow-lg shadow-primary/20 hover:bg-primary-container transition-all flex items-center gap-3"
+							className="w-full sm:w-auto flex items-center gap-2 min-h-11 px-6 font-semibold"
 						>
-							<span className="material-symbols-outlined">view_carousel</span>
-							Start Flashcard Review
-						</button>
+							<span className="material-symbols-outlined text-[20px]">view_carousel</span>
+							Start flashcard review
+						</PrimaryButton>
 					</div>
 				</div>
 
 				<div className="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
 					<div className="lg:col-span-8 flex flex-col gap-gutter">
-						<div className="bg-surface-container-lowest rounded-xl shadow-[0_10px_25px_-5px_rgba(26,20,107,0.05),0_8px_10px_-6px_rgba(26,20,107,0.01)] border-t-2 border-primary p-10 h-full">
+						<div className="bg-surface-container-lowest rounded-xl border border-outline-variant/60 p-10 h-full">
 							<div className="flex items-center gap-3 mb-8 pb-4 border-b border-surface-variant">
 								<div className="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-primary">
 									<span className="material-symbols-outlined">psychiatry</span>
@@ -173,7 +186,7 @@ const TopicStudyPage = () => {
 								<h2 className="font-h2 text-h2 text-on-surface">AI Distilled Notes</h2>
 							</div>
 
-							<div className="space-y-8">
+							<div className="space-y-8 max-w-prose">
 								{markdownNotes ? (
 									<div className="space-y-6">
 										<ReactMarkdown
@@ -204,7 +217,7 @@ const TopicStudyPage = () => {
 													<li className="font-body-md text-body-md leading-relaxed pl-2">{children}</li>
 												),
 												blockquote: ({ children }) => (
-													<blockquote className="border-l-4 border-primary bg-surface-container-low px-8 py-5 my-8 italic text-on-surface-variant rounded-r-xl shadow-sm">
+													<blockquote className="border-l border-primary bg-surface-container-low px-6 py-4 my-6 italic text-on-surface-variant rounded-r-lg">
 														{children}
 													</blockquote>
 												),
@@ -300,7 +313,7 @@ const TopicStudyPage = () => {
 					</div>
 
 					<div className="lg:col-span-4 flex flex-col gap-gutter">
-						<div className="bg-surface-container-lowest rounded-xl shadow-[0_10px_25px_-5px_rgba(26,20,107,0.05),0_8px_10px_-6px_rgba(26,20,107,0.01)] p-6">
+						<div className="bg-surface-container-lowest rounded-xl border border-outline-variant/60 p-6">
 							<div className="flex items-center justify-between mb-4">
 								<h3 className="font-h3 text-h3 text-on-surface text-lg">Topic Mastery</h3>
 								<span className="font-label-md text-label-md text-secondary bg-secondary-container px-2 py-1 rounded">
@@ -317,7 +330,7 @@ const TopicStudyPage = () => {
 
 							<div className="w-full h-2 bg-tertiary-fixed rounded-full overflow-hidden">
 								<div
-									className="h-full bg-secondary rounded-full"
+									className="h-full bg-secondary rounded-full transition-[width] duration-500 ease-out"
 									style={{ width: `${mastery.retentionRate || 0}%` }}
 								/>
 							</div>
@@ -328,7 +341,7 @@ const TopicStudyPage = () => {
 							</div>
 						</div>
 
-						<div className="bg-surface-container-lowest rounded-xl shadow-[0_10px_25px_-5px_rgba(26,20,107,0.05),0_8px_10px_-6px_rgba(26,20,107,0.01)] p-6 flex-1">
+						<div className="bg-surface-container-lowest rounded-xl border border-outline-variant/60 p-6 flex-1">
 							<div className="flex items-center gap-2 mb-6 pb-4 border-b border-surface-variant">
 								<span className="material-symbols-outlined text-primary">smart_display</span>
 								<h3 className="font-h3 text-h3 text-on-surface text-lg">Video Explanations</h3>

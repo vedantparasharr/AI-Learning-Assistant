@@ -19,7 +19,7 @@ const studyPlanTopicSchema = new mongoose.Schema(
     },
     completionStatus: {
       type: String,
-      enum: ["pending", "completed"],
+      enum: ["pending", "in_progress", "completed"],
       default: "pending",
     },
   },

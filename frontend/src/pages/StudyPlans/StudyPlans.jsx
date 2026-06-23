@@ -1,263 +1,422 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import {
+  ConfirmationModal,
+  EmptyState,
+  ErrorState,
+  LoadingState,
+  PageShell,
+  PrimaryButton,
+  SecondaryButton,
+} from "../../components/common/ui";
 import studyPlanService from "../../services/studyPlanService";
+import { formatDate } from "../../utils/formatters";
 
 const SORTS = {
-	LAST_ACTIVE: "last-active",
-	RECENTLY_ADDED: "recently-added",
-	PROGRESS: "progress",
+  RECENTLY_UPDATED: "recently-updated",
+  EXAM_DATE: "exam-date",
+  PROGRESS: "progress",
 };
 
 const toEpoch = (value) => {
-	const date = new Date(value);
-	return Number.isNaN(date.getTime()) ? 0 : date.getTime();
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? 0 : date.getTime();
+};
+
+const clampPercentage = (value) => Math.max(0, Math.min(100, value));
+
+const getProgressPercentage = (plan) => {
+  if (typeof plan.progressPercentage === "number") {
+    return clampPercentage(Math.round(plan.progressPercentage));
+  }
+
+  const topics = Array.isArray(plan.topics) ? plan.topics : [];
+  if (topics.length === 0) {
+    return 0;
+  }
+
+  const completedTopics = topics.filter((topic) => topic.completionStatus === "completed").length;
+  return clampPercentage(Math.round((completedTopics / topics.length) * 100));
+};
+
+const getSourceLabel = (sourceType) => {
+  switch (sourceType) {
+    case "document":
+      return "Document";
+    case "prompt":
+      return "Prompt";
+    case "text":
+      return "Notes";
+    default:
+      return "Manual";
+  }
+};
+
+const getTopicPreview = (topics) => {
+  if (!topics.length) {
+    return "No topics have been outlined yet.";
+  }
+
+  const names = topics
+    .map((topic) => topic?.name?.trim())
+    .filter(Boolean);
+
+  if (names.length === 0) {
+    return "Topics are ready to be refined.";
+  }
+
+  if (names.length <= 3) {
+    return names.join(" • ");
+  }
+
+  return `${names.slice(0, 3).join(" • ")} +${names.length - 3} more`;
+};
+
+const buildSearchParams = ({ query, subject }) => {
+  const params = new URLSearchParams();
+
+  if (query) {
+    params.set("query", query);
+  }
+
+  if (subject && subject !== "all") {
+    params.set("subject", subject);
+  }
+
+  return params;
 };
 
 const StudyPlans = () => {
-	const [plans, setPlans] = useState([]);
-	const [subjectFilter, setSubjectFilter] = useState("all");
-	const [sortBy, setSortBy] = useState(SORTS.LAST_ACTIVE);
-	const [loading, setLoading] = useState(true);
-	const [error, setError] = useState("");
-	const [openMenuPlanId, setOpenMenuPlanId] = useState("");
-	const [deletingPlanId, setDeletingPlanId] = useState("");
-	const [searchParams] = useSearchParams();
-	const query = searchParams.get("query")?.trim().toLowerCase() || "";
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [plans, setPlans] = useState([]);
+  const [sortBy, setSortBy] = useState(SORTS.RECENTLY_UPDATED);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [deletingPlanId, setDeletingPlanId] = useState("");
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [planToDelete, setPlanToDelete] = useState(null);
 
-	useEffect(() => {
-		const fetchPlans = async () => {
-			try {
-				setLoading(true);
-				setError("");
-				const response = await studyPlanService.getStudyPlans();
-				const incomingPlans = Array.isArray(response?.data) ? response.data : [];
-				setPlans(incomingPlans);
-			} catch (requestError) {
-				setError(requestError?.message || "Failed to load study plans");
-			} finally {
-				setLoading(false);
-			}
-		};
+  const query = searchParams.get("query")?.trim() || "";
+  const subjectFilter = searchParams.get("subject") || "all";
 
-		fetchPlans();
-	}, []);
+  const fetchPlans = async () => {
+    try {
+      setLoading(true);
+      setError("");
+      const response = await studyPlanService.getStudyPlans();
+      const incomingPlans = Array.isArray(response?.data) ? response.data : [];
+      setPlans(incomingPlans);
+    } catch (requestError) {
+      setError(requestError?.message || "Failed to load study plans");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-	const subjects = useMemo(() => {
-		const unique = [...new Set(plans.map((plan) => plan.subjectTag).filter(Boolean))];
-		return unique.sort((left, right) => left.localeCompare(right));
-	}, [plans]);
+  useEffect(() => {
+    fetchPlans();
+  }, []);
 
-	const filteredAndSortedPlans = useMemo(() => {
-		const filtered = subjectFilter === "all"
-			? plans
-			: plans.filter((plan) => plan.subjectTag === subjectFilter);
+  const normalizedPlans = useMemo(
+    () =>
+      plans.map((plan) => {
+        const topics = Array.isArray(plan.topics) ? plan.topics : [];
+        const completedTopics = topics.filter((topic) => topic.completionStatus === "completed").length;
+        const progressPercentage = getProgressPercentage(plan);
 
-		const searched = query
-			? filtered.filter((plan) => {
-				const haystack = [plan.subjectName, plan.subjectTag, plan.snippet]
-					.join(" ")
-					.toLowerCase();
-				return haystack.includes(query);
-			})
-			: filtered;
+        return {
+          ...plan,
+          planId: String(plan._id || plan.id),
+          topicCount: topics.length,
+          completedTopics,
+          progressPercentage,
+          sourceLabel: getSourceLabel(plan.sourceType),
+          topicPreview: getTopicPreview(topics),
+        };
+      }),
+    [plans],
+  );
 
-		const sorted = [...searched];
-		if (sortBy === SORTS.RECENTLY_ADDED) {
-			sorted.sort((left, right) => toEpoch(right.createdAt) - toEpoch(left.createdAt));
-			return sorted;
-		}
+  const subjects = useMemo(() => {
+    const unique = [...new Set(normalizedPlans.map((plan) => plan.subjectName).filter(Boolean))];
+    return unique.sort((left, right) => left.localeCompare(right));
+  }, [normalizedPlans]);
 
-		if (sortBy === SORTS.PROGRESS) {
-			sorted.sort((left, right) => (right.progressPercentage || 0) - (left.progressPercentage || 0));
-			return sorted;
-		}
+  const filteredAndSortedPlans = useMemo(() => {
+    const loweredQuery = query.toLowerCase();
 
-		sorted.sort((left, right) => toEpoch(right.updatedAt) - toEpoch(left.updatedAt));
-		return sorted;
-	}, [plans, sortBy, subjectFilter, query]);
+    const filtered = subjectFilter === "all"
+      ? normalizedPlans
+      : normalizedPlans.filter((plan) => plan.subjectName === subjectFilter);
 
-	const handleDeletePlan = async (planId) => {
-		const targetPlan = plans.find((plan) => String(plan.id) === String(planId));
-		const confirmed = window.confirm(
-			`Delete ${targetPlan?.subjectName || "this study plan"}? This action cannot be undone.`,
-		);
+    const searched = loweredQuery
+      ? filtered.filter((plan) => {
+        const haystack = [
+          plan.subjectName,
+          plan.sourceLabel,
+          plan.topicPreview,
+          ...(plan.topics || []).map((topic) => topic.name),
+        ]
+          .join(" ")
+          .toLowerCase();
 
-		if (!confirmed) {
-			return;
-		}
+        return haystack.includes(loweredQuery);
+      })
+      : filtered;
 
-		try {
-			setDeletingPlanId(String(planId));
-			setError("");
-			await studyPlanService.deleteStudyPlan(planId);
-			setPlans((current) => current.filter((plan) => String(plan.id) !== String(planId)));
-			setOpenMenuPlanId("");
-		} catch (requestError) {
-			setError(requestError?.message || "Failed to delete study plan");
-		} finally {
-			setDeletingPlanId("");
-		}
-	};
+    const sorted = [...searched];
 
-	return (
-		<>
-			<div className="flex flex-col md:flex-row md:items-end justify-between gap-lg mb-xl">
-				<div>
-					<h2 className="font-h1 text-h1 text-on-surface mb-xs">Study Plans</h2>
-					<p className="font-body-lg text-body-lg text-on-surface-variant">
-						Your active curriculums and distilled learning paths.
-					</p>
-				</div>
+    if (sortBy === SORTS.EXAM_DATE) {
+      sorted.sort((left, right) => toEpoch(left.examDate) - toEpoch(right.examDate));
+      return sorted;
+    }
 
-				<div className="flex flex-wrap items-center gap-md">
-					<div className="relative">
-						<select
-							value={subjectFilter}
-							onChange={(event) => setSubjectFilter(event.target.value)}
-							className="appearance-none bg-surface-container-lowest border border-outline-variant rounded p-2 pl-4 pr-10 font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary shadow-sm min-w-[160px] cursor-pointer"
-						>
-							<option value="all">All Subjects</option>
-							{subjects.map((subject) => (
-								<option key={subject} value={subject}>
-									{subject}
-								</option>
-							))}
-						</select>
-						<span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant text-[18px]">
-							expand_more
-						</span>
-					</div>
+    if (sortBy === SORTS.PROGRESS) {
+      sorted.sort((left, right) => right.progressPercentage - left.progressPercentage);
+      return sorted;
+    }
 
-					<div className="relative">
-						<select
-							value={sortBy}
-							onChange={(event) => setSortBy(event.target.value)}
-							className="appearance-none bg-surface-container-lowest border border-outline-variant rounded p-2 pl-4 pr-10 font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary shadow-sm min-w-[160px] cursor-pointer"
-						>
-							<option value={SORTS.LAST_ACTIVE}>Last Active</option>
-							<option value={SORTS.RECENTLY_ADDED}>Recently Added</option>
-							<option value={SORTS.PROGRESS}>Progress (High-Low)</option>
-						</select>
-						<span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant text-[18px]">
-							expand_more
-						</span>
-					</div>
-				</div>
-			</div>
+    sorted.sort((left, right) => toEpoch(right.updatedAt) - toEpoch(left.updatedAt));
+    return sorted;
+  }, [normalizedPlans, query, sortBy, subjectFilter]);
 
-			{error ? (
-				<div className="bg-error-container text-on-error-container border border-error rounded-xl p-lg mb-xl">
-					{error}
-				</div>
-			) : null}
+  const hasActiveRefinements = Boolean(query) || subjectFilter !== "all";
 
-			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-gutter">
-				{!loading && filteredAndSortedPlans.map((plan, index) => {
-					const isFeatured = index === 0;
-					const borderClass = isFeatured
-						? "border-t-2 border-primary"
-						: "border-t-2 border-outline-variant hover:border-primary";
-					const menuOpen = String(openMenuPlanId) === String(plan.id);
+  const handleSubjectChange = (nextSubject) => {
+    setSearchParams(buildSearchParams({ query, subject: nextSubject }));
+  };
 
-					return (
-						<div
-							key={plan.id}
-							className={`bg-surface-container-lowest rounded-xl p-lg flex flex-col shadow-sm shadow-primary/5 hover:shadow-md hover:shadow-primary/10 transition-all duration-300 group ${borderClass}`}
-						>
-							<div className="flex justify-between items-start mb-md">
-								<span className="bg-surface-variant text-on-surface-variant font-label-sm text-label-sm px-3 py-1 rounded-full">
-									{plan.subjectTag || "General"}
-								</span>
-								<div className="relative">
-									<button
-										type="button"
-										className="text-outline hover:text-on-surface transition-colors"
-										onClick={() => setOpenMenuPlanId(menuOpen ? "" : String(plan.id))}
-										aria-label="Plan options"
-									>
-										<span className="material-symbols-outlined text-[20px]">more_vert</span>
-									</button>
+  const clearRefinements = () => {
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete("query");
+    nextParams.delete("subject");
+    setSearchParams(nextParams);
+  };
 
-									{menuOpen ? (
-										<div className="absolute right-0 mt-2 w-36 rounded-lg border border-outline-variant bg-surface-container-lowest shadow-[0_10px_30px_-15px_rgba(49,46,129,0.2)] z-10 py-1">
-											<button
-												type="button"
-												onClick={() => handleDeletePlan(plan.id)}
-												disabled={deletingPlanId === String(plan.id)}
-												className="w-full text-left px-3 py-2 text-body-sm text-error hover:bg-error-container/40 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-											>
-												{deletingPlanId === String(plan.id) ? "Deleting..." : "Delete Plan"}
-											</button>
-										</div>
-									) : null}
-								</div>
-							</div>
+  const requestDeletePlan = (plan) => {
+    setPlanToDelete(plan);
+    setIsDeleteModalOpen(true);
+  };
 
-							<Link to={`/plans/${plan.id}`} className="block">
-								<h3 className="font-h3 text-h3 text-on-surface mb-xs group-hover:text-primary transition-colors cursor-pointer">
-									{plan.subjectName}
-								</h3>
+  const handleConfirmDelete = async () => {
+    if (!planToDelete) return;
+    try {
+      setDeletingPlanId(planToDelete.planId);
+      setError("");
+      await studyPlanService.deleteStudyPlan(planToDelete.planId);
+      setPlans((current) => current.filter((plan) => String(plan._id || plan.id) !== String(planToDelete.planId)));
+      setIsDeleteModalOpen(false);
+      setPlanToDelete(null);
+    } catch (requestError) {
+      setError(requestError?.message || "Failed to delete study plan");
+    } finally {
+      setDeletingPlanId("");
+    }
+  };
 
-								<p className="font-body-sm text-body-sm text-on-surface-variant line-clamp-2 mb-lg">
-									{plan.snippet}
-								</p>
-							</Link>
+  const headerActions = (
+    <PrimaryButton
+      type="button"
+      className="w-full sm:w-auto"
+      onClick={() => navigate("/study-plan/new")}
+    >
+      Create study plan
+    </PrimaryButton>
+  );
 
-							<Link to={`/plans/${plan.id}`} className="block">
-								<div className="flex items-center gap-lg mb-xl mt-auto">
-									<div className="flex items-center gap-xs text-on-surface-variant">
-										<span className="material-symbols-outlined text-[18px]">subject</span>
-										<span className="font-label-md text-label-md">{plan.topicCount || 0} Topics</span>
-									</div>
+  return (
+    <PageShell
+      title="Study Plans"
+      description="Review your active plans, pick up where you left off, and keep upcoming exams in view."
+      actions={headerActions}
+    >
 
-									<div className="flex items-center gap-xs text-on-surface-variant">
-										<span className="material-symbols-outlined text-[18px]">style</span>
-										<span className="font-label-md text-label-md">{plan.cardCount || 0} Cards</span>
-									</div>
-								</div>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between pb-3 border-b border-outline-variant/60">
+        <div className="font-body-sm text-body-sm text-on-surface-variant flex flex-wrap items-center gap-2">
+          <span>Showing <span className="font-semibold text-on-surface">{filteredAndSortedPlans.length}</span> {filteredAndSortedPlans.length === 1 ? "study plan" : "study plans"}</span>
+          {hasActiveRefinements && (
+            <>
+              <span aria-hidden="true" className="text-outline-variant/60">•</span>
+              <div className="flex flex-wrap gap-1.5">
+                {query && (
+                  <span className="inline-flex items-center rounded-full bg-surface-container px-2.5 py-0.5 text-xs text-on-surface-variant border border-outline-variant/60">
+                    “{query}”
+                  </span>
+                )}
+                {subjectFilter !== "all" && (
+                  <span className="inline-flex items-center rounded-full bg-surface-container px-2.5 py-0.5 text-xs text-on-surface-variant border border-outline-variant/60">
+                    {subjectFilter}
+                  </span>
+                )}
+                <button
+                  type="button"
+                  className="text-xs font-semibold text-primary hover:text-primary-container transition-colors"
+                  onClick={clearRefinements}
+                >
+                  Clear
+                </button>
+              </div>
+            </>
+          )}
+        </div>
 
-								<div>
-									<div className="flex justify-between items-end mb-xs">
-										<span className="font-label-md text-label-md text-on-surface-variant">Progress</span>
-										<span className="font-label-md text-label-md text-secondary">
-											{plan.progressPercentage || 0}%
-										</span>
-									</div>
-									<div className="h-[8px] w-full bg-tertiary-fixed rounded-full overflow-hidden">
-										<div
-											className="h-full bg-secondary rounded-full"
-											style={{ width: `${plan.progressPercentage || 0}%` }}
-										/>
-									</div>
-								</div>
-							</Link>
-						</div>
-					);
-				})}
+        <div className="flex flex-wrap items-center gap-3">
+          <select
+            value={subjectFilter}
+            onChange={(event) => handleSubjectChange(event.target.value)}
+            className="min-h-10 rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-1.5 text-sm text-on-surface shadow-sm transition focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+            aria-label="Filter by subject"
+          >
+            <option value="all">All Subjects</option>
+            {subjects.map((subject) => (
+              <option key={subject} value={subject}>
+                {subject}
+              </option>
+            ))}
+          </select>
 
-				<Link
-					to="/study-plan/new"
-					className="bg-surface border-2 border-dashed border-outline-variant hover:border-primary hover:bg-surface-container-lowest rounded-xl p-lg flex flex-col items-center justify-center text-center shadow-none transition-all duration-300 cursor-pointer group min-h-[280px]"
-				>
-					<div className="w-16 h-16 rounded-full bg-surface-container flex items-center justify-center mb-md group-hover:bg-primary-container transition-colors">
-						<span className="material-symbols-outlined text-[32px] text-primary group-hover:text-on-primary">
-							add
-						</span>
-					</div>
-					<h3 className="font-h3 text-h3 text-on-surface mb-xs">Create Plan</h3>
-					<p className="font-body-sm text-body-sm text-on-surface-variant">Compile a new curriculum</p>
-				</Link>
-			</div>
+          <select
+            value={sortBy}
+            onChange={(event) => setSortBy(event.target.value)}
+            className="min-h-10 rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-1.5 text-sm text-on-surface shadow-sm transition focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+            aria-label="Sort plans"
+          >
+            <option value={SORTS.RECENTLY_UPDATED}>Recently Updated</option>
+            <option value={SORTS.EXAM_DATE}>Exam Date</option>
+            <option value={SORTS.PROGRESS}>Progress</option>
+          </select>
+        </div>
+      </div>
 
-			{!loading && filteredAndSortedPlans.length === 0 ? (
-				<p className="text-on-surface-variant mt-lg">No study plans match the selected filter.</p>
-			) : null}
+      {error ? (
+        <ErrorState
+          title="We couldn't load your study plans"
+          description={`${error} You can retry now or create a new plan if you were starting fresh.`}
+          action={(
+            <div className="flex flex-wrap gap-3">
+              <PrimaryButton onClick={fetchPlans}>
+                Retry
+              </PrimaryButton>
+              <SecondaryButton type="button" onClick={() => navigate("/study-plan/new")}>
+                Create study plan
+              </SecondaryButton>
+            </div>
+          )}
+        />
+      ) : null}
 
-			{loading ? (
-				<p className="text-on-surface-variant mt-lg">Loading study plans...</p>
-			) : null}
-		</>
-	);
+      {loading ? (
+        <LoadingState label="Loading your study plans" />
+      ) : null}
+
+      {!loading && filteredAndSortedPlans.length === 0 ? (
+        <EmptyState
+          title={hasActiveRefinements ? "No plans match your current filters" : "You haven't created a study plan yet"}
+          description={
+            hasActiveRefinements
+              ? "Try clearing the current search or subject filter to see all of your plans again."
+              : "Turn notes, prompts, or documents into a plan with topics, progress tracking, and a clear next step."
+          }
+          action={hasActiveRefinements ? (
+            <SecondaryButton type="button" onClick={clearRefinements}>
+              Clear filters
+            </SecondaryButton>
+          ) : (
+            <PrimaryButton
+              onClick={() => navigate("/study-plan/new")}
+            >
+              Create your first study plan
+            </PrimaryButton>
+          )}
+        />
+      ) : null}
+
+      {!loading && filteredAndSortedPlans.length > 0 ? (
+        <div className="space-y-gutter">
+          {filteredAndSortedPlans.map((plan) => (
+            <article
+              key={plan.planId}
+              className="bg-surface-container-lowest rounded-xl p-4 shadow-[0_2px_8px_-4px_rgba(13,28,46,0.08)] border border-outline-variant/60 hover:border-primary/40 transition-all flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between group cursor-pointer"
+              onClick={() => navigate(`/plans/${plan.planId}`)}
+            >
+              <div className="flex items-center gap-3 min-w-0 flex-1">
+                <div className="w-9 h-9 rounded-lg bg-surface-container flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-on-primary transition-colors shrink-0">
+                  <span className="material-symbols-outlined text-[20px]">menu_book</span>
+                </div>
+                <div className="min-w-0 flex-1">
+                  <h2 className="font-semibold text-on-background group-hover:text-primary transition-colors truncate">
+                    {plan.subjectName}
+                  </h2>
+                  <div className="flex items-center gap-2 mt-0.5 text-xs text-on-surface-variant">
+                    <span className="inline-flex items-center rounded bg-surface-container-high px-1.5 py-0.5 font-medium">
+                      {plan.sourceLabel}
+                    </span>
+                    <span>•</span>
+                    <span>{plan.completedTopics}/{plan.topicCount} topics</span>
+                    {plan.examDate && (
+                      <>
+                        <span>•</span>
+                        <span>Exam: {formatDate(plan.examDate)}</span>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-4 shrink-0 w-full sm:w-auto">
+                <div className="flex items-center gap-3 w-full sm:w-[180px]">
+                  <div className="flex-1 h-2 overflow-hidden rounded-full bg-surface-container">
+                    <div
+                      className="h-full rounded-full bg-secondary transition-[width] duration-300 ease-out motion-reduce:transition-none"
+                      style={{ width: `${plan.progressPercentage}%` }}
+                    />
+                  </div>
+                  <span className="font-semibold text-xs text-on-surface w-9 text-right shrink-0">
+                    {plan.progressPercentage}%
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    type="button"
+                    className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-outline-variant bg-surface-container-lowest text-on-surface transition-colors hover:bg-surface-container-low focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 border-error/20 text-error hover:bg-error-container/20 hover:border-error/40 hover:text-error"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      requestDeletePlan(plan);
+                    }}
+                    disabled={deletingPlanId === plan.planId}
+                    aria-label="Delete plan"
+                  >
+                    {deletingPlanId === plan.planId ? (
+                      <span className="h-4 w-4 animate-spin rounded-full border border-error border-t-transparent" />
+                    ) : (
+                      <span className="material-symbols-outlined text-[18px]">delete</span>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+      ) : null}
+
+      <ConfirmationModal
+        isOpen={isDeleteModalOpen}
+        title="Delete Study Plan?"
+        message={`Are you sure you want to delete "${planToDelete?.subjectName || "this study plan"}"? This action is permanent and cannot be undone.`}
+        confirmLabel="Delete plan"
+        cancelLabel="Cancel"
+        onConfirm={handleConfirmDelete}
+        onClose={() => {
+          setIsDeleteModalOpen(false);
+          setPlanToDelete(null);
+        }}
+        isDestructive={true}
+        isLoading={deletingPlanId !== ""}
+      />
+    </PageShell>
+  );
 };
 
 export default StudyPlans;
