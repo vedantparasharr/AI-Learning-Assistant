@@ -32,8 +32,8 @@ const DayActivityModal = ({ date, onClose }) => {
       />
 
       {/* Modal Content */}
-      <div className="relative bg-surface-container-lowest rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-surface-container-high animate-in fade-in zoom-in duration-200">
-        <header className="p-4 border-b border-surface-container-high flex justify-between items-center bg-surface-container-low">
+      <div className="relative bg-surface-container-lowest rounded-2xl shadow-2xl w-full max-w-md border border-surface-container-high animate-in fade-in zoom-in duration-200 flex flex-col max-h-[90vh]">
+        <header className="p-4 border-b border-surface-container-high flex justify-between items-center bg-surface-container-low shrink-0">
           <div>
             <h3 className="font-h3 text-[18px] text-on-surface">Study Breakdown</h3>
             <p className="text-[12px] text-on-surface-variant font-medium">
@@ -53,7 +53,7 @@ const DayActivityModal = ({ date, onClose }) => {
           </button>
         </header>
 
-        <div className="p-6">
+        <div className="p-6 overflow-y-auto">
           {isLoading ? (
             <div className="py-8 flex flex-col items-center justify-center gap-3">
               <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
@@ -77,11 +77,17 @@ const DayActivityModal = ({ date, onClose }) => {
               <div>
                 <h4 className="text-[12px] font-bold text-on-surface-variant uppercase tracking-wider mb-3">By Subject</h4>
                 <div className="space-y-3">
-                  {activity.subjects.length > 0 ? activity.subjects.map((subject) => (
+                  {activity.subjects.length > 0 ? activity.subjects.map((subject) => {
+                    // Format topic_key to Title Case
+                    const formattedName = subject.name
+                      ? subject.name.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
+                      : "Unknown Topic";
+
+                    return (
                     <div key={subject.name} className="flex flex-col gap-1.5">
                       <div className="flex justify-between items-center text-[13px]">
-                        <span className="font-semibold text-on-surface">{subject.name}</span>
-                        <span className="text-on-surface-variant font-medium">{subject.count} cards</span>
+                        <span className="font-semibold text-on-surface truncate pr-2" title={formattedName}>{formattedName}</span>
+                        <span className="text-on-surface-variant font-medium shrink-0">{subject.count} cards</span>
                       </div>
                       <div className="h-1.5 w-full bg-surface-container rounded-full overflow-hidden flex">
                         <div 
@@ -94,7 +100,7 @@ const DayActivityModal = ({ date, onClose }) => {
                         />
                       </div>
                     </div>
-                  )) : (
+                  )}) : (
                     <p className="text-[13px] text-on-surface-variant italic">No subjects recorded.</p>
                   )}
                 </div>
@@ -119,7 +125,7 @@ const DayActivityModal = ({ date, onClose }) => {
           )}
         </div>
 
-        <footer className="p-4 bg-surface-container-low border-t border-surface-container-high flex justify-end">
+        <footer className="p-4 bg-surface-container-low border-t border-surface-container-high flex justify-end shrink-0">
           <button 
             onClick={onClose}
             className="px-6 py-2 bg-on-surface text-surface rounded-lg font-label-md text-label-md hover:opacity-90 transition-opacity"

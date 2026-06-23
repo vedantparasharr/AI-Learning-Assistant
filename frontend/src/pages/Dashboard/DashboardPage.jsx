@@ -1,154 +1,276 @@
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { useAuth } from "../../context/AuthContext";
+import { useEffect, useState, useCallback } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 import dashboardService from "../../services/dashboardService";
 import ActivityHeatmap from "../../components/dashboard/ActivityHeatmap";
 
+
+
 const DashboardPage = () => {
-  const { user } = useAuth();
+  const navigate = useNavigate();
+  
   const [dashboardData, setDashboardData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isOffline, setIsOffline] = useState(false);
+
+  const fetchDashboard = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setIsOffline(false);
+      const res = await dashboardService.getDashboardSummary();
+      if (res?.success && res.data) {
+        setDashboardData(res.data);
+      } else {
+        setDashboardData(null);
+        setIsOffline(true);
+      }
+    } catch (err) {
+      console.error("Failed to load dashboard data", err);
+      setDashboardData(null);
+      setIsOffline(true);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    const fetchDashboard = async () => {
-      try {
-        const res = await dashboardService.getDashboardSummary();
-        if (res?.success) {
-          setDashboardData(res.data);
-        }
-      } catch (err) {
-        console.error("Failed to load dashboard data", err);
-      } finally {
-        setIsLoading(false);
+    fetchDashboard();
+  }, [fetchDashboard]);
+
+  // Keyboard Navigation / Shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      const activeEl = document.activeElement;
+      if (
+        activeEl &&
+        (activeEl.tagName === "INPUT" ||
+          activeEl.tagName === "TEXTAREA" ||
+          activeEl.isContentEditable)
+      ) {
+        return;
+      }
+
+      const key = e.key.toLowerCase();
+      if (key === "r") {
+        e.preventDefault();
+        navigate("/flashcards");
+        toast.success("Navigating to Flashcard Review Queue");
+      } else if (key === "u") {
+        e.preventDefault();
+        navigate("/study-plan/new");
+        toast.success("Navigating to New Plan Upload");
+      } else if (key === "p") {
+        e.preventDefault();
+        navigate("/plans");
+        toast.success("Navigating to Study Plans");
       }
     };
-    fetchDashboard();
-  }, []);
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [navigate]);
 
   const getGreeting = () => {
     const hour = new Date().getHours();
-    if (hour < 12) return "Good Morning";
-    if (hour < 18) return "Good Afternoon";
-    return "Good Evening";
+    if (hour < 12) return "Good morning";
+    if (hour < 18) return "Good afternoon";
+    return "Good evening";
   };
 
-  const userName = user?.username || "Scholar";
+  const userName = "Vedant";
 
-  // Derived values for better readability
-  const dueCards = dashboardData?.dueCards || 0;
-  const streak = dashboardData?.streak || 0;
-  const maxStreak = dashboardData?.maxStreak || 0;
-  const totalActiveDays = dashboardData?.totalActiveDays || 0;
-  const joinedAt = dashboardData?.joinedAt || null;
-  const subjects = dashboardData?.subjects || [];
-  const reviewBreakdown = dashboardData?.reviewBreakdown || { learn: 0, review: 0, new: 0 };
-  const estimatedReviewMinutes = dashboardData?.estimatedReviewMinutes || 0;
-  const heatmapData = dashboardData?.heatmapData || {};
+  // Data mapping with fallback values
+  const dueCards = dashboardData?.dueCards ?? 0;
+  const streak = dashboardData?.streak ?? 0;
+  const totalActiveDays = dashboardData?.totalActiveDays ?? 0;
+  const joinedAt = dashboardData?.joinedAt ?? null;
+  const subjects = dashboardData?.subjects ?? [];
+  const heatmapData = dashboardData?.heatmapData ?? {};
+  
+  const totalCards = dashboardData?.totalCards ?? 0;
+  const plansCount = dashboardData?.plansCount ?? 0;
+  const retentionRate = dashboardData?.retentionRate ?? 0;
+  const cardsReviewed = dashboardData?.cardsReviewed ?? 0;
+  const dueCardsTrend = dashboardData?.dueCardsTrend ?? 0;
+  const retentionRateTrend = dashboardData?.retentionRateTrend ?? 0;
 
+  // loading state skeletons
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <p className="font-body-md text-on-surface-variant animate-pulse">
-          Loading your learning environment...
-        </p>
+      <div className="max-w-container-max mx-auto space-y-lg animate-pulse">
+        <header className="mb-lg flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <div className="h-9 w-64 bg-surface-container rounded-lg mb-2" />
+            <div className="h-5 w-96 bg-surface-container rounded-lg" />
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-28 bg-surface-container rounded-full" />
+            <div className="h-10 w-28 bg-surface-container rounded-lg" />
+          </div>
+        </header>
+
+        {/* Stats Row Skeleton */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter mb-lg">
+          <div className="bg-surface-container-lowest border border-outline-variant/60 rounded-xl p-5 h-[110px]" />
+          <div className="bg-surface-container-lowest border border-outline-variant/60 rounded-xl p-5 h-[110px]" />
+          <div className="bg-surface-container-lowest border border-outline-variant/60 rounded-xl p-5 h-[110px]" />
+          <div className="bg-surface-container-lowest border border-outline-variant/60 rounded-xl p-5 h-[110px]" />
+        </div>
+
+        <div className="grid grid-cols-12 gap-gutter">
+          <div className="col-span-12 md:col-span-8 space-y-4">
+            <div className="h-7 w-48 bg-surface-container rounded-lg mb-2" />
+            <div className="bg-surface-container-lowest border border-outline-variant/60 rounded-xl h-[100px]" />
+            <div className="bg-surface-container-lowest border border-outline-variant/60 rounded-xl h-[100px]" />
+          </div>
+          <div className="col-span-12 md:col-span-4 bg-surface-container-lowest border border-outline-variant/60 rounded-xl h-[300px]" />
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-container-max mx-auto">
-      <header className="mb-lg">
-        <h1 className="font-h1 text-h1 text-on-surface mb-xs">
-          {getGreeting()}, {userName}
-        </h1>
-        <p className="font-body-md text-body-md text-on-surface-variant">
-          Your distilled learning environment is ready. You have {dueCards}{" "}
-          items to review today.
-        </p>
-      </header>
-
-      {/* Bento Grid Layout */}
-      <div className="grid grid-cols-12 gap-gutter mb-xl">
-        {/* Daily Review Card (FSRS) */}
-        <div className="col-span-12 md:col-span-8 bg-surface-container-lowest rounded-xl p-6 shadow-[0_10px_30px_-15px_rgba(49,46,129,0.15)] border-t-2 border-primary relative overflow-hidden flex flex-col justify-between min-h-[280px]">
-          <div className="relative z-10 flex justify-between items-start mb-4">
-            <div>
-              <h2 className="font-h3 text-h3 text-on-surface flex items-center gap-2">
-                <span className="material-symbols-outlined text-primary">
-                  psychology
-                </span>
-                Daily Review
-              </h2>
-              <p className="font-body-sm text-body-sm text-on-surface-variant mt-1">
-                FSRS Spaced Repetition Queue
-              </p>
-            </div>
-            <span className="bg-surface-container-high text-on-surface font-label-md text-label-md px-3 py-1 rounded-full">
-              High Priority
+    <div className="max-w-container-max mx-auto space-y-lg">
+      
+      {/* Offline Status Warning Bar */}
+      {isOffline && (
+        <div className="bg-surface-container border border-outline-variant/60 rounded-xl px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 shadow-sm">
+          <div className="flex items-center gap-2 text-on-surface font-body-sm text-body-sm">
+            <span className="material-symbols-outlined text-outline text-[20px]" aria-hidden="true">
+              cloud_off
+            </span>
+            <span>
+              <strong>System Offline</strong> — Connection to backend failed. Could not fetch latest dashboard data.
             </span>
           </div>
-
-          <div className="relative z-10 flex items-end gap-6 mt-auto">
-            <div className="flex flex-col">
-              <span className="font-display text-display text-primary leading-none">
-                {dueCards}
-              </span>
-              <span className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mt-2">
-                Cards Due Today
-              </span>
-            </div>
-            
-            <div className="flex gap-4 flex-1 items-center justify-end">
-              <ReviewStat label="Learn" count={reviewBreakdown.learn} colorClass="bg-error-container text-on-error-container" />
-              <ReviewStat label="Review" count={reviewBreakdown.review} colorClass="bg-surface-variant text-primary-container" />
-              <ReviewStat label="New" count={reviewBreakdown.new} colorClass="bg-secondary-container text-on-secondary-container" />
-            </div>
-          </div>
-
-          <div className="relative z-10 mt-6 pt-6 border-t border-outline-variant flex justify-between items-center">
-            <div className="flex items-center gap-2 text-on-surface-variant font-body-sm text-body-sm">
-              <span className="material-symbols-outlined text-[16px]">
-                schedule
-              </span>
-              Estimated time: ~{estimatedReviewMinutes} mins
-            </div>
-            <Link
-              to="/flashcards"
-              className="bg-primary hover:bg-on-primary-fixed-variant text-on-primary font-label-md text-label-md px-6 py-2 rounded-lg transition-colors shadow-sm"
-            >
-              Start Review
-            </Link>
-          </div>
+          <button
+            onClick={fetchDashboard}
+            className="text-primary hover:text-on-primary-fixed-variant font-label-md text-label-md uppercase tracking-wider flex items-center gap-1 focus:outline-none focus:underline shrink-0"
+          >
+            <span className="material-symbols-outlined text-[16px]">sync</span>
+            Retry Connection
+          </button>
         </div>
+      )}
 
-        {/* Quick Upload Action */}
-        <div className="col-span-12 md:col-span-4 bg-primary-container rounded-xl p-6 shadow-[0_10px_30px_-15px_rgba(49,46,129,0.2)] flex flex-col items-center justify-center text-center relative group overflow-hidden cursor-pointer transition-transform hover:-translate-y-1 duration-300 min-h-[280px]">
-          <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white via-transparent to-transparent"></div>
-          <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 backdrop-blur-sm border border-white/20">
-            <span className="material-symbols-outlined text-white text-[32px]">
-              upload_file
-            </span>
-          </div>
-          <h3 className="font-h3 text-h3 text-white mb-2 relative z-10">
-            Distill New Document
-          </h3>
-          <p className="font-body-sm text-body-sm text-primary-fixed-dim mb-6 relative z-10">
-            Upload PDF, DOCX, or text to generate a new study plan and
-            flashcards.
+      {/* Header */}
+      <header className="mb-lg flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="font-h1 text-h1 text-on-surface mb-xs">
+            {getGreeting()}, {userName}
+          </h1>
+          <p className="font-body-md text-body-md text-on-surface-variant">
+            You have {dueCards} cards due for review today
           </p>
+        </div>
+        
+        <div className="flex items-center gap-3">
+          {/* Review Cards Button */}
+          <Link
+            to="/flashcards"
+            className="bg-primary hover:bg-primary-container text-on-primary font-label-md text-label-md px-5 py-2.5 rounded-lg transition-colors flex items-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
+          >
+            <span className="material-symbols-outlined text-[18px]">psychology</span>
+            Review cards
+          </Link>
+          
+          {/* New Plan Button */}
           <Link
             to="/study-plan/new"
-            className="bg-white text-primary font-label-md text-label-md px-6 py-2 rounded-lg transition-colors shadow-sm relative z-10 w-full hover:bg-surface-container-low"
+            className="border border-outline-variant bg-surface-container-lowest hover:bg-surface-container-low text-on-surface font-label-md text-label-md px-5 py-2.5 rounded-lg transition-colors flex items-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
           >
-            Browse Files
+            <span className="material-symbols-outlined text-[18px]">add</span>
+            New plan
           </Link>
         </div>
+      </header>
+
+      {/* Statistics Row (4 Cards) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter mb-lg">
+        
+        {/* CARDS DUE (Interactive link to review) */}
+        <Link
+          to="/flashcards"
+          className="bg-surface-container-lowest rounded-xl p-5 border border-outline-variant/60 hover:border-primary-container/40 hover:shadow-sm transition-all flex flex-col justify-between min-h-[110px] group cursor-pointer"
+        >
+          <span className="font-label-sm text-[11px] text-on-surface-variant uppercase tracking-wider">
+            Cards Due
+          </span>
+          <div className="flex flex-col mt-2">
+            <span className="text-[32px] font-bold text-on-surface leading-none">
+              {dueCards}
+            </span>
+            <span className={`text-[11px] font-semibold mt-1 flex items-center gap-0.5 ${dueCardsTrend > 0 ? 'text-secondary' : dueCardsTrend < 0 ? 'text-error' : 'text-on-surface-variant'}`}>
+              {dueCardsTrend !== 0 && (
+                <span className="material-symbols-outlined text-[12px]">
+                  {dueCardsTrend > 0 ? 'trending_up' : 'trending_down'}
+                </span>
+              )}
+              {dueCardsTrend === 0 ? 'no change from yesterday' : `${Math.abs(dueCardsTrend)} from yesterday`}
+            </span>
+          </div>
+        </Link>
+
+        {/* TOTAL CARDS */}
+        <div className="bg-surface-container-lowest rounded-xl p-5 border border-outline-variant/60 flex flex-col justify-between min-h-[110px] shadow-sm select-none">
+          <span className="font-label-sm text-[11px] text-on-surface-variant uppercase tracking-wider">
+            Total Cards
+          </span>
+          <div className="flex flex-col mt-2">
+            <span className="text-[32px] font-bold text-on-surface leading-none">
+              {totalCards}
+            </span>
+            <span className="text-[11px] text-on-surface-variant/70 mt-1">
+              across {plansCount} plans
+            </span>
+          </div>
+        </div>
+
+        {/* RETENTION RATE */}
+        <div className="bg-surface-container-lowest rounded-xl p-5 border border-outline-variant/60 flex flex-col justify-between min-h-[110px] shadow-sm select-none">
+          <span className="font-label-sm text-[11px] text-on-surface-variant uppercase tracking-wider">
+            Retention Rate
+          </span>
+          <div className="flex flex-col mt-2">
+            <span className="text-[32px] font-bold text-on-surface leading-none">
+              {retentionRate}%
+            </span>
+            <span className={`text-[11px] font-semibold mt-1 flex items-center gap-0.5 ${retentionRateTrend > 0 ? 'text-secondary' : retentionRateTrend < 0 ? 'text-error' : 'text-on-surface-variant'}`}>
+              {retentionRateTrend !== 0 && (
+                <span className="material-symbols-outlined text-[12px]">
+                  {retentionRateTrend > 0 ? 'trending_up' : 'trending_down'}
+                </span>
+              )}
+              {retentionRateTrend === 0 ? 'no change this week' : `${Math.abs(retentionRateTrend)}% this week`}
+            </span>
+          </div>
+        </div>
+
+        {/* CARDS REVIEWED */}
+        <div className="bg-surface-container-lowest rounded-xl p-5 border border-outline-variant/60 flex flex-col justify-between min-h-[110px] shadow-sm select-none">
+          <span className="font-label-sm text-[11px] text-on-surface-variant uppercase tracking-wider">
+            Cards Reviewed
+          </span>
+          <div className="flex flex-col mt-2">
+            <span className="text-[32px] font-bold text-on-surface leading-none">
+              {cardsReviewed.toLocaleString()}
+            </span>
+            <span className="text-[11px] text-on-surface-variant/70 mt-1">
+              all time
+            </span>
+          </div>
+        </div>
+
       </div>
 
+      {/* Plans & Heatmap Row */}
       <div className="grid grid-cols-12 gap-gutter">
-        {/* Recent Study Plans */}
+        
+        {/* Recent Study Plans List */}
         <div className="col-span-12 md:col-span-8 flex flex-col gap-4">
-          <div className="flex justify-between items-center mb-2">
+          <div className="flex justify-between items-center mb-1">
             <h2 className="font-h2 text-h2 text-on-surface">
               Recent Study Plans
             </h2>
@@ -164,43 +286,47 @@ const DashboardPage = () => {
           </div>
 
           {subjects.length > 0 ? (
-            subjects.slice(0, 3).map((subject) => (
-              <SubjectCard key={subject.id} subject={subject} />
-            ))
+            <div className="flex flex-col gap-3">
+              {subjects.slice(0, 3).map((subject) => (
+                <SubjectCard key={subject.id} subject={subject} />
+              ))}
+            </div>
           ) : (
-            <div className="bg-surface-container rounded-xl p-8 text-center border border-dashed border-outline-variant">
-              <p className="text-on-surface-variant">No active study plans found.</p>
-              <Link to="/study-plan/new" className="text-primary font-semibold mt-2 inline-block">Create your first plan</Link>
+            <div className="bg-surface-container-lowest border border-dashed border-outline-variant/60 rounded-xl p-8 text-center flex flex-col items-center justify-center">
+              <span className="material-symbols-outlined text-[36px] text-outline mb-2">
+                menu_book
+              </span>
+              <p className="text-on-surface-variant font-body-sm text-body-sm">
+                No active study plans found. Get started by creating your first plan.
+              </p>
+              <Link
+                to="/study-plan/new"
+                className="text-primary font-semibold text-sm mt-2 inline-block hover:underline"
+              >
+                Create your first plan
+              </Link>
             </div>
           )}
         </div>
 
-        {/* Learning Activity Heatmap */}
+        {/* Heatmap Section */}
         <div className="col-span-12 md:col-span-4 flex flex-col gap-4">
+          <div className="mb-1">
+            <h2 className="font-h2 text-h2 text-on-surface invisible">Activity</h2>
+          </div>
           <ActivityHeatmap 
             heatmapData={heatmapData} 
             streak={streak} 
-            maxStreak={maxStreak} 
+            maxStreak={dashboardData?.maxStreak ?? 0} 
             totalActiveDays={totalActiveDays} 
             joinedAt={joinedAt}
           />
         </div>
+
       </div>
     </div>
   );
 };
-
-// Helper components for better organization
-const ReviewStat = ({ label, count, colorClass }) => (
-  <div className="flex flex-col gap-1 items-center">
-    <span className={`w-12 h-12 rounded-full flex items-center justify-center font-body-md text-body-md font-semibold ${colorClass}`}>
-      {count}
-    </span>
-    <span className="font-label-sm text-label-sm text-on-surface-variant">
-      {label}
-    </span>
-  </div>
-);
 
 const SubjectCard = ({ subject }) => {
   const progress = subject.progressPercentage || 0;
@@ -208,38 +334,39 @@ const SubjectCard = ({ subject }) => {
   return (
     <Link
       to={`/plans/${subject.id}`}
-      className="bg-surface-container-lowest rounded-xl p-5 shadow-[0_4px_15px_-5px_rgba(49,46,129,0.08)] border border-surface-container-high hover:border-primary-container transition-all cursor-pointer group"
+      className="bg-surface-container-lowest rounded-xl p-5 border border-outline-variant/60 hover:border-primary-container/40 hover:shadow-sm transition-all flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 group cursor-pointer"
     >
-      <div className="flex justify-between items-start mb-3">
-        <div className="flex gap-3">
-          <div className="w-10 h-10 rounded-lg bg-surface-variant flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-on-primary transition-colors">
-            <span className="material-symbols-outlined">menu_book</span>
-          </div>
-          <div>
-            <h4 className="font-body-lg text-body-lg text-on-surface font-semibold group-hover:text-primary transition-colors">
-              {subject.subjectName}
-            </h4>
-            <p className="font-body-sm text-body-sm text-on-surface-variant">
-              {subject.topicCount} topics • {subject.dueCount} cards due
-            </p>
-          </div>
+      <div className="flex items-center gap-3.5 min-w-0">
+        <div className="w-10 h-10 rounded-lg bg-surface-container border border-outline-variant/60 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-on-primary transition-colors shrink-0">
+          <span className="material-symbols-outlined text-[20px]">menu_book</span>
         </div>
-        <span className="font-label-sm text-label-sm text-secondary bg-secondary-fixed-dim/20 px-2 py-1 rounded">
-          Active
-        </span>
+        <div className="min-w-0">
+          <h4 className="font-body-md text-body-md text-on-surface font-semibold group-hover:text-primary transition-colors truncate">
+            {subject.subjectName}
+          </h4>
+          <p className="font-body-sm text-[12px] text-on-surface-variant mt-0.5">
+            {subject.topicCount} topics • {subject.dueCount} cards due
+          </p>
+        </div>
       </div>
 
-      <div className="mt-4">
-        <div className="flex justify-between font-label-sm text-label-sm text-on-surface-variant mb-1">
-          <span>Overall Progress</span>
-          <span>{progress}%</span>
+      <div className="flex items-center gap-4 shrink-0 w-full sm:w-auto">
+        {/* Progress Bar */}
+        <div className="flex items-center gap-3 w-full sm:w-[160px]">
+          <div className="flex-1 h-1.5 bg-surface-container border border-outline-variant/65 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-secondary rounded-full transition-all duration-500 ease-out"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+          <span className="font-semibold text-xs text-on-surface w-9 text-right shrink-0">
+            {progress}%
+          </span>
         </div>
-        <div className="w-full h-2 bg-surface-container rounded-full overflow-hidden">
-          <div
-            className="h-full bg-secondary rounded-full transition-all duration-700 ease-out"
-            style={{ width: `${progress}%` }}
-          />
-        </div>
+
+        <span className="text-[10px] uppercase font-bold tracking-wider text-secondary bg-secondary-container/20 border border-secondary/15 px-2 py-0.5 rounded shrink-0">
+          Active
+        </span>
       </div>
     </Link>
   );

@@ -1,11 +1,28 @@
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import dashboardService from "../../services/dashboardService";
 
 export default function TopNavbar() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
+  const [streak, setStreak] = useState(12);
+
+  useEffect(() => {
+    const fetchStreak = async () => {
+      try {
+        const res = await dashboardService.getDashboardSummary();
+        if (res?.success && res.data?.streak !== undefined) {
+          setStreak(res.data.streak);
+        }
+      } catch {
+        // Fallback to mock 12
+      }
+    };
+    fetchStreak();
+  }, []);
+
   const currentQuery = useMemo(
     () => new URLSearchParams(location.search).get("query") || "",
     [location.search],
@@ -46,6 +63,12 @@ export default function TopNavbar() {
       </form>
 
       <div className="flex items-center gap-2">
+        {/* Streak Pill */}
+        <div className="flex items-center gap-1.5 border border-primary-container/20 text-on-primary-fixed-variant bg-primary-fixed/20 font-label-sm text-[12px] px-3.5 py-1.5 rounded-full font-semibold select-none mr-2">
+          <span className="material-symbols-outlined text-[16px] text-primary leading-none">local_fire_department</span>
+          {streak}-day streak
+        </div>
+
         <button
           type="button"
           aria-label="Notifications"
