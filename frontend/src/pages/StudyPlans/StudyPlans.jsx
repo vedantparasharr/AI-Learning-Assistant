@@ -72,15 +72,11 @@ const getTopicPreview = (topics) => {
   return `${names.slice(0, 3).join(" • ")} +${names.length - 3} more`;
 };
 
-const buildSearchParams = ({ query, subject }) => {
+const buildSearchParams = ({ query }) => {
   const params = new URLSearchParams();
 
   if (query) {
     params.set("query", query);
-  }
-
-  if (subject && subject !== "all") {
-    params.set("subject", subject);
   }
 
   return params;
@@ -98,7 +94,6 @@ const StudyPlans = () => {
   const [planToDelete, setPlanToDelete] = useState(null);
 
   const query = searchParams.get("query")?.trim() || "";
-  const subjectFilter = searchParams.get("subject") || "all";
 
   const fetchPlans = async () => {
     try {
@@ -138,17 +133,10 @@ const StudyPlans = () => {
     [plans],
   );
 
-  const subjects = useMemo(() => {
-    const unique = [...new Set(normalizedPlans.map((plan) => plan.subjectName).filter(Boolean))];
-    return unique.sort((left, right) => left.localeCompare(right));
-  }, [normalizedPlans]);
-
   const filteredAndSortedPlans = useMemo(() => {
     const loweredQuery = query.toLowerCase();
 
-    const filtered = subjectFilter === "all"
-      ? normalizedPlans
-      : normalizedPlans.filter((plan) => plan.subjectName === subjectFilter);
+    const filtered = normalizedPlans;
 
     const searched = loweredQuery
       ? filtered.filter((plan) => {
@@ -179,18 +167,13 @@ const StudyPlans = () => {
 
     sorted.sort((left, right) => toEpoch(right.updatedAt) - toEpoch(left.updatedAt));
     return sorted;
-  }, [normalizedPlans, query, sortBy, subjectFilter]);
+  }, [normalizedPlans, query, sortBy]);
 
-  const hasActiveRefinements = Boolean(query) || subjectFilter !== "all";
-
-  const handleSubjectChange = (nextSubject) => {
-    setSearchParams(buildSearchParams({ query, subject: nextSubject }));
-  };
+  const hasActiveRefinements = Boolean(query);
 
   const clearRefinements = () => {
     const nextParams = new URLSearchParams(searchParams);
     nextParams.delete("query");
-    nextParams.delete("subject");
     setSearchParams(nextParams);
   };
 
@@ -244,11 +227,7 @@ const StudyPlans = () => {
                     “{query}”
                   </span>
                 )}
-                {subjectFilter !== "all" && (
-                  <span className="inline-flex items-center rounded-full bg-surface-container px-2.5 py-0.5 text-xs text-on-surface-variant border border-outline-variant/60">
-                    {subjectFilter}
-                  </span>
-                )}
+
                 <button
                   type="button"
                   className="text-xs font-semibold text-primary hover:text-primary-container transition-colors"
@@ -262,19 +241,7 @@ const StudyPlans = () => {
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <select
-            value={subjectFilter}
-            onChange={(event) => handleSubjectChange(event.target.value)}
-            className="min-h-10 rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-1.5 text-sm text-on-surface shadow-sm transition focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
-            aria-label="Filter by subject"
-          >
-            <option value="all">All Subjects</option>
-            {subjects.map((subject) => (
-              <option key={subject} value={subject}>
-                {subject}
-              </option>
-            ))}
-          </select>
+
 
           <select
             value={sortBy}

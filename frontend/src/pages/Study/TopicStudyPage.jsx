@@ -192,96 +192,51 @@ const TopicStudyPage = () => {
 										<ReactMarkdown
 											remarkPlugins={[remarkGfm]}
 											components={{
-												h2: ({ children }) => (
-													<h2 className="font-h2 text-h2 text-primary mb-5 mt-12 first:mt-0 pb-3 border-b border-surface-variant flex items-center gap-3">
-														<span className="material-symbols-outlined text-secondary text-[26px]">bolt</span>
-														{children}
-													</h2>
-												),
-												h3: ({ children }) => (
-													<h3 className="font-h3 text-h3 text-on-surface font-bold mb-4 mt-10">{children}</h3>
-												),
-												h4: ({ children }) => (
-													<h4 className="font-body-lg text-body-lg text-on-surface font-semibold mb-3 mt-8 uppercase tracking-wider opacity-80">{children}</h4>
-												),
-												p: ({ children }) => (
-													<p className="font-body-md text-body-md text-on-surface-variant leading-relaxed mb-6 last:mb-0">{children}</p>
-												),
-												ul: ({ children }) => (
-													<ul className="space-y-3 pl-6 mb-6 list-disc marker:text-primary text-on-surface">{children}</ul>
-												),
-												ol: ({ children }) => (
-													<ol className="space-y-3 pl-6 mb-6 list-decimal marker:text-primary text-on-surface">{children}</ol>
-												),
-												li: ({ children }) => (
-													<li className="font-body-md text-body-md leading-relaxed pl-2">{children}</li>
-												),
-												blockquote: ({ children }) => (
-													<blockquote className="border-l border-primary bg-surface-container-low px-6 py-4 my-6 italic text-on-surface-variant rounded-r-lg">
-														{children}
-													</blockquote>
-												),
-												hr: () => <hr className="my-12 border-surface-variant" />,
-												table: ({ children }) => (
-													<div className="overflow-x-auto my-10 rounded-xl border border-outline-variant shadow-lg bg-surface-container-lowest">
-														<table className="w-full text-left border-collapse">{children}</table>
-													</div>
-												),
-												thead: ({ children }) => <thead className="bg-surface-container-low text-on-surface font-bold">{children}</thead>,
-												th: ({ children }) => <th className="px-6 py-4 border-b border-outline-variant text-[12px] uppercase tracking-widest font-black">{children}</th>,
-												td: ({ children }) => <td className="px-6 py-5 border-b border-outline-variant text-body-sm align-top">{children}</td>,
-												tr: ({ children }) => <tr className="hover:bg-surface-container-lowest transition-colors border-b last:border-0 border-outline-variant/30">{children}</tr>,
-												strong: ({ children }) => (
-													<strong className="font-bold text-on-surface underline decoration-secondary/30 decoration-2 underline-offset-2">{children}</strong>
-												),
-												pre: ({ children }) => (
-													<div className="relative my-10 rounded-xl overflow-hidden bg-[#0d1117] group border border-white/10 shadow-2xl">
-														<div className="flex items-center justify-between px-5 py-2.5 bg-white/5 border-b border-white/10">
-															<span className="text-[10px] font-mono text-white/40 uppercase tracking-[0.2em] font-bold">Reference Implementation</span>
-															<div className="flex gap-2">
-																<div className="w-2.5 h-2.5 rounded-full bg-error/40" />
-																<div className="w-2.5 h-2.5 rounded-full bg-secondary/40" />
-																<div className="w-2.5 h-2.5 rounded-full bg-primary/40" />
-															</div>
-														</div>
-														{children}
-													</div>
-												),
+												h1: ({ children }) => <h1 className="text-3xl font-bold mb-4 mt-6 text-on-surface">{children}</h1>,
+												h2: ({ children }) => <h2 className="text-2xl font-semibold mb-4 mt-6 text-on-surface pb-1 border-b border-surface-variant">{children}</h2>,
+												h3: ({ children }) => <h3 className="text-xl font-medium mb-3 mt-5 text-on-surface">{children}</h3>,
+												h4: ({ children }) => <h4 className="text-lg font-medium mb-2 mt-4 text-on-surface">{children}</h4>,
+												p: ({ children }) => <p className="mb-4 text-on-surface-variant leading-relaxed">{children}</p>,
+												ul: ({ children }) => <ul className="list-disc pl-6 mb-4 space-y-1 text-on-surface-variant">{children}</ul>,
+												ol: ({ children }) => <ol className="list-decimal pl-6 mb-4 space-y-1 text-on-surface-variant">{children}</ol>,
+												li: ({ children }) => <li className="text-on-surface-variant">{children}</li>,
+												blockquote: ({ children }) => <blockquote className="border-l-4 border-surface-variant pl-4 italic text-on-surface-variant mb-4">{children}</blockquote>,
+												hr: () => <hr className="my-6 border-surface-variant" />,
+												table: ({ children }) => <div className="overflow-x-auto mb-4 border border-surface-variant rounded"><table className="min-w-full divide-y divide-surface-variant">{children}</table></div>,
+												thead: ({ children }) => <thead className="bg-surface-container-low">{children}</thead>,
+												th: ({ children }) => <th className="px-4 py-2 text-left font-semibold text-on-surface border-b border-surface-variant">{children}</th>,
+												td: ({ children }) => <td className="px-4 py-2 text-on-surface-variant border-b border-surface-variant">{children}</td>,
+												strong: ({ children }) => <strong className="font-semibold text-on-surface">{children}</strong>,
 												code: ({ node, className, children, ...props }) => {
 													const match = /language-(\w+)/.exec(className || "");
-													const isBlock = match || (node?.position?.start?.line !== node?.position?.end?.line);
-
-													if (match) {
+													const isInline = !match && (!node || node.position?.start?.line === node.position?.end?.line);
+													
+													if (!isInline && match) {
 														return (
-															<SyntaxHighlighter
-																style={vscDarkPlus}
-																language={match[1]}
-																PreTag="div"
-																customStyle={{
-																	margin: 0,
-																	padding: "2rem",
-																	backgroundColor: "transparent",
-																	fontSize: "14px",
-																	lineHeight: "2",
-																}}
-																className="scrollbar-thin scrollbar-thumb-white/10"
-																{...props}
-															>
-																{String(children).replace(/\n$/, "")}
-															</SyntaxHighlighter>
+															<div className="rounded-md overflow-hidden mb-4 border border-surface-variant">
+																<div className="flex items-center px-4 py-2 bg-surface-container-high text-on-surface-variant text-xs font-mono">
+																	{match[1]}
+																</div>
+																<SyntaxHighlighter
+																	style={vscDarkPlus}
+																	language={match[1]}
+																	PreTag="div"
+																	customStyle={{ margin: 0, padding: "1rem", fontSize: "0.875rem" }}
+																	{...props}
+																>
+																	{String(children).replace(/\n$/, "")}
+																</SyntaxHighlighter>
+															</div>
 														);
-													}
-
-													if (isBlock) {
+													} else if (!isInline) {
 														return (
-															<pre className="p-8 overflow-x-auto scrollbar-thin scrollbar-thumb-white/10 text-[#e6edf3] font-mono text-[14px] leading-loose">
+															<pre className="p-4 rounded-md bg-[#0d1117] text-[#e6edf3] font-mono text-sm overflow-x-auto mb-4 border border-surface-variant">
 																<code {...props}>{children}</code>
 															</pre>
 														);
 													}
-
 													return (
-														<code className="bg-surface-container-high text-primary px-1.5 py-0.5 rounded font-mono text-[0.85em] font-semibold border border-outline-variant" {...props}>
+														<code className="bg-surface-container text-on-surface px-1.5 py-0.5 rounded font-mono text-sm" {...props}>
 															{children}
 														</code>
 													);

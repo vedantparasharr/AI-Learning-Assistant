@@ -86,10 +86,10 @@ const App = () => {
           <Route path="/study/:topicKey" element={<TopicStudyPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/help-center" element={<HelpCenterPage />} />
+          <Route path="/flashcards" element={<ReviewQueuePage />} />
         </Route>
 
         <Route element={<RequireAuth />}>
-          <Route path="/flashcards" element={<ReviewQueuePage />} />
         </Route>
 
         <Route path="*" element={<NotFoundPage />} />
