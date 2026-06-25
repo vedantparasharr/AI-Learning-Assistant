@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import authService from "../../services/authService";
 import { Input, PrimaryButton, SecondaryButton } from "../../components/common/ui";
+import { useAuth } from "../../context/AuthContext";
 
 const ProfilePage = () => {
   const { user, updateUser, logout } = useAuth();

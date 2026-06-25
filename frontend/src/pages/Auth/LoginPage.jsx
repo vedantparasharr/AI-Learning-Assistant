@@ -3,7 +3,8 @@ import toast from "react-hot-toast";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import authService from "../../services/authService";
-import { Input, Checkbox, PrimaryButton } from "../../components/common/ui";
+import { Input, PrimaryButton } from "../../components/common/ui";
+import Logo from "../../components/common/Logo";
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -33,74 +34,66 @@ const LoginPage = () => {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background text-on-surface p-md">
-      <main className="w-full max-w-[440px] mx-auto">
-        <div className="text-center mb-xl">
-          <h1 className="font-h1 text-h1 text-primary mb-sm tracking-tight font-black">DistillLearn</h1>
-          <p className="font-body-lg text-body-lg text-on-surface-variant">Sign in to your account</p>
-        </div>
+      <main className="w-full max-w-[400px] mx-auto">
+        {/* Card — everything inside */}
+        <div className="bg-surface-container-lowest rounded-xl border border-outline-variant/40 p-xl flex flex-col gap-md">
+          {/* Brand */}
+          <div className="flex justify-center pb-xs">
+            <Logo className="h-10" />
+          </div>
 
-        <div className="bg-surface-container-lowest rounded-xl border border-outline-variant/30 p-xl">
-          <form onSubmit={handleSubmit} className="space-y-lg">
+          <form onSubmit={handleSubmit} className="flex flex-col gap-md">
             <Input
               id="email"
               name="email"
               type="email"
-              label="Email address"
-              icon="mail"
-              placeholder="you@example.com"
+              placeholder="Email"
               required
               autoComplete="email"
               value={form.email}
               onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))}
             />
 
-            <div>
-              <div className="flex items-center justify-between mb-xs">
-                <label className="block font-label-md text-label-md text-on-surface" htmlFor="password">
-                  Password
-                </label>
-                <Link className="font-label-md text-label-md text-primary hover:text-primary-container transition-colors" to="/help-center">
-                  Forgot password?
-                </Link>
-              </div>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                icon="lock"
-                placeholder="••••••••"
-                required
-                autoComplete="current-password"
-                value={form.password}
-                onChange={(event) => setForm((current) => ({ ...current, password: event.target.value }))}
-              />
-            </div>
-
-            <Checkbox
-              id="remember-me"
-              name="remember-me"
-              label="Remember me"
+            <Input
+              id="password"
+              name="password"
+              type="password"
+              placeholder="Password"
+              required
+              autoComplete="current-password"
+              value={form.password}
+              onChange={(event) => setForm((current) => ({ ...current, password: event.target.value }))}
             />
 
             <PrimaryButton
               type="submit"
               disabled={submitting}
-              className="w-full flex justify-center"
+              className="w-full"
             >
-              {submitting ? "Signing In..." : "Sign In"}
-              <span className="material-symbols-outlined ml-xs text-[18px]" style={{ fontVariationSettings: "'FILL' 0" }}>
-                arrow_forward
-              </span>
+              {submitting ? "Signing in…" : "Sign In"}
             </PrimaryButton>
           </form>
-        </div>
 
-        <p className="mt-xl text-center font-body-sm text-body-sm text-on-surface-variant">
-          Don&apos;t have an account?
-          <Link className="font-label-md text-label-md text-primary hover:text-primary-container transition-colors ml-xs" to={`/register${location.search || ""}`}>
-            Sign up
-          </Link>
-        </p>
+          {/* Secondary navigation row */}
+          <div className="flex w-full items-center justify-between pt-xs border-t border-outline-variant/30">
+            <Link
+              className="text-xs text-on-surface-variant hover:text-on-surface transition-colors"
+              to="/help-center"
+            >
+              Forgot password?
+            </Link>
+
+            <p className="text-xs text-on-surface-variant">
+              No account?{" "}
+              <Link
+                className="font-semibold text-primary hover:text-primary-container hover:underline transition-colors"
+                to={`/register${location.search || ""}`}
+              >
+                Sign up
+              </Link>
+            </p>
+          </div>
+        </div>
       </main>
     </div>
   );

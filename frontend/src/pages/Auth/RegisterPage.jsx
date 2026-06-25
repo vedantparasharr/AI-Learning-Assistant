@@ -3,6 +3,8 @@ import toast from "react-hot-toast";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import authService from "../../services/authService";
 import { Input, PrimaryButton } from "../../components/common/ui";
+import Logo from "../../components/common/Logo";
+
 const RegisterPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -45,21 +47,20 @@ const RegisterPage = () => {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background text-on-surface p-md">
-      <main className="w-full max-w-[440px] mx-auto">
-        <div className="text-center mb-xl">
-          <h1 className="font-h1 text-h1 text-primary mb-sm tracking-tight font-black">DistillLearn</h1>
-          <p className="font-body-lg text-body-lg text-on-surface-variant">Create your account</p>
-        </div>
+      <main className="w-full max-w-[400px] mx-auto">
+        {/* Card — everything inside */}
+        <div className="bg-surface-container-lowest rounded-xl border border-outline-variant/40 p-xl flex flex-col gap-md">
+          {/* Brand */}
+          <div className="flex justify-center pb-xs">
+            <Logo className="h-10" />
+          </div>
 
-        <div className="bg-surface-container-lowest rounded-xl border border-outline-variant/30 p-xl">
-          <form onSubmit={handleSubmit} className="space-y-lg">
+          <form onSubmit={handleSubmit} className="flex flex-col gap-md">
             <Input
               id="name"
               name="name"
               type="text"
-              label="Full Name"
-              icon="person"
-              placeholder="Jane Doe"
+              placeholder="Username"
               required
               autoComplete="name"
               value={form.username}
@@ -70,38 +71,29 @@ const RegisterPage = () => {
               id="email"
               name="email"
               type="email"
-              label="Email Address"
-              icon="mail"
-              placeholder="jane@example.com"
+              placeholder="Email"
               required
               autoComplete="email"
               value={form.email}
               onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))}
             />
 
-            <div>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                label="Password"
-                icon="lock"
-                placeholder="••••••••"
-                required
-                autoComplete="new-password"
-                value={form.password}
-                onChange={(event) => setForm((current) => ({ ...current, password: event.target.value }))}
-              />
-              <p className="font-label-sm text-label-sm text-on-surface-variant mt-1">Must be at least 8 characters long.</p>
-            </div>
+            <Input
+              id="password"
+              name="password"
+              type="password"
+              placeholder="Password"
+              required
+              autoComplete="new-password"
+              value={form.password}
+              onChange={(event) => setForm((current) => ({ ...current, password: event.target.value }))}
+            />
 
             <Input
               id="confirmPassword"
               name="confirmPassword"
               type="password"
-              label="Confirm Password"
-              icon="lock"
-              placeholder="••••••••"
+              placeholder="Confirm password"
               required
               autoComplete="new-password"
               value={form.confirmPassword}
@@ -111,22 +103,25 @@ const RegisterPage = () => {
             <PrimaryButton
               type="submit"
               disabled={submitting}
-              className="w-full flex justify-center"
+              className="w-full"
             >
-              {submitting ? "Creating Account..." : "Create Account"}
-              <span className="material-symbols-outlined ml-xs text-[18px]" style={{ fontVariationSettings: "'FILL' 0" }}>
-                arrow_forward
-              </span>
+              {submitting ? "Creating account…" : "Create Account"}
             </PrimaryButton>
           </form>
-        </div>
 
-        <p className="mt-xl text-center font-body-sm text-body-sm text-on-surface-variant">
-          Already a member?
-          <Link className="font-label-md text-label-md text-primary hover:text-primary-container transition-colors ml-xs" to={`/login${location.search || ""}`}>
-            Sign in
-          </Link>
-        </p>
+          {/* Switch */}
+          <div className="pt-xs border-t border-outline-variant/30 text-center">
+            <p className="text-xs text-on-surface-variant">
+              Have an account?{" "}
+              <Link
+                className="font-semibold text-primary hover:text-primary-container hover:underline transition-colors"
+                to={`/login${location.search || ""}`}
+              >
+                Sign in
+              </Link>
+            </p>
+          </div>
+        </div>
       </main>
     </div>
   );

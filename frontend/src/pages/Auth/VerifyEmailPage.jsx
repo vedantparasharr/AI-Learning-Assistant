@@ -3,7 +3,8 @@ import toast from "react-hot-toast";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import authService from "../../services/authService";
-import { PrimaryButton } from "../../components/common/ui";
+import { PrimaryButton, SecondaryButton } from "../../components/common/ui";
+import Logo from "../../components/common/Logo";
 const RESEND_COOLDOWN_SECONDS = 30;
 
 const getCooldownStorageKey = (email) => `otp-resend-cooldown-until:${(email || "").toLowerCase()}`;
@@ -157,33 +158,29 @@ const VerifyEmailPage = () => {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background text-on-surface p-md">
-      <main className="w-full max-w-[440px] mx-auto">
-        <div className="text-center mb-xl">
-          <h1 className="font-h1 text-h1 text-primary mb-sm tracking-tight font-black">DistillLearn</h1>
-          <p className="font-body-lg text-body-lg text-on-surface-variant">Verify your email</p>
-        </div>
+      <main className="w-full max-w-[400px] mx-auto">
 
-        <div className="bg-surface-container-lowest rounded-xl border border-outline-variant/30 p-xl flex flex-col items-center">
-          <div className="w-20 h-20 bg-surface-container-low rounded-full flex items-center justify-center mb-lg border border-outline-variant/30">
-            <span className="material-symbols-outlined text-primary text-4xl" style={{ fontVariationSettings: "'FILL' 0, 'wght' 300" }}>
-              mark_email_read
-            </span>
+        <div className="bg-surface-container-lowest rounded-xl border border-outline-variant/40 p-xl flex flex-col gap-md">
+          {/* Brand */}
+          <div className="flex justify-center pb-xs">
+            <Logo className="h-10" />
+          </div>
+          <div className="text-center">
+            <h2 className="font-title text-title text-on-surface font-bold">Verify email</h2>
+            <p className="font-body-sm text-body-sm text-on-surface-variant mt-xs">
+              We sent a verification code to {email}
+            </p>
           </div>
 
-          <h2 className="font-title text-title text-on-surface mb-xs text-center font-bold">Check your inbox</h2>
-          <p className="font-body-sm text-body-sm text-on-surface-variant mb-xl text-center">
-            We&apos;ve sent a 6-digit verification code to your email. Please enter it below.
-          </p>
-
-          <form onSubmit={handleSubmit} className="w-full flex flex-col gap-lg">
-            <div className="flex justify-between gap-2 mx-auto w-full max-w-xs" id="otp-inputs" onPaste={handlePaste}>
+          <form onSubmit={handleSubmit} className="w-full flex flex-col gap-md">
+            <div className="grid grid-cols-6 gap-2 w-full" id="otp-inputs" onPaste={handlePaste}>
               {otp.map((digit, index) => (
                 <input
                   key={index}
                   ref={(element) => {
                     inputRefs.current[index] = element;
                   }}
-                  className="w-11 h-13 text-center text-h2 font-semibold border border-outline-variant/60 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary bg-surface-container-lowest outline-none transition-colors"
+                  className="h-14 w-full text-center text-h2 font-semibold border border-outline-variant/60 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary bg-surface-container-lowest outline-none transition-colors p-0"
                   maxLength={1}
                   type="text"
                   inputMode="numeric"
@@ -193,34 +190,26 @@ const VerifyEmailPage = () => {
                 />
               ))}
             </div>
-
-            <PrimaryButton
-              type="submit"
-              disabled={submitting}
-              className="w-full flex justify-center"
-            >
-              {submitting ? "Verifying..." : "Verify OTP"}
-            </PrimaryButton>
+            <button type="button" className="text-xs text-on-surface-variant hover:text-on-surface transition-colors self-center" onClick={handleResendOtp} disabled={resending || cooldown > 0}>
+              {cooldown > 0 ? `Resend(${formatSeconds(cooldown)})` : `Resend`}
+            </button>
+            <div className="flex gap-md" >
+              <SecondaryButton
+                type="button"
+                className="w-full flex justify-center"
+                onClick={() => navigate(`/login${location.search ? `?${new URLSearchParams({ returnTo }).toString()}` : ""}`)}>
+                Cancel
+              </SecondaryButton>
+              <PrimaryButton
+                type="submit"
+                disabled={submitting}
+                className="w-full flex justify-center"
+              >
+                Confirm
+              </PrimaryButton>
+            </div>
           </form>
-
-          <div className="mt-lg">
-            <Link className="font-label-md text-label-md text-primary hover:text-primary-container transition-colors inline-flex items-center justify-center gap-xs" to={`/login${location.search ? `?${new URLSearchParams({ returnTo }).toString()}` : ""}`}>
-              <span className="material-symbols-outlined text-[16px]">arrow_back</span>
-              Back to Login
-            </Link>
-          </div>
         </div>
-
-        <p className="font-body-sm text-body-sm text-on-surface-variant mt-xl text-center">
-          Didn&apos;t receive a code?{" "}
-          <button type="button" className="text-primary font-semibold hover:text-primary-container transition-colors hover:underline" onClick={handleResendOtp} disabled={resending || cooldown > 0}>
-            {resending ? "Resending..." : cooldown > 0 ? `Resend in ${formatSeconds(cooldown)}` : "Resend Code"}
-          </button>{" "}
-          or{" "}
-          <Link className="text-primary hover:text-primary-container transition-colors hover:underline" to="/help-center">
-            contact support
-          </Link>.
-        </p>
       </main>
     </div>
   );

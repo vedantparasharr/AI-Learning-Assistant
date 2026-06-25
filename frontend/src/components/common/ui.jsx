@@ -177,7 +177,7 @@ export const Input = ({
         )}
         <input
           id={inputId}
-          className={`block w-full py-2.5 bg-surface-container-lowest border rounded-lg font-body-md text-body-md text-on-surface placeholder:text-on-surface-variant/60 outline-none transition-colors focus:ring-2 ${
+          className={`text-xs block w-full py-2.5 bg-surface-container-lowest border rounded-lg font-body-md text-body-md text-on-surface placeholder:text-on-surface-variant outline-none transition-colors focus:ring-2 ${
             icon ? "pl-10 pr-4" : "px-sm"
           } ${
             error 

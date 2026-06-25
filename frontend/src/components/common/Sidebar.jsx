@@ -1,5 +1,6 @@
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import Logo from "./Logo";
 
 export default function Sidebar() {
   const { logout } = useAuth();
@@ -17,13 +18,11 @@ export default function Sidebar() {
       {/* Desktop Sidebar */}
       <nav className="hidden md:flex fixed left-0 top-0 z-50 h-screen w-64 flex-col border-r border-outline-variant/60 bg-surface-container-lowest px-4 py-6 text-on-background">
         <div className="mb-6 px-2">
-          <span className="block font-h3 text-h3 text-on-background">
-            DistillLearn
-          </span>
+          <Logo className="h-7" />
           <span className="mt-1 block font-body-sm text-body-sm text-on-surface-variant">
             Study workspace
           </span>
-        </div>
+        </div> 
 
         <div className="flex-1 overflow-y-auto">
           {navItems.map((item) => (
@@ -31,10 +30,9 @@ export default function Sidebar() {
               key={item.label}
               to={item.to}
               className={({ isActive }) =>
-                `flex items-center gap-3 rounded-lg px-4 py-3 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 ${
-                  isActive
-                    ? "bg-primary-fixed text-primary"
-                    : "text-on-surface-variant hover:bg-surface-container-low hover:text-primary"
+                `flex items-center gap-3 rounded-lg px-4 py-3 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 ${isActive
+                  ? "bg-primary-fixed text-primary"
+                  : "text-on-surface-variant hover:bg-surface-container-low hover:text-primary"
                 }`
               }
             >
@@ -57,10 +55,9 @@ export default function Sidebar() {
           <NavLink
             to="/help-center"
             className={({ isActive }) =>
-              `flex items-center gap-3 rounded-lg px-4 py-3 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 ${
-                isActive
-                  ? "bg-primary-fixed text-primary"
-                  : "text-on-surface-variant hover:bg-surface-container-low hover:text-primary"
+              `flex items-center gap-3 rounded-lg px-4 py-3 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 ${isActive
+                ? "bg-primary-fixed text-primary"
+                : "text-on-surface-variant hover:bg-surface-container-low hover:text-primary"
               }`
             }
           >
@@ -96,8 +93,7 @@ export default function Sidebar() {
               key={item.label}
               to={item.to}
               className={({ isActive }) =>
-                `flex flex-col items-center justify-center gap-1 rounded-lg px-2 py-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 flex-1 ${
-                  isActive ? "text-primary" : "text-on-surface-variant hover:bg-surface-container-low"
+                `flex flex-col items-center justify-center gap-1 rounded-lg px-2 py-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 flex-1 ${isActive ? "text-primary" : "text-on-surface-variant hover:bg-surface-container-low"
                 }`
               }
             >

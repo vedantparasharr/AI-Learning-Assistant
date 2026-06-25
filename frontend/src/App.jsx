@@ -19,6 +19,7 @@ import TopicStudyPage from "./pages/Study/TopicStudyPage";
 import SyllabusPage from "./pages/Syllabus/SyllabusPage";
 import ProfilePage from "./pages/Profile/ProfilePage";
 import HelpCenterPage from "./pages/HelpCenter/HelpCenterPage";
+import LandingPage from "./pages/Landing/LandingPage";
 import { useAuth } from "./context/AuthContext";
 import { Analytics } from "@vercel/analytics/react";
 
@@ -42,7 +43,7 @@ const App = () => {
             isAuthenticated ? (
               <Navigate to="/dashboard" replace />
             ) : (
-              <Navigate to="/login" replace />
+              <LandingPage />
             )
           }
         />
