@@ -5,7 +5,8 @@ import remarkGfm from "remark-gfm";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 import topicService from "../../services/topicService";
-import { LoadingState, ErrorState, PrimaryButton, SecondaryButton } from "../../components/common/ui";
+import { useAuth } from "../../context/AuthContext";
+import { LoadingState, ErrorState, PrimaryButton, SecondaryButton, PageShell } from "../../components/common/ui";
 
 const TopicStudyPage = () => {
 	const { topicKey } = useParams();
@@ -110,8 +111,32 @@ const TopicStudyPage = () => {
 
 	if (loading) {
 		return (
-			<div className="flex-1 w-full max-w-container-max mx-auto p-6 flex items-center justify-center min-h-[50vh]">
-				<LoadingState label="Preparing topic content..." />
+			<div className="flex-1 w-full max-w-container-max mx-auto animate-pulse">
+				<div className="space-y-sm mb-xxl">
+					<div className="h-4 w-48 bg-surface-container rounded mb-2" />
+					<div className="h-10 w-3/4 max-w-2xl bg-surface-container rounded-lg" />
+					<div className="h-6 w-1/2 max-w-xl bg-surface-container rounded mt-4" />
+				</div>
+				<div className="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+					<div className="lg:col-span-8 flex flex-col gap-gutter">
+						<div className="bg-surface-container-lowest rounded-xl border border-outline-variant/60 p-6 md:p-8 min-h-[500px]">
+							<div className="h-8 w-1/3 bg-surface-container rounded mb-6" />
+							<div className="h-4 w-full bg-surface-container rounded mb-3" />
+							<div className="h-4 w-full bg-surface-container rounded mb-3" />
+							<div className="h-4 w-5/6 bg-surface-container rounded mb-8" />
+							<div className="h-6 w-1/4 bg-surface-container rounded mb-4" />
+							<div className="h-4 w-full bg-surface-container rounded mb-3" />
+							<div className="h-4 w-4/5 bg-surface-container rounded mb-3" />
+						</div>
+					</div>
+					<div className="lg:col-span-4">
+						<div className="sticky top-24 bg-surface-container-lowest rounded-xl border border-outline-variant/60 p-6">
+							<div className="h-6 w-1/2 bg-surface-container rounded mb-4" />
+							<div className="h-10 w-full bg-surface-container rounded-lg mb-3" />
+							<div className="h-10 w-full bg-surface-container rounded-lg" />
+						</div>
+					</div>
+				</div>
 			</div>
 		);
 	}
@@ -135,28 +160,27 @@ const TopicStudyPage = () => {
 	return (
 		<>
 			<div className="flex-1 w-full max-w-container-max mx-auto">
-				<nav className="flex items-center gap-2 text-on-surface-variant font-label-sm text-label-sm uppercase tracking-wider mb-8">
-					<Link to="/plans" className="hover:text-primary transition-colors">
-						Study Plans
-					</Link>
-					<span className="material-symbols-outlined text-[14px]">chevron_right</span>
-					<Link to={`/plans/${topic.studyPlanId}`} className="hover:text-primary transition-colors">
-						{topic.subjectName}
-					</Link>
-					<span className="material-symbols-outlined text-[14px]">chevron_right</span>
-					<span className="text-primary font-semibold">{topic.name}</span>
-				</nav>
-
-				<div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-xxl">
-					<div>
-						<h1 className="font-display text-display text-on-surface mb-2">{topic.name}</h1>
-						{completionMessage ? (
-							<p className="font-body-sm text-body-sm text-secondary mt-3">{completionMessage}</p>
-						) : null}
-					</div>
-
-					<div className="flex-shrink-0 flex flex-wrap items-center gap-3">
-						<SecondaryButton
+				<PageShell
+					breadcrumbs={
+						<nav className="flex items-center gap-2 text-on-surface-variant font-label-sm text-label-sm uppercase tracking-wider">
+							<Link to="/plans" className="hover:text-primary transition-colors">
+								Study Plans
+							</Link>
+							<span className="material-symbols-outlined text-[14px]">chevron_right</span>
+							<Link to={`/plans/${topic.studyPlanId}`} className="hover:text-primary transition-colors">
+								{topic.subjectName}
+							</Link>
+							<span className="material-symbols-outlined text-[14px]">chevron_right</span>
+							<span className="text-primary font-semibold">{topic.name}</span>
+						</nav>
+					}
+					title={topic.name}
+					description={completionMessage ? (
+						<span className="text-secondary">{completionMessage}</span>
+					) : "Study the material, review generated notes, and test your knowledge."}
+					actions={
+						<div className="flex-shrink-0 flex flex-wrap items-center gap-3">
+							<SecondaryButton
 							type="button"
 							onClick={handleMarkCompleted}
 							disabled={topic.completionStatus === "completed" || completing}
@@ -173,8 +197,9 @@ const TopicStudyPage = () => {
 							<span className="material-symbols-outlined text-[20px]">view_carousel</span>
 							Start flashcard review
 						</PrimaryButton>
-					</div>
-				</div>
+						</div>
+					}
+				>
 
 				<div className="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
 					<div className="lg:col-span-8 flex flex-col gap-gutter">
@@ -327,6 +352,7 @@ const TopicStudyPage = () => {
 						</div>
 					</div>
 				</div>
+				</PageShell>
 			</div>
 		</>
 	);

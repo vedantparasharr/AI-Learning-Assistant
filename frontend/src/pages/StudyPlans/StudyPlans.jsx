@@ -274,7 +274,22 @@ const StudyPlans = () => {
       ) : null}
 
       {loading ? (
-        <LoadingState label="Loading your study plans" />
+        <div className="space-y-gutter animate-pulse">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="bg-surface-container-lowest rounded-xl p-4 border border-outline-variant/60 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-3 flex-1">
+                <div className="w-9 h-9 rounded-lg bg-surface-container shrink-0" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-5 w-48 bg-surface-container rounded" />
+                  <div className="h-3 w-32 bg-surface-container rounded" />
+                </div>
+              </div>
+              <div className="sm:w-32 w-full">
+                <div className="h-3 w-full bg-surface-container rounded-full" />
+              </div>
+            </div>
+          ))}
+        </div>
       ) : null}
 
       {!loading && filteredAndSortedPlans.length === 0 ? (
@@ -312,7 +327,7 @@ const StudyPlans = () => {
                   <span className="material-symbols-outlined text-[20px]">menu_book</span>
                 </div>
                 <div className="min-w-0 flex-1">
-                  <h2 className="font-semibold text-on-background group-hover:text-primary transition-colors truncate">
+                  <h2 className="font-body-lg text-body-lg font-semibold text-on-surface group-hover:text-primary transition-colors truncate">
                     {plan.subjectName}
                   </h2>
                   <div className="flex items-center gap-2 mt-0.5 text-xs text-on-surface-variant">

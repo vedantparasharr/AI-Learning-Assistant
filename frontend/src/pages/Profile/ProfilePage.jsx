@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import authService from "../../services/authService";
-import { Input, PrimaryButton, SecondaryButton } from "../../components/common/ui";
+import { Input, PrimaryButton, SecondaryButton, PageShell } from "../../components/common/ui";
 import { useAuth } from "../../context/AuthContext";
 
 const ProfilePage = () => {
@@ -129,13 +129,10 @@ const ProfilePage = () => {
 
   return (
     <div className="bg-background text-on-background min-h-screen flex flex-col pb-safe">
-      <div className="mb-margin">
-        <h1 className="font-h1 text-h1 text-on-background tracking-tight font-black">Profile Settings</h1>
-        <p className="font-body-md text-body-md text-on-surface-variant mt-xs">
-          Manage your account details and learning preferences.
-        </p>
-      </div>
-
+      <PageShell
+        title="Profile Settings"
+        description="Manage your account details and learning preferences."
+      >
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-lg">
         <div className="lg:col-span-2 flex flex-col gap-lg">
           {/* Personal Information */}
@@ -407,6 +404,7 @@ const ProfilePage = () => {
       </div>
 
       <div className="h-xl w-full" />
+      </PageShell>
     </div>
   );
 };

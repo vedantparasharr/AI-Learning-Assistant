@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import dashboardService from "../../services/dashboardService";
 import ActivityHeatmap from "../../components/dashboard/ActivityHeatmap";
+import { PageShell } from "../../components/common/ui";
 
 
 
@@ -138,7 +139,7 @@ const DashboardPage = () => {
       {isOffline && (
         <div className="bg-surface-container border border-outline-variant/60 rounded-xl px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 shadow-sm">
           <div className="flex items-center gap-2 text-on-surface font-body-sm text-body-sm">
-            <span className="material-symbols-outlined text-outline text-[20px]" aria-hidden="true">
+            <span className="material-symbols-outlined text-outline text-[1.25rem]" aria-hidden="true">
               cloud_off
             </span>
             <span>
@@ -149,30 +150,24 @@ const DashboardPage = () => {
             onClick={fetchDashboard}
             className="text-primary hover:text-on-primary-fixed-variant font-label-md text-label-md uppercase tracking-wider flex items-center gap-1 focus:outline-none focus:underline shrink-0"
           >
-            <span className="material-symbols-outlined text-[16px]">sync</span>
+            <span className="material-symbols-outlined text-[1rem]">sync</span>
             Retry Connection
           </button>
         </div>
       )}
 
       {/* Header */}
-      <header className="mb-lg flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="font-h1 text-h1 text-on-surface mb-xs">
-            {getGreeting()}, {userName}
-          </h1>
-          <p className="font-body-md text-body-md text-on-surface-variant">
-            You have {dueCards} cards due for review today
-          </p>
-        </div>
-        
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto mt-2 sm:mt-0">
-          {/* Review Cards Button */}
+      <PageShell
+        title={`${getGreeting()}, ${userName}`}
+        description={`You have ${dueCards} cards due for review today`}
+        actions={
+          <>
+            {/* Review Cards Button */}
           <Link
             to="/flashcards"
             className="bg-primary hover:bg-primary-container text-on-primary font-label-md text-label-md px-5 py-3 sm:py-2.5 rounded-lg transition-colors flex items-center justify-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
           >
-            <span className="material-symbols-outlined text-[18px]">psychology</span>
+            <span className="material-symbols-outlined text-[1.125rem]">psychology</span>
             Review cards
           </Link>
           
@@ -181,13 +176,12 @@ const DashboardPage = () => {
             to="/study-plan/new"
             className="border border-outline-variant bg-surface-container-lowest hover:bg-surface-container-low text-on-surface font-label-md text-label-md px-5 py-3 sm:py-2.5 rounded-lg transition-colors flex items-center justify-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
           >
-            <span className="material-symbols-outlined text-[18px]">add</span>
+            <span className="material-symbols-outlined text-[1.125rem]">add</span>
             New plan
           </Link>
-        </div>
-      </header>
-
-      {/* Statistics Row (4 Cards) */}
+          </>
+        }
+      >
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter mb-lg">
         
         {/* CARDS DUE (Interactive link to review) */}
@@ -195,14 +189,14 @@ const DashboardPage = () => {
           to="/flashcards"
           className="bg-surface-container-lowest rounded-xl p-5 border border-outline-variant/60 hover:border-primary-container/40 hover:shadow-sm transition-all flex flex-col justify-between min-h-[110px] group cursor-pointer"
         >
-          <span className="font-label-sm text-[11px] text-on-surface-variant uppercase tracking-wider">
+          <span className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">
             Cards Due
           </span>
           <div className="flex flex-col mt-2">
-            <span className="text-[32px] font-bold text-on-surface leading-none">
+            <span className="font-h2 text-h2 text-on-surface leading-none tabular-data">
               {dueCards}
             </span>
-            <span className={`text-[11px] font-semibold mt-1 flex items-center gap-0.5 ${dueCardsTrend > 0 ? 'text-secondary' : dueCardsTrend < 0 ? 'text-error' : 'text-on-surface-variant'}`}>
+            <span className={`font-label-sm text-label-sm mt-1 flex items-center gap-0.5 ${dueCardsTrend > 0 ? 'text-secondary' : dueCardsTrend < 0 ? 'text-error' : 'text-on-surface-variant'}`}>
               {dueCardsTrend !== 0 && (
                 <span className="material-symbols-outlined text-[12px]">
                   {dueCardsTrend > 0 ? 'trending_up' : 'trending_down'}
@@ -215,14 +209,14 @@ const DashboardPage = () => {
 
         {/* TOTAL CARDS */}
         <div className="bg-surface-container-lowest rounded-xl p-5 border border-outline-variant/60 flex flex-col justify-between min-h-[110px] shadow-sm select-none">
-          <span className="font-label-sm text-[11px] text-on-surface-variant uppercase tracking-wider">
+          <span className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">
             Total Cards
           </span>
           <div className="flex flex-col mt-2">
-            <span className="text-[32px] font-bold text-on-surface leading-none">
+            <span className="font-h2 text-h2 text-on-surface leading-none tabular-data">
               {totalCards}
             </span>
-            <span className="text-[11px] text-on-surface-variant/70 mt-1">
+            <span className="font-label-sm text-label-sm text-on-surface-variant mt-1">
               across {plansCount} plans
             </span>
           </div>
@@ -230,14 +224,14 @@ const DashboardPage = () => {
 
         {/* RETENTION RATE */}
         <div className="bg-surface-container-lowest rounded-xl p-5 border border-outline-variant/60 flex flex-col justify-between min-h-[110px] shadow-sm select-none">
-          <span className="font-label-sm text-[11px] text-on-surface-variant uppercase tracking-wider">
+          <span className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">
             Retention Rate
           </span>
           <div className="flex flex-col mt-2">
-            <span className="text-[32px] font-bold text-on-surface leading-none">
+            <span className="font-h2 text-h2 text-on-surface leading-none tabular-data">
               {retentionRate}%
             </span>
-            <span className={`text-[11px] font-semibold mt-1 flex items-center gap-0.5 ${retentionRateTrend > 0 ? 'text-secondary' : retentionRateTrend < 0 ? 'text-error' : 'text-on-surface-variant'}`}>
+            <span className={`font-label-sm text-label-sm mt-1 flex items-center gap-0.5 ${retentionRateTrend > 0 ? 'text-secondary' : retentionRateTrend < 0 ? 'text-error' : 'text-on-surface-variant'}`}>
               {retentionRateTrend !== 0 && (
                 <span className="material-symbols-outlined text-[12px]">
                   {retentionRateTrend > 0 ? 'trending_up' : 'trending_down'}
@@ -250,14 +244,14 @@ const DashboardPage = () => {
 
         {/* CARDS REVIEWED */}
         <div className="bg-surface-container-lowest rounded-xl p-5 border border-outline-variant/60 flex flex-col justify-between min-h-[110px] shadow-sm select-none">
-          <span className="font-label-sm text-[11px] text-on-surface-variant uppercase tracking-wider">
+          <span className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">
             Cards Reviewed
           </span>
           <div className="flex flex-col mt-2">
-            <span className="text-[32px] font-bold text-on-surface leading-none">
+            <span className="font-h2 text-h2 text-on-surface leading-none tabular-data">
               {cardsReviewed.toLocaleString()}
             </span>
-            <span className="text-[11px] text-on-surface-variant/70 mt-1">
+            <span className="font-label-sm text-label-sm text-on-surface-variant mt-1">
               all time
             </span>
           </div>
@@ -279,7 +273,7 @@ const DashboardPage = () => {
               className="font-label-md text-label-md text-primary hover:text-on-primary-fixed-variant flex items-center gap-1 transition-colors"
             >
               View All
-              <span className="material-symbols-outlined text-[16px]">
+              <span className="material-symbols-outlined text-[1rem]">
                 arrow_forward
               </span>
             </Link>
@@ -293,7 +287,7 @@ const DashboardPage = () => {
             </div>
           ) : (
             <div className="bg-surface-container-lowest border border-dashed border-outline-variant/60 rounded-xl p-8 text-center flex flex-col items-center justify-center">
-              <span className="material-symbols-outlined text-[36px] text-outline mb-2">
+              <span className="material-symbols-outlined text-[2.25rem] text-outline mb-2">
                 menu_book
               </span>
               <p className="text-on-surface-variant font-body-sm text-body-sm">
@@ -324,8 +318,8 @@ const DashboardPage = () => {
             />
           </div>
         </div>
-
       </div>
+      </PageShell>
     </div>
   );
 };
@@ -340,13 +334,13 @@ const SubjectCard = ({ subject }) => {
     >
       <div className="flex items-center gap-3.5 min-w-0">
         <div className="w-10 h-10 rounded-lg bg-surface-container border border-outline-variant/60 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-on-primary transition-colors shrink-0">
-          <span className="material-symbols-outlined text-[20px]">menu_book</span>
+          <span className="material-symbols-outlined text-[1.25rem]">menu_book</span>
         </div>
         <div className="min-w-0">
-          <h4 className="font-body-md text-body-md text-on-surface font-semibold group-hover:text-primary transition-colors truncate">
+          <h4 className="font-body-lg text-body-lg font-semibold text-on-surface group-hover:text-primary transition-colors truncate">
             {subject.subjectName}
           </h4>
-          <p className="font-body-sm text-[12px] text-on-surface-variant mt-0.5">
+          <p className="font-body-sm text-label-sm text-on-surface-variant mt-0.5">
             {subject.topicCount} topics • {subject.dueCount} cards due
           </p>
         </div>
@@ -361,12 +355,12 @@ const SubjectCard = ({ subject }) => {
               style={{ width: `${progress}%` }}
             />
           </div>
-          <span className="font-semibold text-xs text-on-surface w-9 text-right shrink-0">
+          <span className="font-label-sm text-label-sm text-on-surface w-9 text-right shrink-0 tabular-data">
             {progress}%
           </span>
         </div>
 
-        <span className="text-[10px] uppercase font-bold tracking-wider text-secondary bg-secondary-container/20 border border-secondary/15 px-2 py-0.5 rounded shrink-0">
+        <span className="font-label-sm text-label-sm text-secondary bg-secondary-container/20 border border-secondary/15 px-2 py-0.5 rounded shrink-0">
           Active
         </span>
       </div>

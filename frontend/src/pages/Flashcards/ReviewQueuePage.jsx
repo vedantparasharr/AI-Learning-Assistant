@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import toast from "react-hot-toast";
 import flashcardService from "../../services/flashcardService";
+import { PageShell } from "../../components/common/ui";
 import { LoadingState } from "../../components/common/ui";
 
 const RATING_OPTIONS = [
@@ -164,25 +165,36 @@ export default function ReviewQueuePage() {
 
   if (loading) {
     return (
-      <div className="flex-1 w-full max-w-container-max mx-auto p-6 flex items-center justify-center min-h-[50vh]">
-        <LoadingState label="Loading your session..." />
+      <div className="max-w-container-max mx-auto pb-lg animate-pulse">
+        <PageShell
+          title={topicKey ? `Review: ${topicKey}` : "Flashcards"}
+          description="Preparing your flashcards for this session..."
+        >
+          <div className="flex flex-col items-center justify-center py-8">
+            <div className="w-full max-w-[800px] bg-surface-container-lowest rounded-[12px] border border-outline-variant/60 min-h-[400px] p-12 flex flex-col justify-center items-center text-center">
+              <div className="h-4 w-24 bg-surface-container rounded mb-8" />
+              <div className="h-8 w-full max-w-lg bg-surface-container rounded mb-4" />
+              <div className="h-8 w-3/4 max-w-md bg-surface-container rounded" />
+              <div className="h-3 w-48 bg-surface-container rounded mt-8" />
+            </div>
+            
+            <div className="w-full min-h-[96px] mt-8 flex justify-center">
+               <div className="h-12 w-full max-w-xs bg-surface-container rounded-xl" />
+            </div>
+          </div>
+        </PageShell>
       </div>
     );
   }
 
   return (
-    <div className="max-w-container-max mx-auto">
-      
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-lg">
-        <div>
-          <h1 className="font-h1 text-h1 text-on-surface">
-            {topicKey ? `Review: ${topicKey}` : "Global Review Queue"}
-          </h1>
-        </div>
-
-        {/* MINIMAL PROGRESS AND UNDO */}
-        <div className="flex items-center gap-4 text-body-sm text-on-surface-variant bg-surface-container-lowest border border-outline-variant/60 rounded-xl px-4 py-2 shadow-sm h-11">
-          <div className="flex items-center gap-2">
+    <div className="max-w-container-max mx-auto pb-lg">
+      <PageShell
+        title={topicKey ? `Review: ${topicKey}` : "Flashcards"}
+        description="Master your concepts through spaced repetition."
+        actions={
+          <div className="flex items-center gap-4 text-body-sm text-on-surface-variant bg-surface-container-lowest border border-outline-variant/60 rounded-xl px-4 py-2 shadow-sm h-11">
+            <div className="flex items-center gap-2">
             <span className="font-semibold text-on-surface">Progress</span>
             <span className="text-secondary font-bold text-xs">{reviewedCount} / {initialCount}</span>
             {lastReviewedCard && (
@@ -204,7 +216,8 @@ export default function ReviewQueuePage() {
             />
           </div>
         </div>
-      </div>
+        }
+      >
 
       <div className="flex flex-col items-center justify-center py-8">
         {!currentCard ? (
@@ -273,7 +286,7 @@ export default function ReviewQueuePage() {
                   </span>
 
                   <div className="overflow-y-auto max-h-[250px] w-full px-2">
-                    <h2 className="text-h2 font-display text-on-surface max-w-2xl mx-auto">
+                    <h2 className="text-[28px] leading-[1.3] font-medium tracking-tight text-on-surface max-w-2xl mx-auto">
                       {currentCard.question}
                     </h2>
                   </div>
@@ -291,9 +304,9 @@ export default function ReviewQueuePage() {
                   </span>
 
                   <div className="overflow-y-auto max-h-[280px] w-full px-2">
-                    <p className="text-body-lg text-on-surface max-w-2xl mx-auto leading-relaxed">
+                    <div className="text-[18px] leading-[1.7] text-on-surface-variant max-w-2xl mx-auto">
                       {currentCard.answer}
-                    </p>
+                    </div>
                   </div>
                 </div>
 
@@ -366,6 +379,7 @@ export default function ReviewQueuePage() {
           </div>
         )}
       </div>
+      </PageShell>
     </div>
   );
 }

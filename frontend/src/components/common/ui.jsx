@@ -1,14 +1,15 @@
 import { Link } from "react-router-dom";
 
-export const PageShell = ({ title, description, actions, children }) => (
+export const PageShell = ({ title, description, actions, breadcrumbs, children }) => (
   <div className="space-y-lg">
     <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
       <div className="space-y-xs">
-        <h1 className="font-h1 text-h1 text-on-background">
+        {breadcrumbs ? <div className="mb-4">{breadcrumbs}</div> : null}
+        <h1 className="font-h1 text-h1 text-on-surface mb-xs">
           {title}
         </h1>
         {description ? (
-          <p className="max-w-3xl font-body-md text-body-md text-on-surface-variant">
+          <p className="font-body-md text-body-md font-medium text-on-surface-variant">
             {description}
           </p>
         ) : null}
@@ -161,7 +162,7 @@ export const Input = ({
       {label && (
         <label
           htmlFor={inputId}
-          className="block font-label-md text-label-md text-on-surface mb-xs"
+          className="block font-label-md text-label-md text-on-surface mb-2"
         >
           {label}
         </label>
@@ -211,7 +212,7 @@ export const Textarea = ({
       {label && (
         <label
           htmlFor={inputId}
-          className="block font-label-md text-label-md text-on-surface mb-xs"
+          className="block font-label-md text-label-md text-on-surface mb-2"
         >
           {label}
         </label>
