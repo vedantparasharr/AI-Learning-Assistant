@@ -166,9 +166,9 @@ const SyllabusPage = () => {
             </span>
           </div>
 
-          <div className="h-2 w-full bg-surface-container rounded-full overflow-hidden">
+          <div className="h-2 w-full bg-surface-container-highest rounded-full overflow-hidden">
             <div
-              className="h-full bg-secondary rounded-full transition-all duration-500 ease-out"
+              className="h-full bg-primary rounded-full transition-all duration-500 ease-out"
               style={{ width: `${progress}%` }}
             />
           </div>
@@ -183,7 +183,7 @@ const SyllabusPage = () => {
           {modules.map((topic, index) => (
             <article
               key={topic.topic_key}
-              className="bg-surface-container-lowest rounded-xl p-4 shadow-[0_2px_8px_-4px_rgba(13,28,46,0.08)] border border-outline-variant/60 hover:border-primary/40 transition-all flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between group cursor-pointer"
+              className="bg-surface-container-lowest rounded-xl p-4 shadow-[0_2px_8px_-4px_rgba(13,28,46,0.08)] border border-outline-variant/60 hover:shadow-sm transition-all flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between group cursor-pointer"
               onClick={() => navigate(`/study/${topic.topic_key}`)}
             >
               <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -191,8 +191,8 @@ const SyllabusPage = () => {
                   type="button"
                   className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors shrink-0 ${
                     topic.completionStatus === "completed"
-                      ? "border-secondary bg-secondary text-white"
-                      : "border-outline hover:border-primary"
+                      ? "border-primary bg-primary text-on-primary"
+                      : "border-outline-variant hover:border-primary"
                   }`}
                   onClick={(e) => {
                     e.stopPropagation();
@@ -236,7 +236,7 @@ const SyllabusPage = () => {
                     className={`inline-flex h-9 items-center justify-center gap-1 rounded-lg px-3 py-1 font-label-md text-label-md transition-colors ${
                       topic.completionStatus === "completed"
                         ? "border border-outline-variant bg-surface-container-lowest text-on-surface hover:bg-surface-container-low"
-                        : "bg-primary text-on-primary hover:bg-primary-container"
+                        : "bg-primary text-on-primary hover:opacity-80 transition-opacity"
                     }`}
                   >
                     {topic.completionStatus === "completed" ? (

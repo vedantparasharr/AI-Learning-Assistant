@@ -58,7 +58,7 @@ const ConfirmationModal = ({
             className={`inline-flex min-h-11 items-center justify-center gap-xs rounded-lg px-md py-2 font-label-md text-label-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-60 w-full sm:w-auto ${
               isDestructive
                 ? "bg-error text-on-error hover:bg-error/90 focus-visible:ring-error/20"
-                : "bg-primary text-on-primary hover:bg-primary-container"
+                : "bg-primary text-on-primary hover:opacity-80 transition-opacity"
             }`}
             onClick={onConfirm}
             disabled={isLoading}

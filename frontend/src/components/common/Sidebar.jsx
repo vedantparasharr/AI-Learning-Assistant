@@ -31,8 +31,8 @@ export default function Sidebar() {
               to={item.to}
               className={({ isActive }) =>
                 `flex items-center gap-3 rounded-lg px-4 py-3 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 ${isActive
-                  ? "bg-primary-fixed text-primary"
-                  : "text-on-surface-variant hover:bg-surface-container-low hover:text-primary"
+                  ? "bg-surface-variant text-on-surface"
+                  : "text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface"
                 }`
               }
             >
@@ -56,8 +56,8 @@ export default function Sidebar() {
             to="/help-center"
             className={({ isActive }) =>
               `flex items-center gap-3 rounded-lg px-4 py-3 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 ${isActive
-                ? "bg-primary-fixed text-primary"
-                : "text-on-surface-variant hover:bg-surface-container-low hover:text-primary"
+                ? "bg-surface-variant text-on-surface"
+                : "text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface"
               }`
             }
           >
@@ -93,13 +93,13 @@ export default function Sidebar() {
               key={item.label}
               to={item.to}
               className={({ isActive }) =>
-                `flex flex-col items-center justify-center gap-1 rounded-lg px-2 py-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 flex-1 ${isActive ? "text-primary" : "text-on-surface-variant hover:bg-surface-container-low"
+                `flex flex-col items-center justify-center gap-1 rounded-lg px-2 py-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 flex-1 ${isActive ? "text-on-surface" : "text-on-surface-variant hover:bg-surface-container-low"
                 }`
               }
             >
               {({ isActive }) => (
                 <>
-                  <div className={`flex items-center justify-center w-12 h-8 rounded-full transition-colors ${isActive ? 'bg-primary-container/20' : ''}`}>
+                  <div className={`flex items-center justify-center w-12 h-8 rounded-full transition-colors ${isActive ? 'bg-surface-variant' : ''}`}>
                     <span
                       className="material-symbols-outlined"
                       style={{ fontVariationSettings: isActive ? '"FILL" 1' : '"FILL" 0' }}

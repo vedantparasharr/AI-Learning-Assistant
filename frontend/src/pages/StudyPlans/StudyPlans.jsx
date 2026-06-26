@@ -319,7 +319,7 @@ const StudyPlans = () => {
           {filteredAndSortedPlans.map((plan) => (
             <article
               key={plan.planId}
-              className="bg-surface-container-lowest rounded-xl p-4 shadow-[0_2px_8px_-4px_rgba(13,28,46,0.08)] border border-outline-variant/60 hover:border-primary/40 transition-all flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between group cursor-pointer"
+              className="bg-surface-container-lowest rounded-xl p-4 shadow-[0_2px_8px_-4px_rgba(13,28,46,0.08)] border border-outline-variant/60 hover:shadow-sm transition-all flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between group cursor-pointer"
               onClick={() => navigate(`/plans/${plan.planId}`)}
             >
               <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -348,9 +348,9 @@ const StudyPlans = () => {
 
               <div className="flex items-center gap-4 shrink-0 w-full sm:w-auto">
                 <div className="flex items-center gap-3 w-full sm:w-[180px]">
-                  <div className="flex-1 h-2 overflow-hidden rounded-full bg-surface-container">
+                  <div className="flex-1 h-2 overflow-hidden rounded-full bg-surface-container-highest">
                     <div
-                      className="h-full rounded-full bg-secondary transition-[width] duration-300 ease-out motion-reduce:transition-none"
+                      className="h-full rounded-full bg-primary transition-[width] duration-300 ease-out motion-reduce:transition-none"
                       style={{ width: `${plan.progressPercentage}%` }}
                     />
                   </div>
@@ -362,7 +362,7 @@ const StudyPlans = () => {
                 <div className="flex items-center gap-2 shrink-0">
                   <button
                     type="button"
-                    className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-outline-variant bg-surface-container-lowest text-on-surface transition-colors hover:bg-surface-container-low focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 border-error/20 text-error hover:bg-error-container/20 hover:border-error/40 hover:text-error"
+                    className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-on-surface-variant transition-colors hover:bg-error-container hover:text-error focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-error/20"
                     onClick={(e) => {
                       e.stopPropagation();
                       requestDeletePlan(plan);

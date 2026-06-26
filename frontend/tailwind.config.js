@@ -56,10 +56,10 @@ export default {
         "on-tertiary-fixed-variant": "#46464f",
       },
       borderRadius: {
-        DEFAULT: "0.125rem",
-        lg: "0.25rem",
+        DEFAULT: "0.25rem",
+        lg: "0.375rem",
         xl: "0.5rem",
-        full: "0.75rem",
+        full: "9999px",
       },
       spacing: {
         xxl: "80px",
@@ -74,52 +74,53 @@ export default {
         margin: "32px",
       },
       fontFamily: {
-        h2: ["Spectral", "serif"],
-        "body-md": ["Inter", "sans-serif"],
-        "label-sm": ["Inter", "sans-serif"],
-        display: ["Spectral", "serif"],
-        h1: ["Spectral", "serif"],
-        "label-md": ["Inter", "sans-serif"],
-        "body-sm": ["Inter", "sans-serif"],
-        "body-lg": ["Inter", "sans-serif"],
-        h3: ["Spectral", "serif"],
+        h2: ["Geist", "sans-serif"],
+        "body-md": ["Geist", "sans-serif"],
+        "label-sm": ["Geist", "sans-serif"],
+        display: ["Geist", "sans-serif"],
+        h1: ["Geist", "sans-serif"],
+        "label-md": ["Geist", "sans-serif"],
+        "body-sm": ["Geist", "sans-serif"],
+        "body-lg": ["Geist", "sans-serif"],
+        h3: ["Geist", "sans-serif"],
+        sans: ["Geist", "sans-serif"],
       },
       fontSize: {
         h2: [
-          "1.875rem",
-          { lineHeight: "1.3", letterSpacing: "-0.04em", fontWeight: "600" },
+          "2rem", // 32px
+          { lineHeight: "1.25", letterSpacing: "-0.04em", fontWeight: "600" },
         ],
         "body-md": [
-          "1rem",
-          { lineHeight: "1.6", letterSpacing: "-0.02em", fontWeight: "400" },
+          "0.875rem", // 14px
+          { lineHeight: "1.428", letterSpacing: "-0.01em", fontWeight: "400" },
         ],
         "label-sm": [
-          "0.75rem",
-          { lineHeight: "1", letterSpacing: "0em", fontWeight: "500" },
+          "0.75rem", // 12px
+          { lineHeight: "1.33", letterSpacing: "0em", fontWeight: "500" },
         ],
         display: [
-          "3rem",
-          { lineHeight: "1.1", letterSpacing: "-0.06em", fontWeight: "700" },
+          "3rem", // 48px
+          { lineHeight: "1", letterSpacing: "-0.06em", fontWeight: "600" },
         ],
         h1: [
-          "2.25rem",
+          "2.5rem", // 40px
           { lineHeight: "1.2", letterSpacing: "-0.05em", fontWeight: "600" },
         ],
         "label-md": [
-          "0.875rem",
-          { lineHeight: "1", letterSpacing: "0em", fontWeight: "600" },
+          "0.8125rem", // 13px
+          { lineHeight: "1", letterSpacing: "0em", fontWeight: "500" },
         ],
         "body-sm": [
-          "0.875rem",
-          { lineHeight: "1.5", letterSpacing: "-0.01em", fontWeight: "400" },
+          "0.8125rem", // 13px
+          { lineHeight: "1.5", letterSpacing: "0em", fontWeight: "400" },
         ],
         "body-lg": [
-          "1.125rem",
-          { lineHeight: "1.6", letterSpacing: "-0.025em", fontWeight: "400" },
+          "1rem", // 16px
+          { lineHeight: "1.5", letterSpacing: "-0.01em", fontWeight: "400" },
         ],
         h3: [
-          "1.5rem",
-          { lineHeight: "1.4", letterSpacing: "-0.03em", fontWeight: "600" },
+          "1.5rem", // 24px
+          { lineHeight: "1.33", letterSpacing: "-0.03em", fontWeight: "600" },
         ],
       },
     },

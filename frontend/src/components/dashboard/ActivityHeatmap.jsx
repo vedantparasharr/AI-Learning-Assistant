@@ -58,11 +58,11 @@ const ActivityHeatmap = ({ heatmapData = {}, streak = 0, maxStreak = 0, totalAct
   }, [viewDate, joinedAt]);
 
   const getColorClass = (count) => {
-    if (count === 0) return "bg-surface-container";
-    if (count <= 5) return "bg-primary-fixed-dim";
-    if (count <= 15) return "bg-primary-container";
-    if (count <= 30) return "bg-primary/80";
-    return "bg-primary";
+    if (count === 0) return "bg-[#ebedf0] dark:bg-[#161b22]";
+    if (count <= 5) return "bg-[#9be9a8] dark:bg-[#0e4429]";
+    if (count <= 15) return "bg-[#40c463] dark:bg-[#006d32]";
+    if (count <= 30) return "bg-[#30a14e] dark:bg-[#26a641]";
+    return "bg-[#216e39] dark:bg-[#39d353]";
   };
 
   const isToday = (dateStr) => {
@@ -70,7 +70,7 @@ const ActivityHeatmap = ({ heatmapData = {}, streak = 0, maxStreak = 0, totalAct
   };
 
   return (
-    <div className="bg-surface-container-lowest rounded-xl p-4 shadow-sm border border-surface-container-high flex flex-col w-full h-full">
+    <div className="bg-surface-container-lowest rounded-xl p-4 shadow-sm border border-outline-variant/60 flex flex-col w-full h-full">
       <div className="flex justify-between items-center mb-3">
         <h2 className="text-[10px] font-bold text-on-surface-variant uppercase tracking-tighter">Activity</h2>
         
@@ -162,10 +162,11 @@ const ActivityHeatmap = ({ heatmapData = {}, streak = 0, maxStreak = 0, totalAct
         </div>
 
         <div className="flex items-center gap-1 mb-0.5">
-          <div className="w-2 h-2 rounded-[1px] bg-surface-container" />
-          <div className="w-2 h-2 rounded-[1px] bg-primary-fixed-dim" />
-          <div className="w-2 h-2 rounded-[1px] bg-primary-container" />
-          <div className="w-2 h-2 rounded-[1px] bg-primary" />
+          <div className="w-2 h-2 rounded-[1px] bg-[#ebedf0] dark:bg-[#161b22]" />
+          <div className="w-2 h-2 rounded-[1px] bg-[#9be9a8] dark:bg-[#0e4429]" />
+          <div className="w-2 h-2 rounded-[1px] bg-[#40c463] dark:bg-[#006d32]" />
+          <div className="w-2 h-2 rounded-[1px] bg-[#30a14e] dark:bg-[#26a641]" />
+          <div className="w-2 h-2 rounded-[1px] bg-[#216e39] dark:bg-[#39d353]" />
         </div>
       </div>
     </div>

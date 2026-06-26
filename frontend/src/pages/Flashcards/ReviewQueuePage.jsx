@@ -253,7 +253,7 @@ export default function ReviewQueuePage() {
               <div className="flex flex-col gap-3">
                 <button
                   onClick={loadQueue}
-                  className="w-full bg-primary text-on-primary font-label-md text-label-md uppercase tracking-wider py-3 rounded-xl hover:bg-primary-container focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-all flex items-center justify-center gap-2 shadow-sm"
+                  className="w-full bg-primary text-on-primary font-label-md text-label-md uppercase tracking-wider py-3 rounded-xl hover:opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-all flex items-center justify-center gap-2 shadow-sm"
                 >
                   <span className="material-symbols-outlined text-[20px]">refresh</span>
                   Review Again
@@ -328,7 +328,7 @@ export default function ReviewQueuePage() {
                   onClick={() => {
                     if (!isFlipping) setRevealed(true);
                   }}
-                  className="w-full h-12 bg-primary text-on-primary font-label-md text-label-md uppercase tracking-wider rounded-xl hover:bg-primary-container focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-all flex items-center justify-center gap-2 shadow-sm"
+                  className="w-full h-12 bg-primary text-on-primary font-label-md text-label-md uppercase tracking-wider rounded-xl hover:opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-all flex items-center justify-center gap-2 shadow-sm"
                 >
                   <span className="material-symbols-outlined text-[20px]">visibility</span>
                   Show Answer

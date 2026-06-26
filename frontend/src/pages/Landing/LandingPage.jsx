@@ -191,7 +191,7 @@ function Nav() {
           </Link>
           <Link
             to="/register"
-            className="inline-flex items-center gap-1.5 bg-primary text-white text-[13px] font-semibold px-4 py-2 rounded-lg no-underline hover:bg-primary-container active:scale-[0.97] transition-all duration-150"
+            className="inline-flex items-center gap-1.5 bg-primary text-white text-[13px] font-semibold px-4 py-2 rounded-lg no-underline hover:opacity-80 transition-opacity active:scale-[0.97] transition-all duration-150"
           >
             Start for free
           </Link>
@@ -241,7 +241,7 @@ function Hero() {
           <div className="flex flex-wrap gap-3.5 items-center">
             <Link
               to="/register"
-              className="inline-flex items-center gap-1.5 bg-primary text-white text-[15px] font-semibold px-6 py-[13px] rounded-lg no-underline hover:bg-primary-container active:scale-[0.97] transition-all duration-150"
+              className="inline-flex items-center gap-1.5 bg-primary text-white text-[15px] font-semibold px-6 py-[13px] rounded-lg no-underline hover:opacity-80 transition-opacity active:scale-[0.97] transition-all duration-150"
             >
               Start learning free
               <span className="material-symbols-outlined text-[18px] leading-none" aria-hidden="true">

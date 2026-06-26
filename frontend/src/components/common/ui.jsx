@@ -112,7 +112,7 @@ export const ErrorState = ({ title = "Something went wrong", description, action
 
 export const PrimaryButton = ({ className = "", children, ...props }) => (
   <button
-    className={`inline-flex min-h-11 items-center justify-center gap-xs rounded-lg bg-primary px-md py-2 font-label-md text-label-md text-on-primary transition-colors hover:bg-primary-container focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-60 ${className}`.trim()}
+    className={`inline-flex min-h-11 items-center justify-center gap-xs rounded-lg bg-primary px-md py-2 font-label-md text-label-md text-on-primary transition-colors hover:opacity-80 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-60 ${className}`.trim()}
     {...props}
   >
     {children}
@@ -131,7 +131,7 @@ export const SecondaryButton = ({ className = "", children, ...props }) => (
 export const PrimaryLinkButton = ({ to, className = "", children }) => (
   <Link
     to={to}
-    className={`inline-flex min-h-11 items-center justify-center gap-xs rounded-lg bg-primary px-md py-2 font-label-md text-label-md text-on-primary transition-colors hover:bg-primary-container focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 ${className}`.trim()}
+    className={`inline-flex min-h-11 items-center justify-center gap-xs rounded-lg bg-primary px-md py-2 font-label-md text-label-md text-on-primary transition-colors hover:opacity-80 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 ${className}`.trim()}
   >
     {children}
   </Link>

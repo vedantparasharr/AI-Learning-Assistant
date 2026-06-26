@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap");
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap');
 @import url("https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200");
 
@@ -8,17 +8,29 @@
 
 @layer base {
   body {
-    background-color: #f8f9ff;
-    color: #0d1c2e;
-    font-family: "Inter", sans-serif;
+    background-color: #ffffff;
+    color: #000000;
+    font-family: "Geist", sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     font-kerning: normal;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+
+  /* Dark mode body */
+  .dark body {
+    background-color: #000000;
+    color: #ededed;
   }
 
   ::selection {
-    background-color: #312e81;
-    color: #9c9af4;
+    background-color: #e5e5e5;
+    color: #000000;
+  }
+
+  .dark ::selection {
+    background-color: #333333;
+    color: #ffffff;
   }
 
   .material-symbols-outlined {
@@ -36,6 +48,75 @@
     -webkit-font-smoothing: antialiased;
     font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
     user-select: none;
+  }
+
+  /* ─── Dark mode: remap semantic color tokens ─── */
+
+  /* backgrounds / surfaces */
+  .dark .bg-background        { background-color: #000000 !important; }
+  .dark .bg-surface           { background-color: #000000 !important; }
+  .dark .bg-surface-bright    { background-color: #111111 !important; }
+  .dark .bg-surface-dim       { background-color: #050505 !important; }
+  .dark .bg-surface-variant   { background-color: #111111 !important; }
+
+  /* containers */
+  .dark .bg-surface-container-lowest  { background-color: #0a0a0a !important; }
+  .dark .bg-surface-container-low     { background-color: #111111 !important; }
+  .dark .bg-surface-container         { background-color: #1a1a1a !important; }
+  .dark .bg-surface-container-high    { background-color: #222222 !important; }
+  .dark .bg-surface-container-highest { background-color: #2a2a2a !important; }
+
+  /* primary */
+  .dark .bg-primary             { background-color: #ffffff !important; }
+  .dark .bg-primary-container   { background-color: #333333 !important; }
+  .dark .bg-primary-fixed       { background-color: #e5e5e5 !important; }
+
+  /* secondary */
+  .dark .bg-secondary             { background-color: #111111 !important; }
+  .dark .bg-secondary-container   { background-color: #333333 !important; }
+
+  /* error */
+  .dark .bg-error           { background-color: #ef4444 !important; }
+  .dark .bg-error-container { background-color: #3b1212 !important; }
+  .dark .text-on-error-container { color: #ffb4b4 !important; }
+
+  /* text on surface / background */
+  .dark .text-on-background      { color: #ededed !important; }
+  .dark .text-on-surface         { color: #ededed !important; }
+  .dark .text-on-surface-variant { color: #888888 !important; }
+
+  /* text on primary */
+  .dark .text-on-primary               { color: #000000 !important; }
+  .dark .text-on-primary-container      { color: #ffffff !important; }
+  .dark .text-on-primary-fixed-variant  { color: #000000 !important; }
+
+  /* text primary / secondary / error / outline */
+  .dark .text-primary   { color: #ffffff !important; }
+  .dark .text-secondary { color: #ededed !important; }
+  .dark .text-error     { color: #ff9999 !important; }
+  .dark .text-outline   { color: #666666 !important; }
+
+  /* borders */
+  .dark [class*="border-outline-variant"] { border-color: #333333 !important; }
+  .dark [class*="border-error"]           { border-color: #ff0000 !important; }
+
+  /* Input & form controls in dark */
+  .dark input:not([type="checkbox"]):not([type="radio"]),
+  .dark textarea,
+  .dark select {
+    background-color: #0a0a0a;
+    color: #ededed;
+  }
+
+  /* Navbar backdrop blur bg in dark */
+  .dark header.backdrop-blur-md {
+    background-color: rgba(0, 0, 0, 0.90);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    body {
+      transition: none !important;
+    }
   }
 }
 
@@ -71,5 +152,11 @@
 
   .flip-card-back {
     transform: rotateY(180deg);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .flip-card-inner {
+      transition: none;
+    }
   }
 }

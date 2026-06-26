@@ -1,12 +1,14 @@
 import { useMemo, useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { useTheme } from "../../context/ThemeContext";
 import dashboardService from "../../services/dashboardService";
 
 export default function TopNavbar() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const [streak, setStreak] = useState(12);
 
   useEffect(() => {
@@ -64,10 +66,23 @@ export default function TopNavbar() {
 
       <div className="flex items-center gap-2">
         {/* Streak Pill */}
-        <div className="hidden sm:flex items-center gap-1.5 border border-primary-container/20 text-on-primary-fixed-variant bg-primary-fixed/20 font-label-sm text-[12px] px-3.5 py-1.5 rounded-full font-semibold select-none mr-2">
-          <span className="material-symbols-outlined text-[16px] text-primary leading-none">local_fire_department</span>
+        <div className="hidden sm:flex items-center gap-1.5 border border-outline-variant bg-surface-variant text-on-surface font-label-sm text-[12px] px-3.5 py-1.5 rounded-full font-semibold select-none mr-2">
+          <span className="material-symbols-outlined text-[16px] text-on-surface leading-none">local_fire_department</span>
           {streak}-day streak
         </div>
+
+        {/* Dark / Light Mode Toggle */}
+        <button
+          type="button"
+          onClick={toggleTheme}
+          aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+          title={theme === "dark" ? "Light mode" : "Dark mode"}
+          className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-on-surface-variant transition-colors hover:bg-surface-container-low hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
+        >
+          <span className="material-symbols-outlined text-[22px]">
+            {theme === "dark" ? "light_mode" : "dark_mode"}
+          </span>
+        </button>
 
         <button
           type="button"

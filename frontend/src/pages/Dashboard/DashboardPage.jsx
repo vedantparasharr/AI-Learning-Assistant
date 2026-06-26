@@ -1,6 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import toast from "react-hot-toast";
 import dashboardService from "../../services/dashboardService";
 import ActivityHeatmap from "../../components/dashboard/ActivityHeatmap";
 import { PageShell } from "../../components/common/ui";
@@ -12,23 +11,19 @@ const DashboardPage = () => {
   
   const [dashboardData, setDashboardData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isOffline, setIsOffline] = useState(false);
 
   const fetchDashboard = useCallback(async () => {
     try {
       setIsLoading(true);
-      setIsOffline(false);
       const res = await dashboardService.getDashboardSummary();
       if (res?.success && res.data) {
         setDashboardData(res.data);
       } else {
         setDashboardData(null);
-        setIsOffline(true);
       }
     } catch (err) {
       console.error("Failed to load dashboard data", err);
       setDashboardData(null);
-      setIsOffline(true);
     } finally {
       setIsLoading(false);
     }
@@ -37,41 +32,6 @@ const DashboardPage = () => {
   useEffect(() => {
     fetchDashboard();
   }, [fetchDashboard]);
-
-  // Keyboard Navigation / Shortcuts
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      const activeEl = document.activeElement;
-      if (
-        activeEl &&
-        (activeEl.tagName === "INPUT" ||
-          activeEl.tagName === "TEXTAREA" ||
-          activeEl.isContentEditable)
-      ) {
-        return;
-      }
-
-      const key = e.key.toLowerCase();
-      if (key === "r") {
-        e.preventDefault();
-        navigate("/flashcards");
-        toast.success("Navigating to Flashcard Review Queue");
-      } else if (key === "u") {
-        e.preventDefault();
-        navigate("/study-plan/new");
-        toast.success("Navigating to New Plan Upload");
-      } else if (key === "p") {
-        e.preventDefault();
-        navigate("/plans");
-        toast.success("Navigating to Study Plans");
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [navigate]);
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -97,36 +57,60 @@ const DashboardPage = () => {
   const dueCardsTrend = dashboardData?.dueCardsTrend ?? 0;
   const retentionRateTrend = dashboardData?.retentionRateTrend ?? 0;
 
-  // loading state skeletons
+  // loading state skeletons — rendered inside PageShell so header + spacing match exactly
   if (isLoading) {
     return (
-      <div className="max-w-container-max mx-auto space-y-lg animate-pulse">
-        <header className="mb-lg flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <div className="h-9 w-64 bg-surface-container rounded-lg mb-2" />
-            <div className="h-5 w-96 bg-surface-container rounded-lg" />
+      <div className="max-w-container-max mx-auto animate-pulse">
+        <div className="space-y-lg">
+          {/* Header skeleton — mirrors PageShell's internal "flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between" */}
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div className="space-y-xs">
+              {/* h1 equivalent: font-h1 on "Good evening, Vedant" */}
+              <div className="h-10 w-60 bg-surface-container rounded-lg" />
+              {/* description: "You have X cards due for review today" */}
+              <div className="h-5 w-72 bg-surface-container rounded-lg mt-1" />
+            </div>
+            {/* actions: "Review cards" + "New plan" buttons */}
+            <div className="flex w-full flex-wrap gap-3 lg:w-auto">
+              <div className="h-11 w-[130px] bg-surface-container rounded-lg" />
+              <div className="h-11 w-[100px] bg-surface-container rounded-lg" />
+            </div>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-28 bg-surface-container rounded-full" />
-            <div className="h-10 w-28 bg-surface-container rounded-lg" />
-          </div>
-        </header>
 
-        {/* Stats Row Skeleton */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter mb-lg">
-          <div className="bg-surface-container-lowest border border-outline-variant/60 rounded-xl p-5 h-[110px]" />
-          <div className="bg-surface-container-lowest border border-outline-variant/60 rounded-xl p-5 h-[110px]" />
-          <div className="bg-surface-container-lowest border border-outline-variant/60 rounded-xl p-5 h-[110px]" />
-          <div className="bg-surface-container-lowest border border-outline-variant/60 rounded-xl p-5 h-[110px]" />
-        </div>
-
-        <div className="grid grid-cols-12 gap-gutter">
-          <div className="col-span-12 md:col-span-8 space-y-4">
-            <div className="h-7 w-48 bg-surface-container rounded-lg mb-2" />
-            <div className="bg-surface-container-lowest border border-outline-variant/60 rounded-xl h-[100px]" />
-            <div className="bg-surface-container-lowest border border-outline-variant/60 rounded-xl h-[100px]" />
+          {/* Stats grid — 4 equal cards, matching grid-cols-4 gap-gutter, min-h-[110px] */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter">
+            <div className="bg-surface-container-lowest border border-outline-variant/60 rounded-xl p-5 min-h-[110px]" />
+            <div className="bg-surface-container-lowest border border-outline-variant/60 rounded-xl p-5 min-h-[110px]" />
+            <div className="bg-surface-container-lowest border border-outline-variant/60 rounded-xl p-5 min-h-[110px]" />
+            <div className="bg-surface-container-lowest border border-outline-variant/60 rounded-xl p-5 min-h-[110px]" />
           </div>
-          <div className="col-span-12 md:col-span-4 bg-surface-container-lowest border border-outline-variant/60 rounded-xl h-[300px]" />
+
+          {/* Plans + Heatmap — mirrors exact col-span-8 / col-span-4 split */}
+          <div className="grid grid-cols-12 gap-gutter">
+            {/* Left: "Recent Study Plans" heading row + 3 subject cards */}
+            <div className="col-span-12 md:col-span-8 flex flex-col gap-4">
+              <div className="flex justify-between items-center">
+                {/* "Recent Study Plans" h2 */}
+                <div className="h-8 w-52 bg-surface-container rounded-lg" />
+                {/* "View All →" link */}
+                <div className="h-5 w-16 bg-surface-container rounded-lg" />
+              </div>
+              <div className="flex flex-col gap-3">
+                {/* Each SubjectCard is p-5 with an icon (w-10 h-10) + text block + progress bar — ~80px tall in practice */}
+                <div className="bg-surface-container-lowest border border-outline-variant/60 rounded-xl h-[80px]" />
+                <div className="bg-surface-container-lowest border border-outline-variant/60 rounded-xl h-[80px]" />
+                <div className="bg-surface-container-lowest border border-outline-variant/60 rounded-xl h-[80px]" />
+              </div>
+            </div>
+            {/* Right: invisible spacer h2 + ActivityHeatmap card */}
+            <div className="col-span-12 md:col-span-4 flex flex-col gap-4">
+              {/* The invisible <h2>Activity</h2> spacer that aligns heatmap with plans header row */}
+              <div className="mb-1 hidden md:block">
+                <div className="h-8 w-0" />
+              </div>
+              <div className="bg-surface-container-lowest border border-outline-variant/60 rounded-xl flex-1 min-h-[280px]" />
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -135,27 +119,6 @@ const DashboardPage = () => {
   return (
     <div className="max-w-container-max mx-auto space-y-lg">
       
-      {/* Offline Status Warning Bar */}
-      {isOffline && (
-        <div className="bg-surface-container border border-outline-variant/60 rounded-xl px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 shadow-sm">
-          <div className="flex items-center gap-2 text-on-surface font-body-sm text-body-sm">
-            <span className="material-symbols-outlined text-outline text-[1.25rem]" aria-hidden="true">
-              cloud_off
-            </span>
-            <span>
-              <strong>System Offline</strong> — Connection to backend failed. Could not fetch latest dashboard data.
-            </span>
-          </div>
-          <button
-            onClick={fetchDashboard}
-            className="text-primary hover:text-on-primary-fixed-variant font-label-md text-label-md uppercase tracking-wider flex items-center gap-1 focus:outline-none focus:underline shrink-0"
-          >
-            <span className="material-symbols-outlined text-[1rem]">sync</span>
-            Retry Connection
-          </button>
-        </div>
-      )}
-
       {/* Header */}
       <PageShell
         title={`${getGreeting()}, ${userName}`}
@@ -165,7 +128,7 @@ const DashboardPage = () => {
             {/* Review Cards Button */}
           <Link
             to="/flashcards"
-            className="bg-primary hover:bg-primary-container text-on-primary font-label-md text-label-md px-5 py-3 sm:py-2.5 rounded-lg transition-colors flex items-center justify-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
+            className="bg-primary hover:opacity-80 text-on-primary font-label-md text-label-md px-5 py-3 sm:py-2.5 rounded-lg transition-opacity flex items-center justify-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
           >
             <span className="material-symbols-outlined text-[1.125rem]">psychology</span>
             Review cards
@@ -182,12 +145,12 @@ const DashboardPage = () => {
           </>
         }
       >
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter mb-lg">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter">
         
         {/* CARDS DUE (Interactive link to review) */}
         <Link
           to="/flashcards"
-          className="bg-surface-container-lowest rounded-xl p-5 border border-outline-variant/60 hover:border-primary-container/40 hover:shadow-sm transition-all flex flex-col justify-between min-h-[110px] group cursor-pointer"
+          className="bg-surface-container-lowest rounded-xl p-5 border border-outline-variant/60 hover:shadow-sm transition-all flex flex-col justify-between min-h-[110px] group cursor-pointer"
         >
           <span className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">
             Cards Due
@@ -196,7 +159,7 @@ const DashboardPage = () => {
             <span className="font-h2 text-h2 text-on-surface leading-none tabular-data">
               {dueCards}
             </span>
-            <span className={`font-label-sm text-label-sm mt-1 flex items-center gap-0.5 ${dueCardsTrend > 0 ? 'text-secondary' : dueCardsTrend < 0 ? 'text-error' : 'text-on-surface-variant'}`}>
+            <span className={`font-label-sm text-label-sm mt-1 flex items-center gap-0.5 ${dueCardsTrend > 0 ? 'text-emerald-600 dark:text-emerald-400' : dueCardsTrend < 0 ? 'text-primary' : 'text-on-surface-variant'}`}>
               {dueCardsTrend !== 0 && (
                 <span className="material-symbols-outlined text-[12px]">
                   {dueCardsTrend > 0 ? 'trending_up' : 'trending_down'}
@@ -330,7 +293,7 @@ const SubjectCard = ({ subject }) => {
   return (
     <Link
       to={`/plans/${subject.id}`}
-      className="bg-surface-container-lowest rounded-xl p-5 border border-outline-variant/60 hover:border-primary-container/40 hover:shadow-sm transition-all flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 group cursor-pointer"
+      className="bg-surface-container-lowest rounded-xl p-5 border border-outline-variant/60 hover:shadow-sm transition-all flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 group cursor-pointer"
     >
       <div className="flex items-center gap-3.5 min-w-0">
         <div className="w-10 h-10 rounded-lg bg-surface-container border border-outline-variant/60 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-on-primary transition-colors shrink-0">
@@ -349,9 +312,9 @@ const SubjectCard = ({ subject }) => {
       <div className="flex items-center gap-4 shrink-0 w-full sm:w-auto">
         {/* Progress Bar */}
         <div className="flex items-center gap-3 w-full sm:w-[160px]">
-          <div className="flex-1 h-1.5 bg-surface-container border border-outline-variant/65 rounded-full overflow-hidden">
+          <div className="flex-1 h-1.5 bg-surface-container-highest rounded-full overflow-hidden">
             <div
-              className="h-full bg-secondary rounded-full transition-all duration-500 ease-out"
+              className="h-full bg-primary transition-all duration-500 ease-out"
               style={{ width: `${progress}%` }}
             />
           </div>
