@@ -8,8 +8,7 @@
 
 @layer base {
   body {
-    background-color: #ffffff;
-    color: #000000;
+    @apply bg-background text-on-background;
     font-family: "Geist", sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;

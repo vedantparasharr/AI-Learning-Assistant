@@ -1,676 +1,273 @@
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
-import heroIllustration from "../../assets/hero-illustration.png";
+import { useTheme } from "../../context/ThemeContext";
 import Logo from "../../components/common/Logo";
 
-/* ─── Scroll-reveal hook ─── */
-function useReveal(threshold = 0.15) {
-  const ref = useRef(null);
-  const [visible, setVisible] = useState(false);
+export default function LandingPage() {
+  const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setVisible(true);
-          observer.unobserve(el);
+    function animateCounter(el, target, suffix, duration) {
+      if (!el) return;
+      const start = Date.now();
+      const isFloat = target % 1 !== 0;
+      function tick() {
+        const elapsed = Date.now() - start;
+        const progress = Math.min(elapsed / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        const current = target * eased;
+        el.textContent = isFloat ? current.toFixed(0) + suffix : Math.round(current) + suffix;
+        if (progress < 1) requestAnimationFrame(tick);
+        else el.textContent = target + suffix;
+      }
+      requestAnimationFrame(tick);
+    }
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((e) => {
+        if (e.isIntersecting) {
+          animateCounter(document.getElementById("stat-retention"), 3, "×", 1200);
+          animateCounter(document.getElementById("stat-time"), 40, "m", 1000);
+          animateCounter(document.getElementById("stat-ready"), 92, "%", 1400);
+          observer.disconnect();
         }
-      },
-      { threshold }
-    );
-    observer.observe(el);
+      });
+    }, { threshold: 0.5 });
+
+    const statsEl = document.getElementById("hero-stats");
+    if (statsEl) observer.observe(statsEl);
+
     return () => observer.disconnect();
-  }, [threshold]);
-
-  return [ref, visible];
-}
-
-/* ─── Reveal class helper ─── */
-// Content is always visible by default; animation only enhances.
-// The tiny CSS block below handles the opacity/transform transition
-// and the prefers-reduced-motion override — neither is expressible
-// in plain Tailwind utilities.
-const reveal = (visible, delay = 0) => ({
-  className: `reveal-item${visible ? " reveal-visible" : ""}`,
-  style: { "--reveal-delay": `${delay}ms` },
-});
-
-/* ─── Feature data ─── */
-const features = [
-  {
-    title: "AI-Structured Study Plans",
-    body: "Paste a syllabus, topic list, or exam date. DistillLearn maps every concept into a precision-ordered plan calibrated to your pace and schedule.",
-    icon: "auto_stories",
-  },
-  {
-    title: "Active Recall, Not Passive Reading",
-    body: "Every session ends with smart flashcards and spaced-repetition scheduling. The material you're about to forget surfaces at exactly the right moment.",
-    icon: "psychology",
-  },
-  {
-    title: "Deep-Dive Topic Study",
-    body: "Click any topic and enter a focused reading mode with AI explanations, worked examples, and follow-up questions — no tab-switching required.",
-    icon: "neurology",
-  },
-  {
-    title: "Retention That Compounds",
-    body: "Your review queue knows which concepts are drifting. Each day's session is the minimum viable set to hold everything you've already learned.",
-    icon: "trending_up",
-  },
-  {
-    title: "One Dashboard, Everything Visible",
-    body: "Daily targets, upcoming reviews, progress per topic — all on one calm screen. Nothing hidden; nothing you have to hunt for.",
-    icon: "dashboard",
-  },
-  {
-    title: "Built for Exam Pressure",
-    body: "Deadline-aware scheduling tightens automatically as exam day approaches. You always know whether you're on track — not after the test, before it.",
-    icon: "timer",
-  },
-];
-
-/* ─── How it works ─── */
-const steps = [
-  {
-    num: "1",
-    title: "Add your material",
-    body: "Upload a syllabus, paste topics, or tell DistillLearn what exam you're preparing for. Takes under two minutes.",
-  },
-  {
-    num: "2",
-    title: "Follow the plan",
-    body: "Each day you get a focused list of what to study. Read, engage with the AI explanations, and mark topics as you go.",
-  },
-  {
-    num: "3",
-    title: "Review what matters",
-    body: "Spaced-repetition flashcards surface only the concepts at risk of being forgotten. Fifteen focused minutes beats two distracted hours.",
-  },
-];
-
-/* ─── Testimonials ─── */
-const testimonials = [
-  {
-    quote:
-      "I passed my organic chemistry final after two weeks on DistillLearn. The spaced repetition actually works — I stopped cramming the night before.",
-    name: "Priya S.",
-    context: "University of Edinburgh, 3rd year Chemistry",
-    initial: "P",
-  },
-  {
-    quote:
-      "The study plan builder is the first tool I've used that respects how little time I actually have. It doesn't pad sessions — it gives me exactly what I need.",
-    name: "Marcus T.",
-    context: "A-Level student, preparing for Physics & Maths",
-    initial: "M",
-  },
-  {
-    quote:
-      "I tried Anki, Notion, and a dozen YouTube playlists. DistillLearn is the first thing that put everything in one place and made me feel in control.",
-    name: "Aaliya R.",
-    context: "First-year Engineering, IIT Delhi",
-    initial: "A",
-  },
-  {
-    quote:
-      "The dashboard is quietly brilliant. I open it, see what needs doing, do it, close it. That's the whole thing.",
-    name: "James O.",
-    context: "Law student, King's College London",
-    initial: "J",
-  },
-];
-
-/* ─── Stat bar data ─── */
-const stats = [
-  { value: "3×", label: "faster retention" },
-  { value: "40 min", label: "avg. daily study" },
-  { value: "92%", label: "feel exam-ready" },
-];
-
-/* ================================================================
-   NAV
-   ================================================================ */
-function Nav() {
-  const [scrolled, setScrolled] = useState(false);
-
-  useEffect(() => {
-    const handler = () => setScrolled(window.scrollY > 24);
-    window.addEventListener("scroll", handler, { passive: true });
-    return () => window.removeEventListener("scroll", handler);
   }, []);
 
+  const features = [
+    { title: "AI-structured study plans", body: "Paste your syllabus and exam date. DistillLearn breaks it down and creates a clear schedule based on how fast you want to study.", icon: <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> },
+    { title: "Active recall, not passive reading", body: "Finish your study sessions with smart flashcards. We use the FSRS algorithm to test you on topics right before you forget them.", icon: <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> },
+    { title: "Deep-dive topic study", body: "Click on any topic to get clear explanations, practice problems, and follow-up questions to test your understanding.", icon: <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> },
+    { title: "Retention that compounds", body: "Your review queue automatically highlights concepts you are starting to forget. You only study what you need to stay on track.", icon: <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg> },
+    { title: "One dashboard, everything visible", body: "See your daily targets, upcoming reviews, and topic progress on a single screen. Everything is easy to find.", icon: <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg> },
+    { title: "Built for exam pressure", body: "The schedule automatically adjusts as your exam gets closer so you always know if you are on track.", icon: <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> }
+  ];
+
+  const steps = [
+    { num: "01", title: "Add your material", body: "Upload your syllabus or list of topics. It only takes a couple of minutes to set up." },
+    { num: "02", title: "Follow the plan", body: "Log in every day to see exactly what you need to study. Read the material, use the AI explanations, and check off topics as you finish them." },
+    { num: "03", title: "Review what matters", body: "Our flashcards only test you on concepts you are about to forget. This saves you hours of studying." }
+  ];
+
+  const testimonials = [
+    { quote: "I passed my organic chemistry final after using DistillLearn for just two weeks. The spaced repetition system actually works. I didn't even have to cram the night before.", name: "Priya S.", meta: "University of Edinburgh, 3rd year Chemistry", initials: "PS" },
+    { quote: "This is the first study planner that respects my limited time. It skips the busywork and gives me exactly what I need to focus on.", name: "Marcus T.", meta: "A-Level student, Physics and Maths", initials: "MT" },
+    { quote: "I tried Anki, Notion, and a dozen YouTube playlists. DistillLearn is the first thing that put everything in one place and made me feel in control.", name: "Aaliya R.", meta: "First-year Engineering, IIT Delhi", initials: "AR" },
+    { quote: "The dashboard is quietly brilliant. I open it, see what needs doing, do it, close it. That's the whole thing.", name: "James O.", meta: "Law student, King's College London", initials: "JO" }
+  ];
+
   return (
-    <header
-      role="banner"
-      className={[
-        "fixed inset-x-0 top-0 z-[100] px-[clamp(1rem,4vw,2rem)] transition-all duration-300",
-        scrolled
-          ? "bg-background/90 backdrop-blur-md shadow-[0_1px_0_#e2e8f0]"
-          : "bg-transparent",
-      ].join(" ")}
-    >
-      <div className="max-w-[1200px] mx-auto h-16 flex items-center gap-8">
-        {/* Logo */}
-        <Link
-          to="/"
-          aria-label="DistillLearn home"
-          className="shrink-0 no-underline"
-        >
-          <Logo className="h-8" />
-        </Link>
-
-        {/* Nav links */}
-        <nav
-          aria-label="Site navigation"
-          className="hidden sm:flex gap-8 ml-6"
-        >
-          {[
-            ["#features", "Features"],
-            ["#how-it-works", "How it works"],
-            ["#testimonials", "Stories"],
-          ].map(([href, label]) => (
-            <a
-              key={href}
-              href={href}
-              className="text-sm font-medium text-on-surface-variant no-underline hover:text-primary transition-colors duration-150"
-            >
-              {label}
-            </a>
-          ))}
-        </nav>
-
-        {/* Actions */}
-        <div className="ml-auto flex items-center gap-4">
-          <Link
-            to="/login"
-            className="hidden sm:block text-sm font-medium text-on-surface-variant no-underline hover:text-primary transition-colors duration-150"
-          >
-            Sign in
+    <div className="min-h-screen bg-background text-on-background font-sans overflow-x-hidden selection:bg-surface-variant selection:text-on-background transition-colors duration-200">
+      
+      {/* Header */}
+      <header className="fixed inset-x-0 top-0 z-[100] bg-background border-b border-outline-variant transition-colors duration-200">
+        <div className="h-14 flex items-center justify-between max-w-[1080px] mx-auto px-6">
+          <Link to="/" className="flex items-center gap-2 font-semibold text-[15px] tracking-tight hover:opacity-80 transition-opacity">
+            <Logo className="h-6" />
           </Link>
-          <Link
-            to="/register"
-            className="inline-flex items-center gap-1.5 bg-primary text-white text-[13px] font-semibold px-4 py-2 rounded-lg no-underline hover:opacity-80 transition-opacity active:scale-[0.97] transition-all duration-150"
-          >
-            Start for free
-          </Link>
-        </div>
-      </div>
-    </header>
-  );
-}
 
-/* ================================================================
-   HERO
-   ================================================================ */
-function Hero() {
-  return (
-    <section
-      aria-labelledby="hero-heading"
-      className="bg-background px-[clamp(1rem,4vw,2rem)]"
-      style={{ paddingTop: "calc(64px + clamp(3rem,8vw,6rem))", paddingBottom: "clamp(3rem,8vw,6rem)" }}
-    >
-      {/* Two-column grid */}
-      <div
-        className="max-w-[1200px] mx-auto grid md:grid-cols-2 items-center"
-        style={{ gap: "clamp(2rem,5vw,4rem)" }}
-      >
-        {/* Copy */}
-        <div className="max-w-[560px] reveal-item reveal-visible">
-          <p className="text-xs font-semibold tracking-[0.08em] uppercase text-secondary mb-5">
-            AI-powered study assistant
-          </p>
-          <h1
-            id="hero-heading"
-            className="font-bold tracking-[-0.03em] text-on-background leading-[1.08] mb-6"
-            style={{ fontSize: "clamp(2.5rem,5.5vw,4.5rem)", textWrap: "balance" }}
-          >
-            Study less.<br />
-            Remember more.<br />
-            <em className="italic text-primary not-italic" style={{ fontStyle: "italic" }}>Actually.</em>
-          </h1>
-          <p
-            className="leading-[1.7] text-on-surface-variant max-w-[52ch] mb-9"
-            style={{ fontSize: "clamp(1rem,1.75vw,1.125rem)" }}
-          >
-            DistillLearn turns your syllabus into a daily study plan — then
-            keeps the right material in your head with spaced repetition.
-            Built for students who take their work seriously.
-          </p>
-          <div className="flex flex-wrap gap-3.5 items-center">
-            <Link
-              to="/register"
-              className="inline-flex items-center gap-1.5 bg-primary text-white text-[15px] font-semibold px-6 py-[13px] rounded-lg no-underline hover:opacity-80 transition-opacity active:scale-[0.97] transition-all duration-150"
+          <ul className="hidden md:flex items-center gap-7">
+            <li><a href="#features" className="text-sm text-on-surface-variant hover:text-on-background transition-colors">Features</a></li>
+            <li><a href="#how-it-works" className="text-sm text-on-surface-variant hover:text-on-background transition-colors">How it works</a></li>
+            <li><a href="#testimonials" className="text-sm text-on-surface-variant hover:text-on-background transition-colors">Stories</a></li>
+          </ul>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={toggleTheme}
+              aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+              title={theme === "dark" ? "Light mode" : "Dark mode"}
+              className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-on-surface-variant transition-colors hover:bg-surface-container-low hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
             >
-              Start learning free
-              <span className="material-symbols-outlined text-[18px] leading-none" aria-hidden="true">
-                arrow_forward
+              <span className="material-symbols-outlined text-[22px]">
+                {theme === "dark" ? "light_mode" : "dark_mode"}
               </span>
-            </Link>
-            <a
-              href="#how-it-works"
-              className="inline-flex items-center gap-1.5 bg-transparent text-on-surface-variant text-[15px] font-semibold px-6 py-[13px] rounded-lg border border-outline-variant no-underline hover:bg-white hover:text-primary hover:border-primary active:scale-[0.97] transition-all duration-150"
-            >
-              See how it works
-            </a>
+            </button>
+            <Link to="/login" className="hidden sm:inline-flex px-4 py-2.5 text-sm font-medium bg-surface text-on-background rounded-lg border border-outline-variant hover:bg-surface-container-low transition-all">Sign in</Link>
+            <Link to="/register" className="px-4 py-2.5 text-sm font-medium bg-primary text-on-primary rounded-lg hover:bg-primary-container focus:ring-2 focus:ring-primary/20 transition-all">Start for free</Link>
           </div>
         </div>
+      </header>
 
-        {/* Visual — appears above copy on mobile */}
-        <div className="flex justify-center items-center order-first md:order-last reveal-item reveal-visible">
-          <div className="w-full max-w-[540px] rounded-xl overflow-hidden border border-outline-variant">
-            <img
-              src={heroIllustration}
-              alt="Abstract illustration of a book transforming into structured knowledge nodes — representing DistillLearn's AI study approach"
-              className="w-full h-auto block"
-              loading="eager"
-              decoding="async"
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Stats bar */}
-      <div
-        role="list"
-        aria-label="Key statistics"
-        className="max-w-[1200px] mx-auto flex flex-col sm:flex-row bg-white border border-outline-variant rounded-xl overflow-hidden"
-        style={{ marginTop: "clamp(3rem,6vw,5rem)" }}
-      >
-        {stats.map((s, i) => (
-          <div
-            key={s.label}
-            role="listitem"
-            className={[
-              "flex-1 px-8 py-6 flex flex-col gap-1.5",
-              i < stats.length - 1
-                ? "border-b sm:border-b-0 sm:border-r border-outline-variant"
-                : "",
-            ].join(" ")}
-          >
-            <span
-              className="font-bold tracking-[-0.03em] text-primary"
-              style={{ fontSize: "clamp(1.5rem,3vw,2rem)" }}
-            >
-              {s.value}
-            </span>
-            <span className="text-[13px] font-medium text-outline">{s.label}</span>
-          </div>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-/* ================================================================
-   FEATURES
-   ================================================================ */
-function Features() {
-  const [ref, visible] = useReveal(0.1);
-  return (
-    <section
-      id="features"
-      aria-labelledby="features-heading"
-      className="py-[clamp(5rem,10vw,8rem)]"
-    >
-      <div className="max-w-[1200px] mx-auto px-[clamp(1rem,4vw,2rem)]">
-        {/* Header */}
-        <div
-          ref={ref}
-          {...reveal(visible)}
-          className={`max-w-[600px] mb-[clamp(3rem,6vw,4.5rem)] reveal-item${visible ? " reveal-visible" : ""}`}
-          style={{ "--reveal-delay": "0ms" }}
-        >
-          <h2
-            id="features-heading"
-            className="font-bold tracking-[-0.025em] text-on-background leading-[1.15] mb-4"
-            style={{ fontSize: "clamp(1.75rem,3.5vw,2.625rem)", textWrap: "balance" }}
-          >
-            Everything you need to learn at a high level
-          </h2>
-          <p className="text-[17px] leading-[1.65] text-on-surface-variant max-w-[65ch]">
-            No bloat. No busy features. Six tools that compound into one serious study workflow.
-          </p>
-        </div>
-
-        {/* 1px-gap mosaic grid */}
-        <div className="grid gap-px bg-outline-variant border border-outline-variant rounded-xl overflow-hidden"
-          style={{ gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))" }}>
-          {features.map((f, i) => (
-            <FeatureCard key={f.title} feature={f} index={i} />
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function FeatureCard({ feature, index }) {
-  const [ref, visible] = useReveal(0.12);
-  return (
-    <article
-      ref={ref}
-      className={`bg-white hover:bg-background transition-colors duration-200 reveal-item${visible ? " reveal-visible" : ""}`}
-      style={{ padding: "clamp(1.5rem,3vw,2.25rem)", "--reveal-delay": `${index * 60}ms` }}
-    >
-      <span
-        className="material-symbols-outlined text-[22px] text-primary block mb-4"
-        aria-hidden="true"
-        style={{ fontVariationSettings: "'FILL' 1" }}
-      >
-        {feature.icon}
-      </span>
-      <h3 className="text-base font-semibold tracking-[-0.01em] text-on-background mb-2.5">
-        {feature.title}
-      </h3>
-      <p className="text-[14.5px] leading-[1.65] text-on-surface-variant max-w-[52ch]">
-        {feature.body}
-      </p>
-    </article>
-  );
-}
-
-/* ================================================================
-   HOW IT WORKS
-   ================================================================ */
-function HowItWorks() {
-  const [ref, visible] = useReveal(0.1);
-  return (
-    <section
-      id="how-it-works"
-      aria-labelledby="hiw-heading"
-      className="py-[clamp(5rem,10vw,8rem)] bg-surface-container-low"
-    >
-      <div className="max-w-[1200px] mx-auto px-[clamp(1rem,4vw,2rem)]">
-        {/* Header */}
-        <div
-          ref={ref}
-          className={`max-w-[600px] mb-[clamp(3rem,6vw,4.5rem)] reveal-item${visible ? " reveal-visible" : ""}`}
-          style={{ "--reveal-delay": "0ms" }}
-        >
-          <h2
-            id="hiw-heading"
-            className="font-bold tracking-[-0.025em] text-on-background leading-[1.15] mb-4"
-            style={{ fontSize: "clamp(1.75rem,3.5vw,2.625rem)", textWrap: "balance" }}
-          >
-            From first session to exam day in three steps
-          </h2>
-          <p className="text-[17px] leading-[1.65] text-on-surface-variant max-w-[65ch]">
-            A real sequence: each step depends on the last. The numbers mean something here.
-          </p>
-        </div>
-
-        {/* Steps */}
-        <ol className="list-none p-0 m-0 flex flex-col max-w-[720px]" aria-label="How DistillLearn works">
-          {steps.map((step, i) => (
-            <StepItem key={step.num} step={step} index={i} />
-          ))}
-        </ol>
-      </div>
-    </section>
-  );
-}
-
-function StepItem({ step, index }) {
-  const [ref, visible] = useReveal(0.15);
-  const isLast = step.num === steps[steps.length - 1].num;
-  return (
-    <li
-      ref={ref}
-      className={[
-        "grid items-start py-8",
-        !isLast ? "border-b border-surface-container-high" : "",
-        `reveal-item${visible ? " reveal-visible" : ""}`,
-      ].join(" ")}
-      style={{ gridTemplateColumns: "3rem 1fr", gap: "1.5rem", "--reveal-delay": `${index * 100}ms` }}
-    >
-      {/* Number badge */}
-      <div className="w-11 h-11 flex items-center justify-center text-[13px] font-bold tracking-[0.02em] text-primary border-[1.5px] border-[#c3c0ff] rounded-full shrink-0">
-        {step.num}
-      </div>
-      <div>
-        <h3 className="text-lg font-semibold tracking-[-0.015em] text-on-background mb-2">
-          {step.title}
-        </h3>
-        <p className="text-[15px] leading-[1.7] text-on-surface-variant max-w-[58ch]">
-          {step.body}
-        </p>
-      </div>
-    </li>
-  );
-}
-
-/* ================================================================
-   TESTIMONIALS
-   ================================================================ */
-function Testimonials() {
-  const [ref, visible] = useReveal(0.08);
-  return (
-    <section
-      id="testimonials"
-      aria-labelledby="testimonials-heading"
-      className="py-[clamp(5rem,10vw,8rem)]"
-    >
-      <div className="max-w-[1200px] mx-auto px-[clamp(1rem,4vw,2rem)]">
-        {/* Header */}
-        <div
-          ref={ref}
-          className={`max-w-[600px] mb-[clamp(3rem,6vw,4.5rem)] reveal-item${visible ? " reveal-visible" : ""}`}
-          style={{ "--reveal-delay": "0ms" }}
-        >
-          <h2
-            id="testimonials-heading"
-            className="font-bold tracking-[-0.025em] text-on-background leading-[1.15] mb-4"
-            style={{ fontSize: "clamp(1.75rem,3.5vw,2.625rem)", textWrap: "balance" }}
-          >
-            From students who used to cram
-          </h2>
-          <p className="text-[17px] leading-[1.65] text-on-surface-variant max-w-[65ch]">
-            No curated success stories. What students actually say after a few weeks.
-          </p>
-        </div>
-
-        {/* 2×2 grid */}
-        <div className="grid sm:grid-cols-2 gap-6">
-          {testimonials.map((t, i) => (
-            <TestimonialCard key={t.name} testimonial={t} index={i} />
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function TestimonialCard({ testimonial, index }) {
-  const [ref, visible] = useReveal(0.12);
-  return (
-    <figure
-      ref={ref}
-      className={`m-0 flex flex-col gap-5 bg-white border border-outline-variant rounded-xl hover:shadow-[0_4px_16px_rgba(26,20,107,0.07)] transition-shadow duration-200 reveal-item${visible ? " reveal-visible" : ""}`}
-      style={{ padding: "clamp(1.5rem,3vw,2rem)", "--reveal-delay": `${index * 80}ms` }}
-    >
-      <blockquote className="flex-1 text-[15px] leading-[1.75] text-on-background m-0 p-0">
-        <p className="m-0">"{testimonial.quote}"</p>
-      </blockquote>
-      <figcaption className="flex items-center gap-3.5">
-        <div
-          aria-hidden="true"
-          className="w-9 h-9 rounded-full bg-primary text-[#c3c0ff] text-[13px] font-bold flex items-center justify-center shrink-0"
-        >
-          {testimonial.initial}
-        </div>
-        <div>
-          <div className="text-sm font-semibold text-on-background">{testimonial.name}</div>
-          <div className="text-xs text-outline mt-0.5">{testimonial.context}</div>
-        </div>
-      </figcaption>
-    </figure>
-  );
-}
-
-/* ================================================================
-   FINAL CTA
-   ================================================================ */
-function FinalCTA() {
-  const [ref, visible] = useReveal(0.15);
-  return (
-    <section
-      ref={ref}
-      aria-labelledby="cta-heading"
-      className="bg-primary text-center px-[clamp(1rem,4vw,2rem)] py-[clamp(5rem,10vw,8rem)]"
-    >
-      <div className={`max-w-[640px] mx-auto reveal-item${visible ? " reveal-visible" : ""}`}
-        style={{ "--reveal-delay": "0ms" }}>
-        <h2
-          id="cta-heading"
-          className="font-bold tracking-[-0.03em] text-[#e2dfff] leading-[1.12] mb-5"
-          style={{ fontSize: "clamp(2rem,4vw,3.25rem)", textWrap: "balance" }}
-        >
-          Your next exam is coming.
-          <br />
-          <span className="text-secondary-container">Start before it does.</span>
-        </h2>
-        <p className="text-base leading-[1.65] text-[#9c9af4] mb-10 max-w-[52ch] mx-auto">
-          Free to start. No credit card. Takes two minutes to set up your first study plan.
-        </p>
-        <Link
-          to="/register"
-          className="inline-flex items-center gap-1.5 bg-white text-primary text-[15px] font-semibold px-6 py-[13px] rounded-lg no-underline hover:bg-[#e2dfff] active:scale-[0.97] transition-all duration-150"
-        >
-          Create your free account
-          <span className="material-symbols-outlined text-[18px] leading-none" aria-hidden="true">
-            arrow_forward
-          </span>
-        </Link>
-      </div>
-    </section>
-  );
-}
-
-/* ================================================================
-   FOOTER
-   ================================================================ */
-function Footer() {
-  return (
-    <footer role="contentinfo" className="bg-on-background text-[#9c9af4] pt-[clamp(3rem,6vw,5rem)]">
-      {/* Main footer content */}
-      <div className="max-w-[1200px] mx-auto px-[clamp(1rem,4vw,2rem)] flex flex-wrap gap-16 pb-12 border-b border-[rgba(195,192,255,0.12)]">
-        {/* Brand */}
-        <div className="flex-1 min-w-[200px]">
-          <Link
-            to="/"
-            className="block no-underline mb-3"
-          >
-            <Logo className="h-8" />
-          </Link>
-          <p className="text-sm text-[#9c9af4] leading-relaxed">
-            Serious learning, without the chaos.
-          </p>
-        </div>
-
-        {/* Nav columns */}
-        <nav className="flex gap-12 flex-wrap" aria-label="Footer navigation">
-          {[
-            {
-              title: "Product",
-              links: [
-                { to: "/register", label: "Get started", isRouter: true },
-                { to: "#features", label: "Features", isRouter: false },
-                { to: "#how-it-works", label: "How it works", isRouter: false },
-              ],
-            },
-            {
-              title: "Account",
-              links: [
-                { to: "/login", label: "Sign in", isRouter: true },
-                { to: "/register", label: "Register", isRouter: true },
-                { to: "/help-center", label: "Help center", isRouter: true },
-              ],
-            },
-          ].map((col) => (
-            <div key={col.title} className="flex flex-col gap-2.5">
-              <p className="text-[11px] font-semibold tracking-[0.1em] uppercase text-on-surface-variant mb-1">
-                {col.title}
-              </p>
-              {col.links.map(({ to, label, isRouter }) =>
-                isRouter ? (
-                  <Link
-                    key={label}
-                    to={to}
-                    className="text-sm text-[#9c9af4] no-underline hover:text-[#e2dfff] transition-colors duration-150"
-                  >
-                    {label}
-                  </Link>
-                ) : (
-                  <a
-                    key={label}
-                    href={to}
-                    className="text-sm text-[#9c9af4] no-underline hover:text-[#e2dfff] transition-colors duration-150"
-                  >
-                    {label}
-                  </a>
-                )
-              )}
+      <main className="pt-[56px]">
+        {/* Hero */}
+        <section className="relative pt-[100px] pb-[80px] text-center px-6">
+          
+          <div className="max-w-[1080px] mx-auto relative z-10">
+            <div className="font-mono text-[12px] font-medium text-primary tracking-[0.1em] uppercase mb-6">
+              Adaptive spaced repetition
             </div>
-          ))}
-        </nav>
-      </div>
 
-      {/* Bottom bar */}
-      <div className="max-w-[1200px] mx-auto px-[clamp(1rem,4vw,2rem)] py-6">
-        <p className="text-[13px] text-on-surface-variant">
-          © {new Date().getFullYear()} DistillLearn. All rights reserved.
-        </p>
-      </div>
-    </footer>
-  );
-}
+            <h1 className="text-[clamp(36px,6vw,68px)] font-semibold tracking-tight leading-[1.07] mb-5 text-on-background">
+              Study less.<br /><em className="not-italic text-primary">Remember more.</em> Actually.
+            </h1>
 
-/* ================================================================
-   PAGE
-   ================================================================ */
-export default function LandingPage() {
-  return (
-    <>
-      {/*
-        Minimal style block for scroll-reveal.
-        These 3 rules cannot be expressed in Tailwind utilities:
-          1. opacity/transform transition with CSS var delay
-          2. initial hidden state (only before JS fires)
-          3. prefers-reduced-motion override
-      */}
-      <style>{`
-        .reveal-item {
-          opacity: 1;
-          transform: translateY(0);
-          transition:
-            opacity 0.55s cubic-bezier(0.25, 1, 0.5, 1),
-            transform 0.55s cubic-bezier(0.25, 1, 0.5, 1);
-          transition-delay: var(--reveal-delay, 0ms);
-        }
-        .reveal-item:not(.reveal-visible) {
-          opacity: 0;
-          transform: translateY(20px);
-        }
-        @media (prefers-reduced-motion: reduce) {
-          .reveal-item, .reveal-item:not(.reveal-visible) {
-            opacity: 1 !important;
-            transform: none !important;
-            transition: none !important;
-          }
-        }
-      `}</style>
+            <p className="text-[17px] text-on-surface-variant max-w-[520px] mx-auto mb-10 leading-relaxed">
+              DistillLearn takes your syllabus and turns it into a daily study plan. It uses spaced repetition to make sure you actually remember the material when exam day comes.
+            </p>
 
-      <Nav />
-      <main id="main-content">
-        <Hero />
-        <Features />
-        <HowItWorks />
-        <Testimonials />
-        <FinalCTA />
+            <div className="flex items-center justify-center gap-3 flex-wrap">
+              <Link to="/register" className="inline-flex items-center gap-1.5 px-4 py-2.5 text-[14px] font-medium bg-primary text-on-primary rounded-lg border border-transparent hover:bg-primary-container focus:ring-2 focus:ring-primary/20 transition-all">
+                Start learning free
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+              </Link>
+              <a href="#how-it-works" className="inline-flex items-center gap-1.5 px-4 py-2.5 text-[14px] font-medium bg-surface text-on-background rounded-lg border border-outline-variant hover:bg-surface-container-low transition-all">
+                See how it works
+              </a>
+            </div>
+
+            <div id="hero-stats" className="flex flex-col sm:flex-row items-center justify-center gap-0 mt-16 border border-outline-variant rounded-xl overflow-hidden max-w-[500px] mx-auto bg-surface">
+              <div className="flex-1 py-5 px-6 text-center relative border-b sm:border-b-0 sm:border-r border-outline-variant last:border-0 w-full sm:w-auto">
+                <div className="font-mono text-[26px] font-medium text-primary tracking-tight tabular-nums leading-none mb-1" id="stat-retention">3×</div>
+                <div className="text-[11px] text-on-surface-variant tracking-widest uppercase font-mono">retention rate</div>
+              </div>
+              <div className="flex-1 py-5 px-6 text-center relative border-b sm:border-b-0 sm:border-r border-outline-variant last:border-0 w-full sm:w-auto">
+                <div className="font-mono text-[26px] font-medium text-primary tracking-tight tabular-nums leading-none mb-1" id="stat-time">40m</div>
+                <div className="text-[11px] text-on-surface-variant tracking-widest uppercase font-mono">avg. daily study</div>
+              </div>
+              <div className="flex-1 py-5 px-6 text-center relative w-full sm:w-auto">
+                <div className="font-mono text-[26px] font-medium text-primary tracking-tight tabular-nums leading-none mb-1" id="stat-ready">92%</div>
+                <div className="text-[11px] text-on-surface-variant tracking-widest uppercase font-mono">feel exam-ready</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <hr className="border-t border-outline-variant m-0" />
+
+        {/* Features */}
+        <section className="py-[80px] px-6" id="features">
+          <div className="max-w-[1080px] mx-auto">
+            <div className="font-mono text-[11px] font-medium tracking-widest uppercase text-on-surface-variant mb-3">Features</div>
+            <h2 className="text-[clamp(26px,4vw,40px)] font-semibold tracking-tight leading-[1.15] mb-3.5 text-on-background">Just the tools you need.</h2>
+            <p className="text-[16px] text-on-surface-variant max-w-[540px] leading-relaxed">A focused study workflow without any unnecessary features.</p>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-[1px] bg-outline-variant border border-outline-variant rounded-[24px] overflow-hidden mt-12">
+              {features.map((feature, i) => (
+                <div key={i} className="bg-surface p-7 transition-colors hover:bg-surface-container-low relative group">
+                  <div className="w-9 h-9 bg-surface border border-outline-variant rounded-lg flex items-center justify-center mb-4 shrink-0 text-primary">
+                    <span className="w-4 h-4">{feature.icon}</span>
+                  </div>
+                  <div className="text-[14px] font-semibold text-on-background mb-1.5 tracking-tight">{feature.title}</div>
+                  <div className="text-[13px] text-on-surface-variant leading-relaxed">{feature.body}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <hr className="border-t border-outline-variant m-0" />
+
+        {/* How It Works */}
+        <section className="py-[80px] px-6" id="how-it-works">
+          <div className="max-w-[1080px] mx-auto">
+            <div className="font-mono text-[11px] font-medium tracking-widest uppercase text-on-surface-variant mb-3">How it works</div>
+            <h2 className="text-[clamp(26px,4vw,40px)] font-semibold tracking-tight leading-[1.15] mb-3.5 text-on-background">From first session to exam day.</h2>
+            <p className="text-[16px] text-on-surface-variant max-w-[540px] leading-relaxed">Here is what using the app looks like.</p>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
+              {steps.map((step, i) => (
+                <div key={i} className="p-7 border border-outline-variant rounded-[24px] bg-surface hover:shadow-[0_4px_8px_rgba(0,0,0,0.04)] transition-shadow relative">
+                  <div className="font-mono text-[12px] font-medium text-primary bg-surface border border-outline-variant rounded-lg px-2.5 py-1.5 inline-block mb-4">
+                    {step.num}
+                  </div>
+                  <div className="text-[16px] font-semibold text-on-background mb-2 tracking-tight">{step.title}</div>
+                  <div className="text-[14px] text-on-surface-variant leading-relaxed">{step.body}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <hr className="border-t border-outline-variant m-0" />
+
+        {/* Testimonials */}
+        <section className="py-[80px] px-6" id="testimonials">
+          <div className="max-w-[1080px] mx-auto">
+            <div className="font-mono text-[11px] font-medium tracking-widest uppercase text-on-surface-variant mb-3">Stories</div>
+            <h2 className="text-[clamp(26px,4vw,40px)] font-semibold tracking-tight leading-[1.15] mb-3.5 text-on-background">What students actually say.</h2>
+            <p className="text-[16px] text-on-surface-variant max-w-[540px] leading-relaxed">Real feedback from students using the app.</p>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-12">
+              {testimonials.map((t, i) => (
+                <div key={i} className="p-6 border border-outline-variant rounded-[12px] bg-surface hover:shadow-[0_4px_8px_rgba(0,0,0,0.04)] transition-shadow">
+                  <p className="text-[14px] text-on-surface-variant leading-relaxed mb-5 max-w-[70ch]">"{t.quote}"</p>
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-full bg-surface border border-outline-variant flex items-center justify-center font-mono text-[12px] font-semibold text-primary shrink-0">
+                      {t.initials}
+                    </div>
+                    <div>
+                      <div className="text-[13px] font-medium text-on-background">{t.name}</div>
+                      <div className="text-[12px] text-on-surface-variant mt-0.5">{t.meta}</div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <hr className="border-t border-outline-variant m-0" />
+
+        {/* CTA */}
+        <section className="py-[80px] px-6 text-center">
+          <div className="max-w-[1080px] mx-auto">
+            <div className="border border-outline-variant rounded-[24px] px-6 sm:px-10 py-16 bg-surface relative overflow-hidden">
+              <h2 className="text-[clamp(28px,4vw,44px)] font-semibold tracking-tight mb-3 text-on-background relative z-10">Your next exam is coming.<br />Start before it does.</h2>
+              <p className="text-[15px] text-on-surface-variant mb-9 relative z-10">Free to start. No credit card. Two minutes to your first study plan.</p>
+              
+              <div className="flex items-center justify-center gap-2.5 relative z-10">
+                <Link to="/register" className="inline-flex items-center gap-1.5 px-4 py-2.5 text-[14px] font-medium bg-primary text-on-primary rounded-lg border border-transparent hover:bg-primary-container focus:ring-2 focus:ring-primary/20 transition-all">
+                  Create free account
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                </Link>
+              </div>
+              <p className="font-mono text-[11px] text-on-surface-variant mt-4 tracking-wide relative z-10">No credit card required &nbsp;·&nbsp; Free plan available</p>
+            </div>
+          </div>
+        </section>
       </main>
-      <Footer />
-    </>
+
+      {/* Footer */}
+      <footer className="border-t border-outline-variant py-10 px-6">
+        <div className="max-w-[1080px] mx-auto">
+          <div className="flex flex-col md:flex-row items-start justify-between gap-8 md:gap-10">
+            <div className="flex flex-col gap-2">
+              <div className="font-semibold text-[14px] flex items-center gap-2 text-on-background">
+                <Logo className="h-5" />
+              </div>
+              <div className="text-[13px] text-on-surface-variant">Focus on learning, not planning.</div>
+              <div className="text-[12px] text-on-surface-variant font-mono mt-4">© 2026 DistillLearn. All rights reserved.</div>
+            </div>
+
+            <div className="flex flex-col md:flex-row gap-8 md:gap-16">
+              <div>
+                <h4 className="text-[12px] font-medium text-on-surface-variant uppercase tracking-widest font-mono mb-3">Product</h4>
+                <ul className="flex flex-col gap-2 m-0 p-0 list-none">
+                  <li><Link to="/register" className="text-[13px] text-on-surface-variant hover:text-on-background transition-colors">Get started</Link></li>
+                  <li><a href="#features" className="text-[13px] text-on-surface-variant hover:text-on-background transition-colors">Features</a></li>
+                  <li><a href="#how-it-works" className="text-[13px] text-on-surface-variant hover:text-on-background transition-colors">How it works</a></li>
+                </ul>
+              </div>
+              <div>
+                <h4 className="text-[12px] font-medium text-on-surface-variant uppercase tracking-widest font-mono mb-3">Account</h4>
+                <ul className="flex flex-col gap-2 m-0 p-0 list-none">
+                  <li><Link to="/login" className="text-[13px] text-on-surface-variant hover:text-on-background transition-colors">Sign in</Link></li>
+                  <li><Link to="/register" className="text-[13px] text-on-surface-variant hover:text-on-background transition-colors">Register</Link></li>
+                  <li><Link to="/help-center" className="text-[13px] text-on-surface-variant hover:text-on-background transition-colors">Help center</Link></li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </footer>
+    </div>
   );
 }
