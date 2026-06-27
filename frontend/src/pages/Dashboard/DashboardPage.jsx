@@ -8,7 +8,7 @@ import { PageShell } from "../../components/common/ui";
 
 const DashboardPage = () => {
   const navigate = useNavigate();
-  
+
   const [dashboardData, setDashboardData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -49,7 +49,7 @@ const DashboardPage = () => {
   const joinedAt = dashboardData?.joinedAt ?? null;
   const subjects = dashboardData?.subjects ?? [];
   const heatmapData = dashboardData?.heatmapData ?? {};
-  
+
   const totalCards = dashboardData?.totalCards ?? 0;
   const plansCount = dashboardData?.plansCount ?? 0;
   const retentionRate = dashboardData?.retentionRate ?? 0;
@@ -118,7 +118,7 @@ const DashboardPage = () => {
 
   return (
     <div className="max-w-container-max mx-auto space-y-lg">
-      
+
       {/* Header */}
       <PageShell
         title={`${getGreeting()}, ${userName}`}
@@ -126,162 +126,162 @@ const DashboardPage = () => {
         actions={
           <>
             {/* Review Cards Button */}
-          <Link
-            to="/flashcards"
-            className="bg-primary hover:opacity-80 text-on-primary font-label-md text-label-md px-5 py-3 sm:py-2.5 rounded-lg transition-opacity flex items-center justify-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
-          >
-            <span className="material-symbols-outlined text-[1.125rem]">psychology</span>
-            Review cards
-          </Link>
-          
-          {/* New Plan Button */}
-          <Link
-            to="/study-plan/new"
-            className="border border-outline-variant bg-surface-container-lowest hover:bg-surface-container-low text-on-surface font-label-md text-label-md px-5 py-3 sm:py-2.5 rounded-lg transition-colors flex items-center justify-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
-          >
-            <span className="material-symbols-outlined text-[1.125rem]">add</span>
-            New plan
-          </Link>
+            <Link
+              to="/flashcards"
+              className="bg-primary hover:opacity-80 text-on-primary font-label-md text-label-md px-5 py-3 sm:py-2.5 rounded-lg transition-opacity flex items-center justify-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
+            >
+              <span className="material-symbols-outlined text-[1.125rem]">psychology</span>
+              Review cards
+            </Link>
+
+            {/* New Plan Button */}
+            <Link
+              to="/study-plan/new"
+              className="border border-outline-variant bg-surface-container-lowest hover:bg-surface-container-low text-on-surface font-label-md text-label-md px-5 py-3 sm:py-2.5 rounded-lg transition-colors flex items-center justify-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
+            >
+              <span className="material-symbols-outlined text-[1.125rem]">add</span>
+              New plan
+            </Link>
           </>
         }
       >
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter">
-        
-        {/* CARDS DUE (Interactive link to review) */}
-        <Link
-          to="/flashcards"
-          className="bg-surface-container-lowest rounded-xl p-5 border border-outline-variant/60 hover:shadow-sm transition-all flex flex-col justify-between min-h-[110px] group cursor-pointer"
-        >
-          <span className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">
-            Cards Due
-          </span>
-          <div className="flex flex-col mt-2">
-            <span className="font-h2 text-h2 text-on-surface leading-none tabular-data">
-              {dueCards}
-            </span>
-            <span className={`font-label-sm text-label-sm mt-1 flex items-center gap-0.5 ${dueCardsTrend > 0 ? 'text-emerald-600 dark:text-emerald-400' : dueCardsTrend < 0 ? 'text-primary' : 'text-on-surface-variant'}`}>
-              {dueCardsTrend !== 0 && (
-                <span className="material-symbols-outlined text-[12px]">
-                  {dueCardsTrend > 0 ? 'trending_up' : 'trending_down'}
-                </span>
-              )}
-              {dueCardsTrend === 0 ? 'no change from yesterday' : `${Math.abs(dueCardsTrend)} from yesterday`}
-            </span>
-          </div>
-        </Link>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter">
 
-        {/* TOTAL CARDS */}
-        <div className="bg-surface-container-lowest rounded-xl p-5 border border-outline-variant/60 flex flex-col justify-between min-h-[110px] shadow-sm select-none">
-          <span className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">
-            Total Cards
-          </span>
-          <div className="flex flex-col mt-2">
-            <span className="font-h2 text-h2 text-on-surface leading-none tabular-data">
-              {totalCards}
+          {/* CARDS DUE (Interactive link to review) */}
+          <Link
+            to="/flashcards"
+            className="bg-surface-container-lowest rounded-xl p-5 border border-outline-variant/60 hover:shadow-sm transition-all flex flex-col justify-between min-h-[110px] group cursor-pointer"
+          >
+            <span className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">
+              Cards Due
             </span>
-            <span className="font-label-sm text-label-sm text-on-surface-variant mt-1">
-              across {plansCount} plans
-            </span>
-          </div>
-        </div>
-
-        {/* RETENTION RATE */}
-        <div className="bg-surface-container-lowest rounded-xl p-5 border border-outline-variant/60 flex flex-col justify-between min-h-[110px] shadow-sm select-none">
-          <span className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">
-            Retention Rate
-          </span>
-          <div className="flex flex-col mt-2">
-            <span className="font-h2 text-h2 text-on-surface leading-none tabular-data">
-              {retentionRate}%
-            </span>
-            <span className={`font-label-sm text-label-sm mt-1 flex items-center gap-0.5 ${retentionRateTrend > 0 ? 'text-secondary' : retentionRateTrend < 0 ? 'text-error' : 'text-on-surface-variant'}`}>
-              {retentionRateTrend !== 0 && (
-                <span className="material-symbols-outlined text-[12px]">
-                  {retentionRateTrend > 0 ? 'trending_up' : 'trending_down'}
-                </span>
-              )}
-              {retentionRateTrend === 0 ? 'no change this week' : `${Math.abs(retentionRateTrend)}% this week`}
-            </span>
-          </div>
-        </div>
-
-        {/* CARDS REVIEWED */}
-        <div className="bg-surface-container-lowest rounded-xl p-5 border border-outline-variant/60 flex flex-col justify-between min-h-[110px] shadow-sm select-none">
-          <span className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">
-            Cards Reviewed
-          </span>
-          <div className="flex flex-col mt-2">
-            <span className="font-h2 text-h2 text-on-surface leading-none tabular-data">
-              {cardsReviewed.toLocaleString()}
-            </span>
-            <span className="font-label-sm text-label-sm text-on-surface-variant mt-1">
-              all time
-            </span>
-          </div>
-        </div>
-
-      </div>
-
-      {/* Plans & Heatmap Row */}
-      <div className="grid grid-cols-12 gap-gutter">
-        
-        {/* Recent Study Plans List */}
-        <div className="col-span-12 md:col-span-8 flex flex-col gap-4">
-          <div className="flex justify-between items-center mb-1">
-            <h2 className="font-h2 text-h2 text-on-surface">
-              Recent Study Plans
-            </h2>
-            <Link
-              to="/plans"
-              className="font-label-md text-label-md text-primary hover:text-on-primary-fixed-variant flex items-center gap-1 transition-colors"
-            >
-              View All
-              <span className="material-symbols-outlined text-[1rem]">
-                arrow_forward
+            <div className="flex flex-col mt-2">
+              <span className="font-h2 text-h2 text-on-surface leading-none tabular-data">
+                {dueCards}
               </span>
-            </Link>
-          </div>
-
-          {subjects.length > 0 ? (
-            <div className="flex flex-col gap-3">
-              {subjects.slice(0, 3).map((subject) => (
-                <SubjectCard key={subject.id} subject={subject} />
-              ))}
+              <span className={`font-label-sm text-label-sm mt-1 flex items-center gap-0.5 ${dueCardsTrend > 0 ? 'text-emerald-600 dark:text-emerald-400' : dueCardsTrend < 0 ? 'text-primary' : 'text-on-surface-variant'}`}>
+                {dueCardsTrend !== 0 && (
+                  <span className="material-symbols-outlined text-[12px]">
+                    {dueCardsTrend > 0 ? 'trending_up' : 'trending_down'}
+                  </span>
+                )}
+                {dueCardsTrend === 0 ? 'no change from yesterday' : `${Math.abs(dueCardsTrend)} from yesterday`}
+              </span>
             </div>
-          ) : (
-            <div className="bg-surface-container-lowest border border-dashed border-outline-variant/60 rounded-xl p-8 text-center flex flex-col items-center justify-center">
-              <span className="material-symbols-outlined text-[2.25rem] text-outline mb-2">
-                menu_book
+          </Link>
+
+          {/* TOTAL CARDS */}
+          <div className="bg-surface-container-lowest rounded-xl p-5 border border-outline-variant/60 flex flex-col justify-between min-h-[110px] shadow-sm select-none">
+            <span className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">
+              Total Cards
+            </span>
+            <div className="flex flex-col mt-2">
+              <span className="font-h2 text-h2 text-on-surface leading-none tabular-data">
+                {totalCards}
               </span>
-              <p className="text-on-surface-variant font-body-sm text-body-sm">
-                No active study plans found. Get started by creating your first plan.
-              </p>
+              <span className="font-label-sm text-label-sm text-on-surface-variant mt-1">
+                across {plansCount} plans
+              </span>
+            </div>
+          </div>
+
+          {/* RETENTION RATE */}
+          <div className="bg-surface-container-lowest rounded-xl p-5 border border-outline-variant/60 flex flex-col justify-between min-h-[110px] shadow-sm select-none">
+            <span className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">
+              Retention Rate
+            </span>
+            <div className="flex flex-col mt-2">
+              <span className="font-h2 text-h2 text-on-surface leading-none tabular-data">
+                {retentionRate}%
+              </span>
+              <span className={`font-label-sm text-label-sm mt-1 flex items-center gap-0.5 ${retentionRateTrend > 0 ? 'text-secondary' : retentionRateTrend < 0 ? 'text-error' : 'text-on-surface-variant'}`}>
+                {retentionRateTrend !== 0 && (
+                  <span className="material-symbols-outlined text-[12px]">
+                    {retentionRateTrend > 0 ? 'trending_up' : 'trending_down'}
+                  </span>
+                )}
+                {retentionRateTrend === 0 ? 'no change this week' : `${Math.abs(retentionRateTrend)}% this week`}
+              </span>
+            </div>
+          </div>
+
+          {/* CARDS REVIEWED */}
+          <div className="bg-surface-container-lowest rounded-xl p-5 border border-outline-variant/60 flex flex-col justify-between min-h-[110px] shadow-sm select-none">
+            <span className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">
+              Cards Reviewed
+            </span>
+            <div className="flex flex-col mt-2">
+              <span className="font-h2 text-h2 text-on-surface leading-none tabular-data">
+                {cardsReviewed.toLocaleString()}
+              </span>
+              <span className="font-label-sm text-label-sm text-on-surface-variant mt-1">
+                all time
+              </span>
+            </div>
+          </div>
+
+        </div>
+
+        {/* Plans & Heatmap Row */}
+        <div className="grid grid-cols-12 gap-gutter">
+
+          {/* Recent Study Plans List */}
+          <div className="col-span-12 md:col-span-8 flex flex-col gap-4">
+            <div className="flex justify-between items-center mb-1">
+              <h2 className="font-h2 text-h2 text-on-surface">
+                Recent Study Plans
+              </h2>
               <Link
-                to="/study-plan/new"
-                className="text-primary font-semibold text-sm mt-2 inline-block hover:underline"
+                to="/plans"
+                className="font-label-md text-label-md text-primary hover:text-on-primary-fixed-variant flex items-center gap-1 transition-colors"
               >
-                Create your first plan
+                View All
+                <span className="material-symbols-outlined text-[1rem]">
+                  arrow_forward
+                </span>
               </Link>
             </div>
-          )}
-        </div>
 
-        {/* Heatmap Section */}
-        <div className="col-span-12 md:col-span-4 flex flex-col gap-4">
-          <div className="mb-1 hidden md:block">
-            <h2 className="font-h2 text-h2 text-on-surface invisible">Activity</h2>
+            {subjects.length > 0 ? (
+              <div className="flex flex-col gap-3">
+                {subjects.slice(0, 3).map((subject) => (
+                  <SubjectCard key={subject.id} subject={subject} />
+                ))}
+              </div>
+            ) : (
+              <div className="bg-surface-container-lowest border border-dashed border-outline-variant/60 rounded-xl p-8 text-center flex flex-col items-center justify-center">
+                <span className="material-symbols-outlined text-[2.25rem] text-outline mb-2">
+                  menu_book
+                </span>
+                <p className="text-on-surface-variant font-body-sm text-body-sm">
+                  No active study plans found. Get started by creating your first plan.
+                </p>
+                <Link
+                  to="/study-plan/new"
+                  className="text-primary font-semibold text-sm mt-2 inline-block hover:underline"
+                >
+                  Create your first plan
+                </Link>
+              </div>
+            )}
           </div>
-          <div className="overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0">
-            <ActivityHeatmap 
-              heatmapData={heatmapData} 
-              streak={streak} 
-              maxStreak={dashboardData?.maxStreak ?? 0} 
-              totalActiveDays={totalActiveDays} 
-              joinedAt={joinedAt}
-            />
+
+          {/* Heatmap Section */}
+          <div className="col-span-12 md:col-span-4 flex flex-col gap-4">
+            <div className="mb-1 hidden md:block">
+              <h2 className="font-h2 text-h2 text-on-surface invisible">Activity</h2>
+            </div>
+            <div className="overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0">
+              <ActivityHeatmap
+                heatmapData={heatmapData}
+                streak={streak}
+                maxStreak={dashboardData?.maxStreak ?? 0}
+                totalActiveDays={totalActiveDays}
+                joinedAt={joinedAt}
+              />
+            </div>
           </div>
         </div>
-      </div>
       </PageShell>
     </div>
   );
@@ -289,7 +289,7 @@ const DashboardPage = () => {
 
 const SubjectCard = ({ subject }) => {
   const progress = subject.progressPercentage || 0;
-  
+
   return (
     <Link
       to={`/plans/${subject.id}`}

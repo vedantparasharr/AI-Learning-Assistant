@@ -91,7 +91,7 @@ export default function LandingPage() {
               </span>
             </button>
             <Link to="/login" className="hidden sm:inline-flex px-4 py-2.5 text-sm font-medium bg-surface text-on-background rounded-lg border border-outline-variant hover:bg-surface-container-low transition-all">Sign in</Link>
-            <Link to="/register" className="px-4 py-2.5 text-sm font-medium bg-primary text-on-primary rounded-lg hover:bg-primary-container focus:ring-2 focus:ring-primary/20 transition-all">Start for free</Link>
+            <Link to="/register" className="px-4 py-2.5 text-sm font-medium bg-primary text-on-primary rounded-lg hover:bg-primary/90 focus:ring-2 focus:ring-primary/20 transition-all">Start for free</Link>
           </div>
         </div>
       </header>
@@ -114,7 +114,7 @@ export default function LandingPage() {
             </p>
 
             <div className="flex items-center justify-center gap-3 flex-wrap">
-              <Link to="/register" className="inline-flex items-center gap-1.5 px-4 py-2.5 text-[14px] font-medium bg-primary text-on-primary rounded-lg border border-transparent hover:bg-primary-container focus:ring-2 focus:ring-primary/20 transition-all">
+              <Link to="/register" className="inline-flex items-center gap-1.5 px-4 py-2.5 text-[14px] font-medium bg-primary text-on-primary rounded-lg border border-transparent hover:bg-primary/90 focus:ring-2 focus:ring-primary/20 transition-all">
                 Start learning free
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
               </Link>
@@ -224,7 +224,7 @@ export default function LandingPage() {
               <p className="text-[15px] text-on-surface-variant mb-9 relative z-10">Free to start. No credit card. Two minutes to your first study plan.</p>
               
               <div className="flex items-center justify-center gap-2.5 relative z-10">
-                <Link to="/register" className="inline-flex items-center gap-1.5 px-4 py-2.5 text-[14px] font-medium bg-primary text-on-primary rounded-lg border border-transparent hover:bg-primary-container focus:ring-2 focus:ring-primary/20 transition-all">
+                <Link to="/register" className="inline-flex items-center gap-1.5 px-4 py-2.5 text-[14px] font-medium bg-primary text-on-primary rounded-lg border border-transparent hover:bg-primary/90 focus:ring-2 focus:ring-primary/20 transition-all">
                   Create free account
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
                 </Link>

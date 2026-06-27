@@ -178,13 +178,11 @@ export const Input = ({
         )}
         <input
           id={inputId}
-          className={`text-xs block w-full py-2.5 bg-surface-container-lowest border rounded-lg font-body-md text-body-md text-on-surface placeholder:text-on-surface-variant outline-none transition-colors focus:ring-2 ${
-            icon ? "pl-10 pr-4" : "px-sm"
-          } ${
-            error 
-              ? "border-error focus:border-error focus:ring-error/20" 
+          className={`text-xs block w-full py-2.5 bg-surface-container-lowest border rounded-lg font-body-md text-body-md text-on-surface placeholder:text-on-surface-variant outline-none transition-colors focus:ring-2 ${icon ? "pl-10 pr-4" : "px-sm"
+            } ${error
+              ? "border-error focus:border-error focus:ring-error/20"
               : "border-outline-variant/60 focus:border-primary focus:ring-primary/20"
-          } ${className}`.trim()}
+            } ${className}`.trim()}
           {...props}
         />
       </div>
@@ -219,11 +217,10 @@ export const Textarea = ({
       )}
       <textarea
         id={inputId}
-        className={`block w-full px-sm py-2.5 bg-surface-container-lowest border rounded-lg font-body-md text-body-md text-on-surface placeholder:text-on-surface-variant/60 outline-none transition-colors focus:ring-2 resize-y min-h-[100px] ${
-          error 
-            ? "border-error focus:border-error focus:ring-error/20" 
+        className={`block w-full px-sm py-2.5 bg-surface-container-lowest border rounded-lg font-body-md text-body-md text-on-surface placeholder:text-on-surface-variant/60 outline-none transition-colors focus:ring-2 resize-y min-h-[100px] ${error
+            ? "border-error focus:border-error focus:ring-error/20"
             : "border-outline-variant/60 focus:border-primary focus:ring-primary/20"
-        } ${className}`.trim()}
+          } ${className}`.trim()}
         {...props}
       />
       {error && (
