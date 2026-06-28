@@ -33,7 +33,32 @@ const buildPlanTopics = (topics, subjectName) => {
 };
 
 export const getStudyPlansList = async (userId) => {
-  return StudyPlan.find({ userId }).sort({ examDate: 1, createdAt: -1 });
+  const plans = await StudyPlan.find({ userId }).sort({ examDate: 1, createdAt: -1 });
+
+  return plans.map((plan) => {
+    const topics = Array.isArray(plan.topics) ? plan.topics : [];
+    const completedTopics = topics.filter((topic) => topic.completionStatus === "completed").length;
+
+    let progress = 0;
+    if (typeof plan.progressPercentage === "number") {
+      progress = Math.round(plan.progressPercentage);
+    } else if (topics.length > 0) {
+      progress = Math.round((completedTopics / topics.length) * 100);
+    }
+    progress = Math.max(0, Math.min(100, progress));
+
+    return {
+      planId: String(plan._id),
+      planName: plan.subjectName,
+      sourceLabel: plan.sourceType === "text" ? "Notes" : plan.sourceType.charAt(0).toUpperCase() + plan.sourceType.slice(1),
+      topicCount: topics.length,
+      completedTopics,
+      progress,
+      examDate: plan.examDate,
+      updatedAt: plan.updatedAt,
+      topicNames: topics.map((t) => t.name),
+    };
+  });
 };
 
 export const getStudyPlanOverviewService = async (userId, planId) => {

@@ -1,6 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query'
+import {
   ConfirmationModal,
   EmptyState,
   ErrorState,
@@ -17,157 +22,40 @@ const SORTS = {
   PROGRESS: "progress",
 };
 
-const toEpoch = (value) => {
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? 0 : date.getTime();
-};
-
-const clampPercentage = (value) => Math.max(0, Math.min(100, value));
-
-const getProgressPercentage = (plan) => {
-  if (typeof plan.progressPercentage === "number") {
-    return clampPercentage(Math.round(plan.progressPercentage));
-  }
-
-  const topics = Array.isArray(plan.topics) ? plan.topics : [];
-  if (topics.length === 0) {
-    return 0;
-  }
-
-  const completedTopics = topics.filter((topic) => topic.completionStatus === "completed").length;
-  return clampPercentage(Math.round((completedTopics / topics.length) * 100));
-};
-
-const getSourceLabel = (sourceType) => {
-  switch (sourceType) {
-    case "document":
-      return "Document";
-    case "prompt":
-      return "Prompt";
-    case "text":
-      return "Notes";
-    default:
-      return "Manual";
-  }
-};
-
-const getTopicPreview = (topics) => {
-  if (!topics.length) {
-    return "No topics have been outlined yet.";
-  }
-
-  const names = topics
-    .map((topic) => topic?.name?.trim())
-    .filter(Boolean);
-
-  if (names.length === 0) {
-    return "Topics are ready to be refined.";
-  }
-
-  if (names.length <= 3) {
-    return names.join(" • ");
-  }
-
-  return `${names.slice(0, 3).join(" • ")} +${names.length - 3} more`;
-};
-
-const buildSearchParams = ({ query }) => {
-  const params = new URLSearchParams();
-
-  if (query) {
-    params.set("query", query);
-  }
-
-  return params;
-};
-
 const StudyPlans = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [plans, setPlans] = useState([]);
+  const queryClient = useQueryClient();
   const [sortBy, setSortBy] = useState(SORTS.RECENTLY_UPDATED);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [deletingPlanId, setDeletingPlanId] = useState("");
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [planToDelete, setPlanToDelete] = useState(null);
 
   const query = searchParams.get("query")?.trim() || "";
 
   const fetchPlans = async () => {
-    try {
-      setLoading(true);
-      setError("");
-      const response = await studyPlanService.getStudyPlans();
-      console.log('Data from plans:', response.data);
-      const incomingPlans = Array.isArray(response?.data) ? response.data : [];
-      setPlans(incomingPlans);
-    } catch (requestError) {
-      setError(requestError?.message || "Failed to load study plans");
-    } finally {
-      setLoading(false);
-    }
+    const response = await studyPlanService.getStudyPlans();
+    if (!response.data) throw new Error("Failed to load study plans!")
+    return Array.isArray(response?.data) ? response.data : [];
   };
 
-  useEffect(() => {
-    fetchPlans();
-  }, []);
-
-  const normalizedPlans = useMemo(
-    () =>
-      plans.map((plan) => {
-        const topics = Array.isArray(plan.topics) ? plan.topics : [];
-        const completedTopics = topics.filter((topic) => topic.completionStatus === "completed").length;
-        const progressPercentage = getProgressPercentage(plan);
-
-        return {
-          ...plan,
-          planId: String(plan._id || plan.id),
-          topicCount: topics.length,
-          completedTopics,
-          progressPercentage,
-          sourceLabel: getSourceLabel(plan.sourceType),
-          topicPreview: getTopicPreview(topics),
-        };
-      }),
-    [plans],
-  );
+  const { isPending: loading, error: queryError, data: plans = [] } = useQuery({
+    queryKey: ['plans'],
+    queryFn: fetchPlans,
+  })
 
   const filteredAndSortedPlans = useMemo(() => {
-    const loweredQuery = query.toLowerCase();
+    const q = query.toLowerCase();
 
-    const filtered = normalizedPlans;
-
-    const searched = loweredQuery
-      ? filtered.filter((plan) => {
-        const haystack = [
-          plan.subjectName,
-          plan.sourceLabel,
-          plan.topicPreview,
-          ...(plan.topics || []).map((topic) => topic.name),
-        ]
-          .join(" ")
-          .toLowerCase();
-
-        return haystack.includes(loweredQuery);
-      })
-      : filtered;
-
-    const sorted = [...searched];
-
-    if (sortBy === SORTS.EXAM_DATE) {
-      sorted.sort((left, right) => toEpoch(left.examDate) - toEpoch(right.examDate));
-      return sorted;
-    }
-
-    if (sortBy === SORTS.PROGRESS) {
-      sorted.sort((left, right) => right.progressPercentage - left.progressPercentage);
-      return sorted;
-    }
-
-    sorted.sort((left, right) => toEpoch(right.updatedAt) - toEpoch(left.updatedAt));
-    return sorted;
-  }, [normalizedPlans, query, sortBy]);
+    return plans
+      .filter((plan) =>
+        !q || [plan.planName, plan.sourceLabel, ...(plan.topicNames || [])].join(" ").toLowerCase().includes(q)
+      )
+      .sort((a, b) => {
+        if (sortBy === SORTS.EXAM_DATE) return (new Date(a.examDate).getTime() || 0) - (new Date(b.examDate).getTime() || 0);
+        if (sortBy === SORTS.PROGRESS) return b.progress - a.progress;
+        return (new Date(b.updatedAt).getTime() || 0) - (new Date(a.updatedAt).getTime() || 0);
+      });
+  }, [plans, query, sortBy]);
 
   const hasActiveRefinements = Boolean(query);
 
@@ -182,20 +70,20 @@ const StudyPlans = () => {
     setIsDeleteModalOpen(true);
   };
 
-  const handleConfirmDelete = async () => {
-    if (!planToDelete) return;
-    try {
-      setDeletingPlanId(planToDelete.planId);
-      setError("");
-      await studyPlanService.deleteStudyPlan(planToDelete.planId);
-      setPlans((current) => current.filter((plan) => String(plan._id || plan.id) !== String(planToDelete.planId)));
+  const deleteMutation = useMutation({
+    mutationFn: (planId) => studyPlanService.deleteStudyPlan(planId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['plans'],
+      });
       setIsDeleteModalOpen(false);
       setPlanToDelete(null);
-    } catch (requestError) {
-      setError(requestError?.message || "Failed to delete study plan");
-    } finally {
-      setDeletingPlanId("");
     }
+  });
+
+  const handleConfirmDelete = () => {
+    if (!planToDelete) return;
+    deleteMutation.mutate(planToDelete.planId);
   };
 
   const headerActions = (
@@ -256,10 +144,10 @@ const StudyPlans = () => {
         </div>
       </div>
 
-      {error ? (
+      {queryError && (
         <ErrorState
           title="We couldn't load your study plans"
-          description={`${error} You can retry now or create a new plan if you were starting fresh.`}
+          description={`${queryError.message || queryError} You can retry now or create a new plan if you were starting fresh.`}
           action={(
             <div className="flex flex-wrap gap-3">
               <PrimaryButton onClick={fetchPlans}>
@@ -271,9 +159,9 @@ const StudyPlans = () => {
             </div>
           )}
         />
-      ) : null}
+      )}
 
-      {loading ? (
+      {loading && (
         <div className="space-y-gutter animate-pulse">
           {[1, 2, 3].map((i) => (
             <div key={i} className="bg-surface-container-lowest rounded-xl p-4 border border-outline-variant/60 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -290,9 +178,9 @@ const StudyPlans = () => {
             </div>
           ))}
         </div>
-      ) : null}
+      )}
 
-      {!loading && filteredAndSortedPlans.length === 0 ? (
+      {!loading && filteredAndSortedPlans.length === 0 && (
         <EmptyState
           title={hasActiveRefinements ? "No plans match your current filters" : "You haven't created a study plan yet"}
           description={
@@ -312,9 +200,9 @@ const StudyPlans = () => {
             </PrimaryButton>
           )}
         />
-      ) : null}
+      )}
 
-      {!loading && filteredAndSortedPlans.length > 0 ? (
+      {!loading && filteredAndSortedPlans.length > 0 && (
         <div className="space-y-gutter">
           {filteredAndSortedPlans.map((plan) => (
             <article
@@ -328,7 +216,7 @@ const StudyPlans = () => {
                 </div>
                 <div className="min-w-0 flex-1">
                   <h2 className="font-body-lg text-body-lg font-semibold text-on-surface group-hover:text-primary transition-colors truncate">
-                    {plan.subjectName}
+                    {plan.planName}
                   </h2>
                   <div className="flex items-center gap-2 mt-0.5 text-xs text-on-surface-variant">
                     <span className="inline-flex items-center rounded bg-surface-container-high px-1.5 py-0.5 font-medium">
@@ -351,11 +239,11 @@ const StudyPlans = () => {
                   <div className="flex-1 h-2 overflow-hidden rounded-full bg-surface-container-highest">
                     <div
                       className="h-full rounded-full bg-primary transition-[width] duration-300 ease-out motion-reduce:transition-none"
-                      style={{ width: `${plan.progressPercentage}%` }}
+                      style={{ width: `${plan.progress}%` }}
                     />
                   </div>
                   <span className="font-semibold text-xs text-on-surface w-9 text-right shrink-0">
-                    {plan.progressPercentage}%
+                    {plan.progress}%
                   </span>
                 </div>
 
@@ -367,10 +255,10 @@ const StudyPlans = () => {
                       e.stopPropagation();
                       requestDeletePlan(plan);
                     }}
-                    disabled={deletingPlanId === plan.planId}
+                    disabled={deleteMutation.isPending && deleteMutation.variables === plan.planId}
                     aria-label="Delete plan"
                   >
-                    {deletingPlanId === plan.planId ? (
+                    {deleteMutation.isPending && deleteMutation.variables === plan.planId ? (
                       <span className="h-4 w-4 animate-spin rounded-full border border-error border-t-transparent" />
                     ) : (
                       <span className="material-symbols-outlined text-[18px]">delete</span>
@@ -381,21 +269,23 @@ const StudyPlans = () => {
             </article>
           ))}
         </div>
-      ) : null}
+      )}
 
       <ConfirmationModal
         isOpen={isDeleteModalOpen}
         title="Delete Study Plan?"
-        message={`Are you sure you want to delete "${planToDelete?.subjectName || "this study plan"}"? This action is permanent and cannot be undone.`}
+        message={`Are you sure you want to delete "${planToDelete?.planName || "this study plan"}"? This action is permanent and cannot be undone.`}
         confirmLabel="Delete plan"
         cancelLabel="Cancel"
         onConfirm={handleConfirmDelete}
         onClose={() => {
           setIsDeleteModalOpen(false);
           setPlanToDelete(null);
+          deleteMutation.reset();
         }}
         isDestructive={true}
-        isLoading={deletingPlanId !== ""}
+        isLoading={deleteMutation.isPending}
+        error={deleteMutation.error?.message}
       />
     </PageShell>
   );
