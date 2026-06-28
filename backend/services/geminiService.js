@@ -1,8 +1,5 @@
-import dotenv from "dotenv";
 import { GoogleGenAI } from "@google/genai";
 import { sanitizeTopics } from "../utils/topicKey.js";
-
-dotenv.config();
 
 if (!process.env.GEMINI_API_KEY) {
   console.error("FATAL ERROR: GEMINI_API_KEY is not set in the environment variables.");

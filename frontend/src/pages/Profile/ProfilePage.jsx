@@ -156,7 +156,7 @@ const ProfilePage = () => {
               </div>
               <div className="flex-1 w-full space-y-md">
                 <div className="flex flex-wrap gap-sm items-center">
-                  <label className="cursor-pointer bg-surface border border-outline-variant/60 hover:border-slate-400 text-slate-700 font-label-md text-label-md px-md py-2.5 rounded-lg transition-colors inline-flex items-center gap-xs">
+                  <label className="cursor-pointer border border-outline-variant bg-surface-container-lowest hover:bg-surface-container-low text-on-surface font-label-md text-label-md px-4 py-2.5 rounded-lg transition-colors inline-flex items-center gap-1.5">
                     <span className="material-symbols-outlined text-[16px]">upload</span>
                     Choose Photo
                     <input
@@ -170,7 +170,7 @@ const ProfilePage = () => {
                     <button
                       type="button"
                       onClick={() => setProfileForm((current) => ({ ...current, profileImage: "" }))}
-                      className="border border-rose-200 text-rose-700 font-label-md text-label-md px-md py-2.5 rounded-lg hover:bg-rose-50/50 transition-colors"
+                      className="border border-error/50 text-error font-label-md text-label-md px-4 py-2.5 rounded-lg hover:bg-error-container hover:text-error transition-colors"
                     >
                       Remove Photo
                     </button>

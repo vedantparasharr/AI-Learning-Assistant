@@ -4,7 +4,6 @@ import {
   ConfirmationModal,
   EmptyState,
   ErrorState,
-  LoadingState,
   PageShell,
   PrimaryButton,
   SecondaryButton,
@@ -100,6 +99,7 @@ const StudyPlans = () => {
       setLoading(true);
       setError("");
       const response = await studyPlanService.getStudyPlans();
+      console.log('Data from plans:', response.data);
       const incomingPlans = Array.isArray(response?.data) ? response.data : [];
       setPlans(incomingPlans);
     } catch (requestError) {

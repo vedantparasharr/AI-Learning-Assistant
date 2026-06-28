@@ -1,5 +1,5 @@
-import { useEffect, useState, useCallback } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import dashboardService from "../../services/dashboardService";
 import ActivityHeatmap from "../../components/dashboard/ActivityHeatmap";
 import { PageShell } from "../../components/common/ui";
@@ -7,31 +7,20 @@ import { PageShell } from "../../components/common/ui";
 
 
 const DashboardPage = () => {
-  const navigate = useNavigate();
+  const fetchDashboard = async () => {
+    const res = await dashboardService.getDashboardSummary();
 
-  const [dashboardData, setDashboardData] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  const fetchDashboard = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      const res = await dashboardService.getDashboardSummary();
-      if (res?.success && res.data) {
-        setDashboardData(res.data);
-      } else {
-        setDashboardData(null);
-      }
-    } catch (err) {
-      console.error("Failed to load dashboard data", err);
-      setDashboardData(null);
-    } finally {
-      setIsLoading(false);
+    if (!res?.success) {
+      throw new Error("Failed to fetch dashboard");
     }
-  }, []);
 
-  useEffect(() => {
-    fetchDashboard();
-  }, [fetchDashboard]);
+    return res.data;
+  };
+
+  const { data: dashboardData, isLoading, error } = useQuery({
+    queryKey: ['dashboardData'],
+    queryFn: fetchDashboard
+  })
 
   const getGreeting = () => {
     const hour = new Date().getHours();
