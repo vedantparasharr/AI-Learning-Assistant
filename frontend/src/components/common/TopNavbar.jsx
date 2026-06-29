@@ -84,21 +84,6 @@ export default function TopNavbar() {
           </span>
         </button>
 
-        <button
-          type="button"
-          aria-label="Notifications"
-          className="hidden sm:inline-flex h-10 w-10 items-center justify-center rounded-lg text-on-surface-variant transition-colors hover:bg-surface-container-low hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
-        >
-          <span className="material-symbols-outlined">notifications</span>
-        </button>
-
-        <button
-          type="button"
-          aria-label="Settings"
-          className="hidden sm:inline-flex h-10 w-10 items-center justify-center rounded-lg text-on-surface-variant transition-colors hover:bg-surface-container-low hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
-        >
-          <span className="material-symbols-outlined">settings</span>
-        </button>
 
         <Link
           to="/profile"

@@ -1,12 +1,17 @@
 import { GoogleGenAI } from "@google/genai";
 import { sanitizeTopics } from "../utils/topicKey.js";
 
-if (!process.env.GEMINI_API_KEY) {
-  console.error("FATAL ERROR: GEMINI_API_KEY is not set in the environment variables.");
+const keys = (process.env.GEMINI_API_KEYS || process.env.GEMINI_API_KEY || "")
+  .split(",").map(k => k.trim()).filter(Boolean);
+
+if (!keys.length) {
+  console.error("FATAL ERROR: GEMINI_API_KEY missing.");
   process.exit(1);
 }
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+const aiClients = keys.map(apiKey => new GoogleGenAI({ apiKey }));
+let i = 0;
+const getAi = () => aiClients[i++ % aiClients.length];
 const MODEL = "gemini-2.5-flash-lite";
 
 const jsonConfig = (schema) => ({
@@ -74,7 +79,7 @@ Syllabus:
 ${text.substring(0, 25000)}`;
 
   try {
-    const response = await ai.models.generateContent({
+    const response = await getAi().models.generateContent({
       model: MODEL,
       contents: prompt,
       config: jsonConfig(syllabusTopicSchema),
@@ -103,7 +108,7 @@ Goal: ${prompt.substring(0, 4000)}
 ${subjectName ? `Subject: ${subjectName}` : ""}`;
 
   try {
-    const response = await ai.models.generateContent({
+    const response = await getAi().models.generateContent({
       model: MODEL,
       contents: roadmapPrompt,
       config: jsonConfig(syllabusTopicSchema),
@@ -132,7 +137,7 @@ Rules:
 - Don't repeat phrasing across cards.`;
 
   try {
-    const response = await ai.models.generateContent({
+    const response = await getAi().models.generateContent({
       model: MODEL,
       contents: prompt,
       config: jsonConfig(starterDeckSchema),
@@ -188,7 +193,7 @@ Write exam-oriented study notes for: "${topicName}" (${subjectName})
 - No filler. No "great question" energy. No AI disclaimer at the end.`;
 
   try {
-    const response = await ai.models.generateContent({
+    const response = await getAi().models.generateContent({
       model: MODEL,
       contents: prompt,
     });
@@ -216,7 +221,7 @@ Notes:
 ${notes}`;
 
   try {
-    const response = await ai.models.generateContent({
+    const response = await getAi().models.generateContent({
       model: MODEL,
       contents: prompt,
       config: jsonConfig(flashcardExtractionSchema),

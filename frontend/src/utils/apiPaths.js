@@ -9,7 +9,7 @@ export const API_PATHS = {
     RESEND_OTP: "/api/auth/resend-otp",
     LOGOUT: "/api/auth/logout",
     GET_PROFILE: "/api/auth/profile",
-    UPDATE_PROFILE: "/api/auth/updateProfile",
+    UPDATE_PROFILE: "/api/auth/profile",
     CHANGE_PASSWORD: "/api/auth/change-password",
   },
 

@@ -3,10 +3,12 @@ import { useQuery } from "@tanstack/react-query";
 import dashboardService from "../../services/dashboardService";
 import ActivityHeatmap from "../../components/dashboard/ActivityHeatmap";
 import { PageShell, PrimaryLinkButton, InlineLinkButton, TextLink } from "../../components/common/ui";
-
+import { useAuth } from "../../context/AuthContext";
 
 
 const DashboardPage = () => {
+  const { user } = useAuth();
+
   const fetchDashboard = async () => {
     const res = await dashboardService.getDashboardSummary();
 
@@ -29,7 +31,7 @@ const DashboardPage = () => {
     return "Good evening";
   };
 
-  const userName = "Vedant";
+  const userName = user?.username || "Scholar";
 
   // Data mapping with fallback values
   const dueCards = dashboardData?.dueCards ?? 0;
