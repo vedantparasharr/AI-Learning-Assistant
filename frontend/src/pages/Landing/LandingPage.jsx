@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useTheme } from "../../context/ThemeContext";
 import Logo from "../../components/common/Logo";
+import { PrimaryLinkButton, InlineLinkButton } from "../../components/common/ui";
 
 export default function LandingPage() {
   const { theme, toggleTheme } = useTheme();
@@ -90,8 +91,8 @@ export default function LandingPage() {
                 {theme === "dark" ? "light_mode" : "dark_mode"}
               </span>
             </button>
-            <Link to="/login" className="hidden sm:inline-flex px-4 py-2.5 text-sm font-medium bg-surface text-on-background rounded-lg border border-outline-variant hover:bg-surface-container-low transition-all">Sign in</Link>
-            <Link to="/register" className="px-4 py-2.5 text-sm font-medium bg-primary text-on-primary rounded-lg hover:bg-primary/90 focus:ring-2 focus:ring-primary/20 transition-all">Start for free</Link>
+            <InlineLinkButton to="/login" className="hidden sm:inline-flex">Sign in</InlineLinkButton>
+            <PrimaryLinkButton to="/register">Start for free</PrimaryLinkButton>
           </div>
         </div>
       </header>
@@ -114,11 +115,11 @@ export default function LandingPage() {
             </p>
 
             <div className="flex items-center justify-center gap-3 flex-wrap">
-              <Link to="/register" className="inline-flex items-center gap-1.5 px-4 py-2.5 text-[14px] font-medium bg-primary text-on-primary rounded-lg border border-transparent hover:bg-primary/90 focus:ring-2 focus:ring-primary/20 transition-all">
+              <PrimaryLinkButton to="/register">
                 Start learning free
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-              </Link>
-              <a href="#how-it-works" className="inline-flex items-center gap-1.5 px-4 py-2.5 text-[14px] font-medium bg-surface text-on-background rounded-lg border border-outline-variant hover:bg-surface-container-low transition-all">
+              </PrimaryLinkButton>
+              <a href="#how-it-works" className="inline-flex min-h-11 items-center justify-center gap-xs rounded-lg border border-outline-variant bg-surface-container-lowest px-md py-2 font-label-md text-label-md text-on-surface transition-colors hover:bg-surface-container-low focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20">
                 See how it works
               </a>
             </div>
@@ -149,7 +150,7 @@ export default function LandingPage() {
             <h2 className="text-[clamp(26px,4vw,40px)] font-semibold tracking-tight leading-[1.15] mb-3.5 text-on-background">Just the tools you need.</h2>
             <p className="text-[16px] text-on-surface-variant max-w-[540px] leading-relaxed">A focused study workflow without any unnecessary features.</p>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-[1px] bg-outline-variant border border-outline-variant rounded-[24px] overflow-hidden mt-12">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-[1px] bg-outline-variant border border-outline-variant rounded-2xl overflow-hidden mt-12">
               {features.map((feature, i) => (
                 <div key={i} className="bg-surface p-7 transition-colors hover:bg-surface-container-low relative group">
                   <div className="w-9 h-9 bg-surface border border-outline-variant rounded-lg flex items-center justify-center mb-4 shrink-0 text-primary">
@@ -174,7 +175,7 @@ export default function LandingPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
               {steps.map((step, i) => (
-                <div key={i} className="p-7 border border-outline-variant rounded-[24px] bg-surface hover:shadow-[0_4px_8px_rgba(0,0,0,0.04)] transition-shadow relative">
+                <div key={i} className="p-7 border border-outline-variant rounded-2xl bg-surface hover:shadow-[0_4px_8px_rgba(0,0,0,0.04)] transition-shadow relative">
                   <div className="font-mono text-[12px] font-medium text-primary bg-surface border border-outline-variant rounded-lg px-2.5 py-1.5 inline-block mb-4">
                     {step.num}
                   </div>
@@ -197,7 +198,7 @@ export default function LandingPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-12">
               {testimonials.map((t, i) => (
-                <div key={i} className="p-6 border border-outline-variant rounded-[12px] bg-surface hover:shadow-[0_4px_8px_rgba(0,0,0,0.04)] transition-shadow">
+                <div key={i} className="p-6 border border-outline-variant rounded-xl bg-surface hover:shadow-[0_4px_8px_rgba(0,0,0,0.04)] transition-shadow">
                   <p className="text-[14px] text-on-surface-variant leading-relaxed mb-5 max-w-[70ch]">"{t.quote}"</p>
                   <div className="flex items-center gap-2.5">
                     <div className="w-8 h-8 rounded-full bg-surface border border-outline-variant flex items-center justify-center font-mono text-[12px] font-semibold text-primary shrink-0">
@@ -219,15 +220,15 @@ export default function LandingPage() {
         {/* CTA */}
         <section className="py-[80px] px-6 text-center">
           <div className="max-w-[1080px] mx-auto">
-            <div className="border border-outline-variant rounded-[24px] px-6 sm:px-10 py-16 bg-surface relative overflow-hidden">
+            <div className="border border-outline-variant rounded-2xl px-6 sm:px-10 py-16 bg-surface relative overflow-hidden">
               <h2 className="text-[clamp(28px,4vw,44px)] font-semibold tracking-tight mb-3 text-on-background relative z-10">Your next exam is coming.<br />Start before it does.</h2>
               <p className="text-[15px] text-on-surface-variant mb-9 relative z-10">Free to start. No credit card. Two minutes to your first study plan.</p>
               
               <div className="flex items-center justify-center gap-2.5 relative z-10">
-                <Link to="/register" className="inline-flex items-center gap-1.5 px-4 py-2.5 text-[14px] font-medium bg-primary text-on-primary rounded-lg border border-transparent hover:bg-primary/90 focus:ring-2 focus:ring-primary/20 transition-all">
+                <PrimaryLinkButton to="/register">
                   Create free account
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-                </Link>
+                </PrimaryLinkButton>
               </div>
               <p className="font-mono text-[11px] text-on-surface-variant mt-4 tracking-wide relative z-10">No credit card required &nbsp;·&nbsp; Free plan available</p>
             </div>

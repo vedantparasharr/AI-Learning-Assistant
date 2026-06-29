@@ -2,6 +2,7 @@ import { useState } from "react";
 import toast from "react-hot-toast";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { useMutation } from "@tanstack/react-query";
 import authService from "../../services/authService";
 import { Input, PrimaryButton } from "../../components/common/ui";
 import Logo from "../../components/common/Logo";
@@ -11,26 +12,28 @@ const LoginPage = () => {
   const location = useLocation();
   const { login } = useAuth();
   const [form, setForm] = useState({ email: "", password: "" });
-  const [submitting, setSubmitting] = useState(false);
 
   const query = new URLSearchParams(location.search);
   const returnTo = query.get("returnTo") || "/dashboard";
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    setSubmitting(true);
-
-    try {
-      const response = await authService.login(form.email, form.password);
+  const loginMutation = useMutation({
+    mutationFn: ({ email, password }) => authService.login(email, password),
+    onSuccess: (response) => {
       login(response.data.user);
       toast.success(response.message || "Logged in successfully");
       navigate(returnTo, { replace: true });
-    } catch (error) {
+    },
+    onError: (error) => {
       toast.error(error.error || error.message || "Unable to log in");
-    } finally {
-      setSubmitting(false);
     }
+  });
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    loginMutation.mutate(form);
   };
+
+  const submitting = loginMutation.isPending;
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background text-on-surface p-md">
@@ -50,6 +53,7 @@ const LoginPage = () => {
               placeholder="Email"
               required
               autoComplete="email"
+              maxLength={255}
               value={form.email}
               onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))}
             />
@@ -61,6 +65,7 @@ const LoginPage = () => {
               placeholder="Password"
               required
               autoComplete="current-password"
+              maxLength={255}
               value={form.password}
               onChange={(event) => setForm((current) => ({ ...current, password: event.target.value }))}
             />

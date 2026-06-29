@@ -1,7 +1,8 @@
 import { useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useMutation } from "@tanstack/react-query";
 import studyPlanService from "../../services/studyPlanService";
-import { Input, Textarea, PrimaryButton, PageShell } from "../../components/common/ui";
+import { Input, Textarea, PrimaryButton, SecondaryButton, IconButton, PageShell } from "../../components/common/ui";
 import toast from "react-hot-toast";
 
 const MAX_PDF_SIZE = 10 * 1024 * 1024;
@@ -62,13 +63,10 @@ export default function StudyPlanBuilderPage() {
   const [inputMode, setInputMode] = useState("document");
   const [subjectName, setSubjectName] = useState("");
   const [examDate, setExamDate] = useState("");
-  const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1);
   const [topics, setTopics] = useState([]);
   const [sourceText, setSourceText] = useState("");
   const [fieldErrors, setFieldErrors] = useState({});
-  const [generationError, setGenerationError] = useState("");
-  const [createError, setCreateError] = useState("");
   const [isDragging, setIsDragging] = useState(false);
 
   const today = new Date().toISOString().split("T")[0];
@@ -98,7 +96,6 @@ export default function StudyPlanBuilderPage() {
 
   const handleModeChange = (mode) => {
     setInputMode(mode);
-    setGenerationError("");
     clearFieldError("source");
   };
 
@@ -112,7 +109,6 @@ export default function StudyPlanBuilderPage() {
 
     setFile(candidate);
     clearFieldError("source");
-    setGenerationError("");
   };
 
   const handleDrop = (event) => {
@@ -142,21 +138,9 @@ export default function StudyPlanBuilderPage() {
     return Object.keys(nextErrors).length === 0;
   };
 
-  const handleProcess = async () => {
-    if (!validateSourceStep()) return;
-
-    try {
-      setLoading(true);
-      setGenerationError("");
-
-      const res = await studyPlanService.parseStudyPlan({
-        file,
-        outlineText: inputMode === "text" ? text : "",
-        learningPrompt: inputMode === "prompt" ? text : "",
-        sourceMode: inputMode,
-        subjectName: subjectName.trim(),
-      });
-
+  const parseMutation = useMutation({
+    mutationFn: (data) => studyPlanService.parseStudyPlan(data),
+    onSuccess: (res) => {
       const payload = res.data || {};
       const normalized = (payload.topics || [])
         .map(normalizeTopic)
@@ -164,7 +148,7 @@ export default function StudyPlanBuilderPage() {
 
       if (normalized.length === 0) {
         setTopics([]);
-        setGenerationError(
+        toast.error(
           "No usable topics were generated. Try a more specific source, paste the key sections, or describe the goal in more detail.",
         );
         return;
@@ -174,50 +158,61 @@ export default function StudyPlanBuilderPage() {
       setSourceText(payload.sourceText || text);
       toast.success("Topics generated");
       setStep(2);
-    } catch (err) {
-      setGenerationError(
+    },
+    onError: (err) => {
+      toast.error(
         err.message ||
         "Topics could not be generated. Check the source and try again.",
       );
-    } finally {
-      setLoading(false);
     }
+  });
+
+  const handleProcess = () => {
+    if (!validateSourceStep()) return;
+
+    parseMutation.mutate({
+      file,
+      outlineText: inputMode === "text" ? text : "",
+      learningPrompt: inputMode === "prompt" ? text : "",
+      sourceMode: inputMode,
+      subjectName: subjectName.trim(),
+    });
   };
 
-  const handleCreate = async () => {
+  const createMutation = useMutation({
+    mutationFn: (data) => studyPlanService.createStudyPlan(data),
+    onSuccess: (res) => {
+      toast.success("Study plan created");
+      navigate(`/plans/${res.data.studyPlan._id}`);
+    },
+    onError: (err) => {
+      toast.error(
+        err.message ||
+        "The study plan could not be created. Review the topics and try again.",
+      );
+    }
+  });
+
+  const handleCreate = () => {
     if (hasInvalidTopics) {
-      setCreateError(
+      toast.error(
         "Every topic needs a name and an estimate greater than zero before saving.",
       );
       return;
     }
 
-    try {
-      setLoading(true);
-      setCreateError("");
-
-      const res = await studyPlanService.createStudyPlan({
-        subjectName: subjectName.trim(),
-        examDate,
-        topics,
-        sourceText,
-        sourceType: inputMode,
-      });
-
-      toast.success("Study plan created");
-      navigate(`/plans/${res.data.studyPlan._id}`);
-    } catch (err) {
-      setCreateError(
-        err.message ||
-        "The study plan could not be created. Review the topics and try again.",
-      );
-    } finally {
-      setLoading(false);
-    }
+    createMutation.mutate({
+      subjectName: subjectName.trim(),
+      examDate,
+      topics,
+      sourceText,
+      sourceType: inputMode,
+    });
   };
 
+  const loading = parseMutation.isPending || createMutation.isPending;
+
   const updateTopic = (index, field, value) => {
-    setCreateError("");
     setTopics((current) =>
       current.map((topic, topicIndex) =>
         topicIndex === index ? { ...topic, [field]: value } : topic,
@@ -226,12 +221,10 @@ export default function StudyPlanBuilderPage() {
   };
 
   const removeTopic = (index) => {
-    setCreateError("");
     setTopics((current) => current.filter((_, topicIndex) => topicIndex !== index));
   };
 
   const addTopic = () => {
-    setCreateError("");
     setTopics((current) => [...current, { name: "", estimated_hours: 1 }]);
   };
 
@@ -356,13 +349,13 @@ export default function StudyPlanBuilderPage() {
                             onChange={(event) => handleFileCandidate(event.target.files?.[0])}
                           />
 
-                          <button
+                          <SecondaryButton
                             type="button"
                             onClick={() => fileInputRef.current?.click()}
-                            className="inline-flex h-9 items-center justify-center rounded-full border border-outline-variant/60 bg-surface-container-lowest px-5 font-label-sm text-label-sm text-on-surface transition-colors hover:bg-surface-container-low focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                            className="!min-h-9 !py-1 px-5 rounded-full"
                           >
                             Browse files
-                          </button>
+                          </SecondaryButton>
                         </div>
                       </div>
                     ) : (
@@ -373,7 +366,6 @@ export default function StudyPlanBuilderPage() {
                         onChange={(event) => {
                           setText(event.target.value);
                           clearFieldError("source");
-                          setGenerationError("");
                         }}
                         placeholder={
                           inputMode === "text"
@@ -394,17 +386,16 @@ export default function StudyPlanBuilderPage() {
                           <span className="font-body-sm text-body-sm text-on-surface-variant">{(file.size / 1024 / 1024).toFixed(1)}MB</span>
                         </div>
                         <div className="w-px h-4 bg-outline-variant/40" />
-                        <button
-                          type="button"
+                        <IconButton
+                          variant="danger"
+                          icon="close"
+                          className="!h-8 !w-8 bg-surface-container-lowest"
                           onClick={() => {
                             setFile(null);
                             if (fileInputRef.current) fileInputRef.current.value = "";
                           }}
-                          className="flex h-8 w-8 items-center justify-center rounded-full text-on-surface-variant hover:bg-error-container hover:text-error transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-error/30"
                           aria-label="Remove attached file"
-                        >
-                          <span className="material-symbols-outlined text-[18px]">close</span>
-                        </button>
+                        />
                       </div>
                     )}
 
@@ -456,28 +447,6 @@ export default function StudyPlanBuilderPage() {
 
                   {/* Action Row */}
                   <div className="pt-8 flex flex-col gap-6">
-                    {generationError && (
-                      <div className="rounded-xl bg-error-container/50 border border-error/20 p-5 text-on-error-container animate-in fade-in">
-                        <p className="font-body-md text-body-md font-medium mb-4">{generationError}</p>
-                        <div className="flex flex-wrap gap-3">
-                          <button
-                            type="button"
-                            onClick={handleProcess}
-                            disabled={loading}
-                            className="rounded-full bg-error text-on-error px-5 py-2 font-label-md text-label-md transition-colors hover:bg-error/90 disabled:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-error/30 focus-visible:ring-offset-2"
-                          >
-                            Try again
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleModeChange(inputMode === "document" ? "text" : "document")}
-                            className="rounded-full border border-error/30 px-5 py-2 font-label-md text-label-md text-error transition-colors hover:bg-error/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-error/30 focus-visible:ring-offset-2"
-                          >
-                            Switch input mode
-                          </button>
-                        </div>
-                      </div>
-                    )}
 
                     <div className="flex flex-col gap-8 pt-4 border-t border-outline-variant/30">
                       <div className="flex flex-col gap-4">
@@ -519,12 +488,6 @@ export default function StudyPlanBuilderPage() {
                 </div>
               </div>
 
-              {createError && (
-                <div className="mb-8 rounded-xl border border-error/20 bg-error-container/50 p-4 font-body-md text-body-md text-on-error-container animate-in fade-in">
-                  {createError}
-                </div>
-              )}
-
               {topics.length === 0 ? (
                 <div className="rounded-xl border border-outline-variant/40 bg-surface-container-lowest p-16 text-center">
                   <span className="material-symbols-outlined text-[48px] text-outline-variant mb-4">search_off</span>
@@ -533,13 +496,13 @@ export default function StudyPlanBuilderPage() {
                     We couldn't extract distinct topics from the source. Try a different source, or add topics manually.
                   </p>
                   <div className="flex flex-wrap justify-center gap-4">
-                    <button
+                    <SecondaryButton
                       type="button"
                       onClick={() => setStep(1)}
-                      className="rounded-full border border-outline-variant px-6 py-2.5 font-label-md text-label-md text-on-surface transition-colors hover:bg-surface-container-low focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                      className="rounded-full px-6"
                     >
                       Back to source
-                    </button>
+                    </SecondaryButton>
                     <PrimaryButton type="button" onClick={addTopic}>
                       Add first topic
                     </PrimaryButton>
@@ -589,14 +552,13 @@ export default function StudyPlanBuilderPage() {
                             <span className="font-body-sm text-body-sm text-on-surface-variant">hrs</span>
                           </div>
 
-                          <button
-                            type="button"
+                          <IconButton
+                            variant="danger"
+                            icon="delete"
                             onClick={() => removeTopic(index)}
-                            className="flex h-10 w-10 items-center justify-center rounded-full text-on-surface-variant/50 transition-all hover:bg-error-container hover:text-error focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-error/50 place-self-end md:place-self-center md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100 focus:opacity-100"
+                            className="place-self-end md:place-self-center md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100 focus:opacity-100"
                             aria-label={`Remove topic`}
-                          >
-                            <span className="material-symbols-outlined text-[20px]">delete</span>
-                          </button>
+                          />
                         </div>
                       );
                     })}
@@ -605,26 +567,25 @@ export default function StudyPlanBuilderPage() {
               )}
 
               <div className="mt-8 flex flex-wrap items-center justify-between gap-4">
-                <button
+                <SecondaryButton
                   type="button"
                   onClick={addTopic}
-                  className="inline-flex h-11 items-center gap-2 rounded-full border border-outline-variant/60 px-6 font-label-md text-label-md text-on-surface transition-colors hover:bg-surface-container-low hover:border-outline-variant focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                  className="rounded-full px-6"
                 >
                   <span className="material-symbols-outlined text-[20px]">add</span>
                   Add topic
-                </button>
+                </SecondaryButton>
 
                 <div className="flex items-center gap-4 ml-auto">
-                  <button
+                  <SecondaryButton
                     type="button"
                     onClick={() => {
-                      setCreateError("");
                       setStep(1);
                     }}
-                    className="h-11 rounded-full px-6 font-label-md text-label-md text-on-surface-variant transition-colors hover:bg-surface-container-low hover:text-on-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                    className="rounded-full px-6 bg-transparent border-transparent text-on-surface-variant hover:text-on-surface shadow-none"
                   >
                     Back to source
-                  </button>
+                  </SecondaryButton>
                   <PrimaryButton
                     type="button"
                     onClick={handleCreate}

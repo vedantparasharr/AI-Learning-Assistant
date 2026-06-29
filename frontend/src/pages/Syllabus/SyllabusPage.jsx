@@ -1,38 +1,28 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import studyPlanService from "../../services/studyPlanService";
 import topicService from "../../services/topicService";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { PageShell } from "../../components/common/ui";
 
 const SyllabusPage = () => {
   const { planId } = useParams();
   const navigate = useNavigate();
-  const [plan, setPlan] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    const fetchOverview = async () => {
-      try {
-        setLoading(true);
-        setError("");
-        const response = await studyPlanService.getStudyPlanOverview(planId);
-        if (response?.success) {
-          setPlan(response.data);
-        } else {
-          setError("Failed to load study plan");
-        }
-      } catch (requestError) {
-        setError(requestError?.message || "Failed to load study plan");
-      } finally {
-        setLoading(false);
+  const { data: plan, isLoading: loading, error: queryError } = useQuery({
+    queryKey: ['studyPlan', planId],
+    queryFn: async () => {
+      const response = await studyPlanService.getStudyPlanOverview(planId);
+      if (!response?.success) {
+        throw new Error("Failed to load study plan");
       }
-    };
+      return response.data;
+    },
+    enabled: !!planId,
+  });
 
-    if (planId) {
-      fetchOverview();
-    }
-  }, [planId]);
+  const error = queryError?.message || "";
 
   // Compute progress percentage dynamically
   const progress = useMemo(() => {
@@ -50,37 +40,34 @@ const SyllabusPage = () => {
       .reduce((sum, t) => sum + (t.estimated_hours || 1), 0);
   }, [plan]);
 
-  const toggleTopicCompletion = async (topicKey, currentStatus) => {
-    const nextStatus = currentStatus === "completed" ? "in_progress" : "completed";
+  const toggleMutation = useMutation({
+    mutationFn: ({ topicKey, nextStatus }) => topicService.markTopicCompleted(topicKey, nextStatus),
+    onMutate: async ({ topicKey, nextStatus }) => {
+      await queryClient.cancelQueries({ queryKey: ['studyPlan', planId] });
+      const previousPlan = queryClient.getQueryData(['studyPlan', planId]);
 
-    // Optimistic Update
-    setPlan((currentPlan) => {
-      if (!currentPlan) return currentPlan;
-      const updatedTopics = currentPlan.topics.map((t) =>
-        t.topic_key === topicKey ? { ...t, completionStatus: nextStatus } : t
-      );
-      return {
-        ...currentPlan,
-        topics: updatedTopics,
-      };
-    });
-
-    try {
-      await topicService.markTopicCompleted(topicKey, nextStatus);
-    } catch (err) {
-      console.error("Failed to update topic completion status", err);
-      // Rollback on failure
-      setPlan((currentPlan) => {
-        if (!currentPlan) return currentPlan;
-        const revertedTopics = currentPlan.topics.map((t) =>
-          t.topic_key === topicKey ? { ...t, completionStatus: currentStatus } : t
+      queryClient.setQueryData(['studyPlan', planId], (old) => {
+        if (!old) return old;
+        const updatedTopics = old.topics.map((t) =>
+          t.topic_key === topicKey ? { ...t, completionStatus: nextStatus } : t
         );
         return {
-          ...currentPlan,
-          topics: revertedTopics,
+          ...old,
+          topics: updatedTopics,
         };
       });
+
+      return { previousPlan };
+    },
+    onError: (err, newTodo, context) => {
+      console.error("Failed to update topic completion status", err);
+      queryClient.setQueryData(['studyPlan', planId], context.previousPlan);
     }
+  });
+
+  const toggleTopicCompletion = (topicKey, currentStatus) => {
+    const nextStatus = currentStatus === "completed" ? "in_progress" : "completed";
+    toggleMutation.mutate({ topicKey, nextStatus });
   };
 
   const modules = useMemo(() => plan?.topics || [], [plan]);
@@ -93,7 +80,7 @@ const SyllabusPage = () => {
           <div className="h-10 w-3/4 max-w-2xl bg-surface-container rounded-lg" />
           <div className="h-6 w-1/2 max-w-xl bg-surface-container rounded mt-4" />
         </div>
-        <div className="bg-surface-container-lowest p-5 rounded-xl border border-outline-variant/60 shadow-[0_4px_15px_-5px_rgba(13,28,46,0.08)] max-w-3xl mt-4">
+        <div className="bg-surface-container-lowest p-5 rounded-xl border border-outline-variant/60 max-w-3xl mt-4">
           <div className="h-4 w-32 bg-surface-container rounded mb-2" />
           <div className="h-8 w-48 bg-surface-container rounded mb-4" />
           <div className="h-2 w-full bg-surface-container rounded-full" />
@@ -149,7 +136,7 @@ const SyllabusPage = () => {
         >
 
 
-        <div className="bg-surface-container-lowest p-5 rounded-xl border border-outline-variant/60 shadow-[0_4px_15px_-5px_rgba(13,28,46,0.08)] max-w-3xl">
+        <div className="bg-surface-container-lowest p-5 rounded-xl border border-outline-variant/60 max-w-3xl">
           <div className="flex justify-between items-end mb-4">
             <div>
               <span className="font-label-sm text-label-sm text-primary uppercase tracking-wider block mb-1">
@@ -183,7 +170,7 @@ const SyllabusPage = () => {
           {modules.map((topic, index) => (
             <article
               key={topic.topic_key}
-              className="bg-surface-container-lowest rounded-xl p-4 shadow-[0_2px_8px_-4px_rgba(13,28,46,0.08)] border border-outline-variant/60 hover:shadow-sm transition-all flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between group cursor-pointer"
+              className="bg-surface-container-lowest rounded-xl p-4 border border-outline-variant/60 hover:shadow-sm transition-all flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between group cursor-pointer"
               onClick={() => navigate(`/study/${topic.topic_key}`)}
             >
               <div className="flex items-center gap-3 min-w-0 flex-1">

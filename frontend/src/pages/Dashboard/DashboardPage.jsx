@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import dashboardService from "../../services/dashboardService";
 import ActivityHeatmap from "../../components/dashboard/ActivityHeatmap";
-import { PageShell } from "../../components/common/ui";
+import { PageShell, PrimaryLinkButton, InlineLinkButton, TextLink } from "../../components/common/ui";
 
 
 
@@ -115,22 +115,22 @@ const DashboardPage = () => {
         actions={
           <>
             {/* Review Cards Button */}
-            <Link
+            <PrimaryLinkButton
               to="/flashcards"
-              className="bg-primary hover:opacity-80 text-on-primary font-label-md text-label-md px-5 py-3 sm:py-2.5 rounded-lg transition-opacity flex items-center justify-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
+              className="px-5 py-3 sm:py-2.5"
             >
               <span className="material-symbols-outlined text-[1.125rem]">psychology</span>
               Review cards
-            </Link>
+            </PrimaryLinkButton>
 
             {/* New Plan Button */}
-            <Link
+            <InlineLinkButton
               to="/study-plan/new"
-              className="border border-outline-variant bg-surface-container-lowest hover:bg-surface-container-low text-on-surface font-label-md text-label-md px-5 py-3 sm:py-2.5 rounded-lg transition-colors flex items-center justify-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
+              className="px-5 py-3 sm:py-2.5"
             >
               <span className="material-symbols-outlined text-[1.125rem]">add</span>
               New plan
-            </Link>
+            </InlineLinkButton>
           </>
         }
       >
@@ -220,15 +220,15 @@ const DashboardPage = () => {
               <h2 className="font-h2 text-h2 text-on-surface">
                 Recent Study Plans
               </h2>
-              <Link
+              <TextLink
                 to="/plans"
-                className="font-label-md text-label-md text-primary hover:text-on-primary-fixed-variant flex items-center gap-1 transition-colors"
+                className="flex items-center gap-1"
               >
                 View All
                 <span className="material-symbols-outlined text-[1rem]">
                   arrow_forward
                 </span>
-              </Link>
+              </TextLink>
             </div>
 
             {subjects.length > 0 ? (
@@ -245,12 +245,12 @@ const DashboardPage = () => {
                 <p className="text-on-surface-variant font-body-sm text-body-sm">
                   No active study plans found. Get started by creating your first plan.
                 </p>
-                <Link
+                <TextLink
                   to="/study-plan/new"
-                  className="text-primary font-semibold text-sm mt-2 inline-block hover:underline"
+                  className="font-semibold text-sm mt-2 inline-block"
                 >
                   Create your first plan
-                </Link>
+                </TextLink>
               </div>
             )}
           </div>

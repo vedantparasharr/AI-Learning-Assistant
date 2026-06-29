@@ -1,6 +1,7 @@
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useMutation } from "@tanstack/react-query";
 import authService from "../../services/authService";
 import { Input, PrimaryButton } from "../../components/common/ui";
 import Logo from "../../components/common/Logo";
@@ -16,9 +17,25 @@ const RegisterPage = () => {
     password: "",
     confirmPassword: "",
   });
-  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = async (event) => {
+  const registerMutation = useMutation({
+    mutationFn: ({ username, email, password }) => authService.register(username, email, password),
+    onSuccess: (response, variables) => {
+      toast.success(response.message || "OTP sent to your email");
+      const params = new URLSearchParams({ email: variables.email });
+      if (returnTo) {
+        params.set("returnTo", returnTo);
+      }
+      navigate(`/verify-email?${params.toString()}`, {
+        replace: true,
+      });
+    },
+    onError: (error) => {
+      toast.error(error.error || error.message || "Unable to create account");
+    }
+  });
+
+  const handleSubmit = (event) => {
     event.preventDefault();
 
     if (form.password !== form.confirmPassword) {
@@ -26,24 +43,10 @@ const RegisterPage = () => {
       return;
     }
 
-    setSubmitting(true);
-
-    try {
-      const response = await authService.register(form.username, form.email, form.password);
-      toast.success(response.message || "OTP sent to your email");
-      const params = new URLSearchParams({ email: form.email });
-      if (returnTo) {
-        params.set("returnTo", returnTo);
-      }
-      navigate(`/verify-email?${params.toString()}`, {
-        replace: true,
-      });
-    } catch (error) {
-      toast.error(error.error || error.message || "Unable to create account");
-    } finally {
-      setSubmitting(false);
-    }
+    registerMutation.mutate(form);
   };
+
+  const submitting = registerMutation.isPending;
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background text-on-surface p-md">
@@ -63,6 +66,7 @@ const RegisterPage = () => {
               placeholder="Username"
               required
               autoComplete="name"
+              maxLength={50}
               value={form.username}
               onChange={(event) => setForm((current) => ({ ...current, username: event.target.value }))}
             />
@@ -74,6 +78,7 @@ const RegisterPage = () => {
               placeholder="Email"
               required
               autoComplete="email"
+              maxLength={255}
               value={form.email}
               onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))}
             />
@@ -85,6 +90,7 @@ const RegisterPage = () => {
               placeholder="Password"
               required
               autoComplete="new-password"
+              maxLength={255}
               value={form.password}
               onChange={(event) => setForm((current) => ({ ...current, password: event.target.value }))}
             />
@@ -96,6 +102,7 @@ const RegisterPage = () => {
               placeholder="Confirm password"
               required
               autoComplete="new-password"
+              maxLength={255}
               value={form.confirmPassword}
               onChange={(event) => setForm((current) => ({ ...current, confirmPassword: event.target.value }))}
             />

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -6,65 +6,44 @@ import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 import topicService from "../../services/topicService";
 import { useAuth } from "../../context/AuthContext";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { LoadingState, ErrorState, PrimaryButton, SecondaryButton, PageShell } from "../../components/common/ui";
 
 const TopicStudyPage = () => {
 	const { topicKey } = useParams();
 	const navigate = useNavigate();
-	const [payload, setPayload] = useState(null);
-	const [loading, setLoading] = useState(true);
-	const [error, setError] = useState("");
-	const [completing, setCompleting] = useState(false);
+	const queryClient = useQueryClient();
 	const [completionMessage, setCompletionMessage] = useState("");
 
-	useEffect(() => {
-		let cancelled = false;
-
-		const loadTopic = async (attempt = 0) => {
-			try {
-				if (attempt === 0) {
-					setLoading(true);
-					setError("");
-				}
-
+	const { data: payload, isLoading: loading, error: queryError } = useQuery({
+		queryKey: ['topicContent', topicKey],
+		queryFn: async () => {
+			let attempt = 0;
+			while (attempt < 25) {
 				const response = await topicService.generateTopicContent(topicKey);
 				const status = response?.status;
 				const body = response?.body;
 
-				if (cancelled) {
-					return;
-				}
-
 				if (status === 200 && body?.success) {
-					setPayload(body.data);
-					setLoading(false);
-					return;
+					return body.data;
 				}
 
-				if (status === 202 && attempt < 25) {
-					window.setTimeout(() => {
-						loadTopic(attempt + 1);
-					}, 1800);
-					return;
+				if (status === 202) {
+					attempt++;
+					await new Promise((resolve) => setTimeout(resolve, 1800));
+					continue;
 				}
 
 				throw new Error(body?.error || body?.message || "Failed to load topic content");
-			} catch (requestError) {
-				if (!cancelled) {
-					setError(requestError?.message || "Failed to load topic content");
-					setLoading(false);
-				}
 			}
-		};
+			throw new Error("Failed to load topic content (timeout)");
+		},
+		enabled: !!topicKey,
+		staleTime: 5 * 60 * 1000,
+		retry: false,
+	});
 
-		if (topicKey) {
-			loadTopic();
-		}
-
-		return () => {
-			cancelled = true;
-		};
-	}, [topicKey]);
+	const error = queryError?.message || "";
 
 	const topic = payload?.topic;
 	const markdownNotes = payload?.content?.notes || "";
@@ -72,41 +51,47 @@ const TopicStudyPage = () => {
 	const curatedVideos = useMemo(() => payload?.curatedVideos || [], [payload]);
 	const mastery = payload?.mastery || {};
 
-	const handleMarkCompleted = async () => {
-		if (!topic?.topic_key || completing) {
-			return;
-		}
+	const markCompletedMutation = useMutation({
+		mutationFn: () => topicService.markTopicCompleted(topic.topic_key),
+		onMutate: async () => {
+			await queryClient.cancelQueries({ queryKey: ['topicContent', topicKey] });
+			const previousPayload = queryClient.getQueryData(['topicContent', topicKey]);
 
-		try {
-			setCompleting(true);
-			setCompletionMessage("");
-			const response = await topicService.markTopicCompleted(topic.topic_key);
-			const update = response?.data || {};
-
-			setPayload((previous) => {
-				if (!previous) {
-					return previous;
-				}
-
+			queryClient.setQueryData(['topicContent', topicKey], (old) => {
+				if (!old) return old;
 				return {
-					...previous,
+					...old,
 					topic: {
-						...previous.topic,
+						...old.topic,
 						completionStatus: "completed",
 					},
 					mastery: {
-						...previous.mastery,
+						...old.mastery,
 						status: "completed",
 					},
 				};
 			});
 
+			return { previousPayload };
+		},
+		onError: (err, newTodo, context) => {
+			queryClient.setQueryData(['topicContent', topicKey], context.previousPayload);
+			setCompletionMessage(err?.message || "Could not update completion status.");
+		},
+		onSuccess: (response) => {
+			const update = response?.data || {};
 			setCompletionMessage(`Marked completed. Plan progress is now ${update.progressPercentage || 0}%.`);
-		} catch (requestError) {
-			setCompletionMessage(requestError?.message || "Could not update completion status.");
-		} finally {
-			setCompleting(false);
 		}
+	});
+
+	const completing = markCompletedMutation.isPending;
+
+	const handleMarkCompleted = () => {
+		if (!topic?.topic_key || completing) {
+			return;
+		}
+		setCompletionMessage("");
+		markCompletedMutation.mutate();
 	};
 
 	if (loading) {

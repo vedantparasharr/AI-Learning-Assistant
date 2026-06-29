@@ -3,6 +3,7 @@ import toast from "react-hot-toast";
 import authService from "../../services/authService";
 import { Input, PrimaryButton, SecondaryButton, PageShell } from "../../components/common/ui";
 import { useAuth } from "../../context/AuthContext";
+import { useMutation } from "@tanstack/react-query";
 
 const ProfilePage = () => {
   const { user, updateUser, logout } = useAuth();
@@ -16,8 +17,7 @@ const ProfilePage = () => {
     newPassword: "",
     confirmPassword: "",
   });
-  const [savingProfile, setSavingProfile] = useState(false);
-  const [savingPassword, setSavingPassword] = useState(false);
+
 
   // Preference settings state
   const [studyGoal, setStudyGoal] = useState(() => {
@@ -80,26 +80,46 @@ const ProfilePage = () => {
     });
   };
 
-  const handleProfileSubmit = async (event) => {
-    event.preventDefault();
-
-    try {
-      setSavingProfile(true);
-      const response = await authService.updateProfile(profileForm);
+  const profileMutation = useMutation({
+    mutationFn: (form) => authService.updateProfile(form),
+    onSuccess: (response) => {
       updateUser(response.data);
       toast.success(response.message || "Profile updated");
-    } catch (requestError) {
+    },
+    onError: (requestError) => {
       toast.error(
         requestError.error ||
           requestError.message ||
           "Could not update profile",
       );
-    } finally {
-      setSavingProfile(false);
     }
+  });
+
+  const handleProfileSubmit = (event) => {
+    event.preventDefault();
+    profileMutation.mutate(profileForm);
   };
 
-  const handlePasswordSubmit = async (event) => {
+  const passwordMutation = useMutation({
+    mutationFn: (form) => authService.changePassword(form),
+    onSuccess: (response) => {
+      toast.success(response.message || "Password changed");
+      setPasswordForm({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
+    },
+    onError: (requestError) => {
+      toast.error(
+        requestError.error ||
+          requestError.message ||
+          "Could not change password",
+      );
+    }
+  });
+
+  const handlePasswordSubmit = (event) => {
     event.preventDefault();
 
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
@@ -107,25 +127,11 @@ const ProfilePage = () => {
       return;
     }
 
-    try {
-      setSavingPassword(true);
-      const response = await authService.changePassword(passwordForm);
-      toast.success(response.message || "Password changed");
-      setPasswordForm({
-        currentPassword: "",
-        newPassword: "",
-        confirmPassword: "",
-      });
-    } catch (requestError) {
-      toast.error(
-        requestError.error ||
-          requestError.message ||
-          "Could not change password",
-      );
-    } finally {
-      setSavingPassword(false);
-    }
+    passwordMutation.mutate(passwordForm);
   };
+
+  const savingProfile = profileMutation.isPending;
+  const savingPassword = passwordMutation.isPending;
 
   return (
     <div className="bg-background text-on-background min-h-screen flex flex-col pb-safe">
@@ -181,6 +187,7 @@ const ProfilePage = () => {
                   <Input
                     type="text"
                     label="Full Name"
+                    maxLength={50}
                     value={profileForm.username}
                     onChange={(event) =>
                       setProfileForm((current) => ({
@@ -192,6 +199,7 @@ const ProfilePage = () => {
                   <Input
                     type="email"
                     label="Email Address"
+                    maxLength={255}
                     value={profileForm.email}
                     onChange={(event) =>
                       setProfileForm((current) => ({
@@ -225,6 +233,7 @@ const ProfilePage = () => {
                 label="Current Password"
                 placeholder="••••••••"
                 type="password"
+                maxLength={255}
                 value={passwordForm.currentPassword}
                 onChange={(event) =>
                   setPasswordForm((current) => ({
@@ -238,6 +247,7 @@ const ProfilePage = () => {
                 label="New Password"
                 placeholder="Enter new password"
                 type="password"
+                maxLength={255}
                 value={passwordForm.newPassword}
                 onChange={(event) =>
                   setPasswordForm((current) => ({
@@ -251,6 +261,7 @@ const ProfilePage = () => {
                 label="Confirm New Password"
                 placeholder="Confirm new password"
                 type="password"
+                maxLength={255}
                 value={passwordForm.confirmPassword}
                 onChange={(event) =>
                   setPasswordForm((current) => ({

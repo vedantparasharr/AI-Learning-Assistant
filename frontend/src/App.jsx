@@ -11,7 +11,7 @@ import VerifyEmailPage from "./pages/Auth/VerifyEmailPage";
 import NotFoundPage from "./pages/NotFoundPage";
 import DashboardPage from "./pages/Dashboard/DashboardPage";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
-import RequireAuth from "./components/auth/RequireAuth";
+
 import ReviewQueuePage from "./pages/Flashcards/ReviewQueuePage";
 import StudyPlanBuilderPage from "./pages/StudyPlan/StudyPlanBuilderPage";
 import StudyPlans from "./pages/StudyPlans/StudyPlans";
@@ -90,8 +90,7 @@ const App = () => {
           <Route path="/flashcards" element={<ReviewQueuePage />} />
         </Route>
 
-        <Route element={<RequireAuth />}>
-        </Route>
+
 
         <Route path="*" element={<NotFoundPage />} />
       </Routes>

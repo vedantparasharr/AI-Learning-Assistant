@@ -12,6 +12,7 @@ import {
   PageShell,
   PrimaryButton,
   SecondaryButton,
+  IconButton,
 } from "../../components/common/ui";
 import studyPlanService from "../../services/studyPlanService";
 import { formatDate } from "../../utils/formatters";
@@ -207,7 +208,7 @@ const StudyPlans = () => {
           {filteredAndSortedPlans.map((plan) => (
             <article
               key={plan.planId}
-              className="bg-surface-container-lowest rounded-xl p-4 shadow-[0_2px_8px_-4px_rgba(13,28,46,0.08)] border border-outline-variant/60 hover:shadow-sm transition-all flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between group cursor-pointer"
+              className="bg-surface-container-lowest rounded-xl p-4 border border-outline-variant/60 hover:shadow-sm transition-all flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between group cursor-pointer"
               onClick={() => navigate(`/plans/${plan.planId}`)}
             >
               <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -248,9 +249,9 @@ const StudyPlans = () => {
                 </div>
 
                 <div className="flex items-center gap-2 shrink-0">
-                  <button
-                    type="button"
-                    className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-on-surface-variant transition-colors hover:bg-error-container hover:text-error focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-error/20"
+                  <IconButton
+                    variant="danger"
+                    className="!h-9 !w-9 !rounded-lg"
                     onClick={(e) => {
                       e.stopPropagation();
                       requestDeletePlan(plan);
@@ -263,7 +264,7 @@ const StudyPlans = () => {
                     ) : (
                       <span className="material-symbols-outlined text-[18px]">delete</span>
                     )}
-                  </button>
+                  </IconButton>
                 </div>
               </div>
             </article>

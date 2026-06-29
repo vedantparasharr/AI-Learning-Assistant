@@ -146,6 +146,39 @@ export const InlineLinkButton = ({ to, className = "", children }) => (
   </Link>
 );
 
+export const TextLink = ({ to, className = "", children, ...props }) => (
+  <Link
+    to={to}
+    className={`font-label-md text-label-md text-primary hover:text-primary-container hover:underline transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 rounded ${className}`.trim()}
+    {...props}
+  >
+    {children}
+  </Link>
+);
+
+export const IconButton = ({ 
+  icon, 
+  variant = "ghost", // ghost, danger
+  className = "", 
+  children,
+  ...props 
+}) => {
+  const variants = {
+    ghost: "text-on-surface-variant/50 hover:bg-surface-container-high hover:text-on-surface focus-visible:ring-primary/50",
+    danger: "text-on-surface-variant/50 hover:bg-error-container hover:text-error focus-visible:ring-error/50",
+  };
+  
+  return (
+    <button
+      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-all focus-visible:outline-none focus-visible:ring-2 disabled:opacity-50 disabled:cursor-not-allowed ${variants[variant]} ${className}`.trim()}
+      {...props}
+    >
+      {icon && <span className="material-symbols-outlined text-[20px]">{icon}</span>}
+      {children}
+    </button>
+  );
+};
+
 export const Input = ({
   id,
   label,

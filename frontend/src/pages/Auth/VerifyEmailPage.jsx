@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { useMutation } from "@tanstack/react-query";
 import authService from "../../services/authService";
 import { PrimaryButton, SecondaryButton } from "../../components/common/ui";
 import Logo from "../../components/common/Logo";
@@ -51,8 +52,6 @@ const VerifyEmailPage = () => {
   }, [location.search]);
 
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
-  const [submitting, setSubmitting] = useState(false);
-  const [resending, setResending] = useState(false);
   const [cooldown, setCooldown] = useState(() => getRemainingCooldown(email));
 
   useEffect(() => {
@@ -105,7 +104,19 @@ const VerifyEmailPage = () => {
     inputRefs.current[Math.min(pasted.length, 5)]?.focus();
   };
 
-  const handleSubmit = async (event) => {
+  const verifyMutation = useMutation({
+    mutationFn: ({ email, code }) => authService.verifyEmail(email, code),
+    onSuccess: (response) => {
+      login(response.data.user);
+      toast.success(response.message || "Email verified successfully");
+      navigate(returnTo, { replace: true });
+    },
+    onError: (error) => {
+      toast.error(error.error || error.message || "Verification failed");
+    }
+  });
+
+  const handleSubmit = (event) => {
     event.preventDefault();
 
     if (!email) {
@@ -119,28 +130,12 @@ const VerifyEmailPage = () => {
       return;
     }
 
-    setSubmitting(true);
-    try {
-      const response = await authService.verifyEmail(email, code);
-      login(response.data.user);
-      toast.success(response.message || "Email verified successfully");
-      navigate(returnTo, { replace: true });
-    } catch (error) {
-      toast.error(error.error || error.message || "Verification failed");
-    } finally {
-      setSubmitting(false);
-    }
+    verifyMutation.mutate({ email, code });
   };
 
-  const handleResendOtp = async () => {
-    if (!email) {
-      toast.error("Missing email. Please register again.");
-      return;
-    }
-
-    setResending(true);
-    try {
-      const response = await authService.resendOtp(email);
+  const resendMutation = useMutation({
+    mutationFn: () => authService.resendOtp(email),
+    onSuccess: (response) => {
       toast.success(response.message || "OTP sent again");
       if (typeof window !== "undefined") {
         localStorage.setItem(
@@ -149,12 +144,23 @@ const VerifyEmailPage = () => {
         );
       }
       setCooldown(RESEND_COOLDOWN_SECONDS);
-    } catch (error) {
+    },
+    onError: (error) => {
       toast.error(error.error || error.message || "Unable to resend OTP");
-    } finally {
-      setResending(false);
     }
+  });
+
+  const handleResendOtp = () => {
+    if (!email) {
+      toast.error("Missing email. Please register again.");
+      return;
+    }
+
+    resendMutation.mutate();
   };
+
+  const submitting = verifyMutation.isPending;
+  const resending = resendMutation.isPending;
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background text-on-surface p-md">
