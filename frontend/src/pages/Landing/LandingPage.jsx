@@ -76,7 +76,8 @@ export default function LandingPage() {
           <ul className="hidden md:flex items-center gap-7">
             <li><a href="#features" className="text-sm text-on-surface-variant hover:text-on-background transition-colors">Features</a></li>
             <li><a href="#how-it-works" className="text-sm text-on-surface-variant hover:text-on-background transition-colors">How it works</a></li>
-            <li><a href="#testimonials" className="text-sm text-on-surface-variant hover:text-on-background transition-colors">Stories</a></li>
+            <li><Link to="/blog" className="text-sm text-on-surface-variant hover:text-on-background transition-colors">Blog</Link></li>
+            <li><Link to="/about" className="text-sm text-on-surface-variant hover:text-on-background transition-colors">About</Link></li>
           </ul>
 
           <div className="flex items-center gap-2">
@@ -245,7 +246,7 @@ export default function LandingPage() {
                 <Logo className="h-5" />
               </div>
               <div className="text-[13px] text-on-surface-variant">Focus on learning, not planning.</div>
-              <div className="text-[12px] text-on-surface-variant font-mono mt-4">© 2026 DistillLearn. All rights reserved.</div>
+              <div className="text-[12px] text-on-surface-variant font-mono mt-4">© 2026 DistillAI. All rights reserved.</div>
             </div>
 
             <div className="flex flex-col md:flex-row gap-8 md:gap-16">
@@ -255,6 +256,9 @@ export default function LandingPage() {
                   <li><Link to="/register" className="text-[13px] text-on-surface-variant hover:text-on-background transition-colors">Get started</Link></li>
                   <li><a href="#features" className="text-[13px] text-on-surface-variant hover:text-on-background transition-colors">Features</a></li>
                   <li><a href="#how-it-works" className="text-[13px] text-on-surface-variant hover:text-on-background transition-colors">How it works</a></li>
+                  <li><Link to="/blog" className="text-[13px] text-on-surface-variant hover:text-on-background transition-colors">Blog</Link></li>
+                  <li><Link to="/about" className="text-[13px] text-on-surface-variant hover:text-on-background transition-colors">About</Link></li>
+                  <li><Link to="/contact" className="text-[13px] text-on-surface-variant hover:text-on-background transition-colors">Contact</Link></li>
                 </ul>
               </div>
               <div>
@@ -263,6 +267,13 @@ export default function LandingPage() {
                   <li><Link to="/login" className="text-[13px] text-on-surface-variant hover:text-on-background transition-colors">Sign in</Link></li>
                   <li><Link to="/register" className="text-[13px] text-on-surface-variant hover:text-on-background transition-colors">Register</Link></li>
                   <li><Link to="/help-center" className="text-[13px] text-on-surface-variant hover:text-on-background transition-colors">Help center</Link></li>
+                </ul>
+              </div>
+              <div>
+                <h4 className="text-[12px] font-medium text-on-surface-variant uppercase tracking-widest font-mono mb-3">Legal</h4>
+                <ul className="flex flex-col gap-2 m-0 p-0 list-none">
+                  <li><Link to="/privacy-policy" className="text-[13px] text-on-surface-variant hover:text-on-background transition-colors">Privacy Policy</Link></li>
+                  <li><Link to="/terms-of-service" className="text-[13px] text-on-surface-variant hover:text-on-background transition-colors">Terms of Service</Link></li>
                 </ul>
               </div>
             </div>

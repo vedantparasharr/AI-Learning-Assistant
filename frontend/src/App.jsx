@@ -23,6 +23,14 @@ import LandingPage from "./pages/Landing/LandingPage";
 import { useAuth } from "./context/AuthContext";
 import { Analytics } from "@vercel/analytics/react";
 
+// Public content pages (Blog + Legal) — outside ProtectedRoute
+import BlogIndexPage from "./pages/Blog/BlogIndexPage";
+import BlogPostPage from "./pages/Blog/BlogPostPage";
+import PrivacyPolicyPage from "./pages/Legal/PrivacyPolicyPage";
+import TermsOfServicePage from "./pages/Legal/TermsOfServicePage";
+import AboutPage from "./pages/Legal/AboutPage";
+import ContactPage from "./pages/Legal/ContactPage";
+
 const App = () => {
   const { isAuthenticated, loading } = useAuth();
 
@@ -91,6 +99,13 @@ const App = () => {
         </Route>
 
 
+
+        <Route path="/blog" element={<BlogIndexPage />} />
+        <Route path="/blog/:slug" element={<BlogPostPage />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+        <Route path="/terms-of-service" element={<TermsOfServicePage />} />
+        <Route path="/about" element={<AboutPage />} />
+        <Route path="/contact" element={<ContactPage />} />
 
         <Route path="*" element={<NotFoundPage />} />
       </Routes>

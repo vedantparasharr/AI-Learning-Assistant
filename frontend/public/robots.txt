@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+
+# Block app pages that require login (nothing for crawlers to see there)
+Disallow: /dashboard
+Disallow: /plans
+Disallow: /study/
+Disallow: /study-plan/
+Disallow: /flashcards
+Disallow: /profile
+
+Sitemap: https://www.distillai.tech/sitemap.xml
