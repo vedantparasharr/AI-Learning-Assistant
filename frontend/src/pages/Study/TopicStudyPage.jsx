@@ -1,11 +1,14 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
+import "katex/dist/katex.min.css";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 import topicService from "../../services/topicService";
-import { useAuth } from "../../context/AuthContext";
+import { API_PATHS, BASE_URL } from "../../utils/apiPaths";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { LoadingState, ErrorState, PrimaryButton, SecondaryButton, PageShell } from "../../components/common/ui";
 
@@ -14,6 +17,11 @@ const TopicStudyPage = () => {
 	const navigate = useNavigate();
 	const queryClient = useQueryClient();
 	const [completionMessage, setCompletionMessage] = useState("");
+	const [streamingNotes, setStreamingNotes] = useState("");
+	const [streamingVideos, setStreamingVideos] = useState(null);
+	const [isStreaming, setIsStreaming] = useState(false);
+	const [streamError, setStreamError] = useState(null);
+	const streamInitiatedRef = useRef(false);
 
 	const { data: payload, isLoading: loading, error: queryError } = useQuery({
 		queryKey: ['topicContent', topicKey],
@@ -46,10 +54,115 @@ const TopicStudyPage = () => {
 	const error = queryError?.message || "";
 
 	const topic = payload?.topic;
-	const markdownNotes = payload?.content?.notes || "";
+	const dbNotes = payload?.content?.notes || "";
 	const notesSections = useMemo(() => payload?.notesSections || [], [payload]);
-	const curatedVideos = useMemo(() => payload?.curatedVideos || [], [payload]);
+	const dbVideos = useMemo(() => payload?.curatedVideos || [], [payload]);
 	const mastery = payload?.mastery || {};
+
+	// Derive final values (streaming takes precedence over db values)
+	const markdownNotes = streamingNotes || dbNotes;
+	const curatedVideos = streamingVideos || dbVideos;
+
+	// Reset stream state when topicKey changes
+	useEffect(() => {
+		streamInitiatedRef.current = false;
+		setStreamingNotes("");
+		setStreamingVideos(null);
+		setIsStreaming(false);
+		setStreamError(null);
+	}, [topicKey]);
+
+	useEffect(() => {
+		if (payload && !dbNotes && !streamInitiatedRef.current) {
+			streamInitiatedRef.current = true;
+			setIsStreaming(true);
+			setStreamError(null);
+			
+			const fetchStream = async () => {
+				let attempt = 0;
+				const maxAttempts = 5;
+				let success = false;
+
+				while (attempt < maxAttempts && !success) {
+					attempt++;
+					try {
+						const url = (BASE_URL || "") + API_PATHS.TOPICS.STREAM(topicKey);
+						const response = await fetch(url, { credentials: "include" });
+						
+						if (!response.body) return;
+						
+						const reader = response.body.getReader();
+						const decoder = new TextDecoder();
+						
+						let done = false;
+						let currentNotes = "";
+						let buffer = "";
+						let lastUpdateTime = 0;
+						let streamFailed = false;
+
+						// Reset errors/notes for this attempt silently
+						setStreamError(null);
+						setStreamingNotes("");
+
+						while (!done && !streamFailed) {
+							const { value, done: doneReading } = await reader.read();
+							done = doneReading;
+							if (value) {
+								buffer += decoder.decode(value, { stream: true });
+								let parts = buffer.split('\n\n');
+								buffer = parts.pop();
+								
+								for (const part of parts) {
+									if (part.startsWith('data: ')) {
+										try {
+											const data = JSON.parse(part.substring(6));
+											if (data.type === 'video') {
+												setStreamingVideos(data.curatedVideos);
+											} else if (data.type === 'chunk') {
+												currentNotes += data.text;
+											} else if (data.type === 'error') {
+												streamFailed = true;
+												done = true;
+											} else if (data.type === 'done') {
+												success = true;
+											}
+										} catch (e) {
+											console.error("SSE parse error", e);
+										}
+									}
+								}
+								
+								const now = Date.now();
+								// Throttle React state updates to 50ms for smooth Markdown rendering
+								if (now - lastUpdateTime > 50) {
+									setStreamingNotes(currentNotes);
+									lastUpdateTime = now;
+								}
+							}
+						}
+						// Ensure the final chunks are rendered for this attempt
+						setStreamingNotes(currentNotes);
+
+						if (success) {
+							break; // Successfully finished
+						}
+
+						// If not successful, wait before the next attempt
+						await new Promise(res => setTimeout(res, 2000));
+					} catch (err) {
+						console.error(`Stream fetch failed on attempt ${attempt}:`, err);
+						await new Promise(res => setTimeout(res, 2000));
+					}
+				}
+
+				if (!success) {
+					setStreamError("Connection lost while generating notes. Please refresh to try again.");
+				}
+				setIsStreaming(false);
+			};
+			fetchStream();
+		}
+	}, [payload, dbNotes, topicKey]);
 
 	const markCompletedMutation = useMutation({
 		mutationFn: () => topicService.markTopicCompleted(topic.topic_key),
@@ -147,7 +260,7 @@ const TopicStudyPage = () => {
 			<div className="flex-1 w-full max-w-container-max mx-auto">
 				<PageShell
 					breadcrumbs={
-						<nav className="flex items-center gap-2 text-on-surface-variant font-label-sm text-label-sm uppercase tracking-wider">
+						<nav className="flex flex-wrap items-center gap-2 text-on-surface-variant font-label-sm text-label-sm uppercase tracking-wider">
 							<Link to="/plans" className="hover:text-primary transition-colors">
 								Study Plans
 							</Link>
@@ -156,7 +269,7 @@ const TopicStudyPage = () => {
 								{topic.subjectName}
 							</Link>
 							<span className="material-symbols-outlined text-[14px]">chevron_right</span>
-							<span className="text-primary font-semibold">{topic.name}</span>
+							<span className="text-primary font-semibold line-clamp-1 max-w-full break-all sm:break-normal">{topic.name}</span>
 						</nav>
 					}
 					title={topic.name}
@@ -193,14 +306,24 @@ const TopicStudyPage = () => {
 									<div className="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-primary">
 										<span className="material-symbols-outlined">psychiatry</span>
 									</div>
-									<h2 className="font-h2 text-h2 text-on-surface">AI Distilled Notes</h2>
+									<h2 className="font-h2 text-h2 text-on-surface">Study Notes</h2>
 								</div>
 
 								<div className="space-y-8 max-w-prose">
+									{streamError && (
+										<div className="bg-error/10 border border-error/20 p-4 rounded-lg flex items-start gap-3">
+											<span className="material-symbols-outlined text-error">error</span>
+											<div>
+												<p className="font-medium text-error mb-1">Generation Interrupted</p>
+												<p className="text-sm text-error/80">{streamError}</p>
+											</div>
+										</div>
+									)}
 									{markdownNotes ? (
 										<div className="space-y-6">
 											<ReactMarkdown
-												remarkPlugins={[remarkGfm]}
+												remarkPlugins={[remarkGfm, remarkMath]}
+												rehypePlugins={[rehypeKatex]}
 												components={{
 													h1: ({ children }) => <h1 className="text-3xl font-bold mb-4 mt-6 text-on-surface">{children}</h1>,
 													h2: ({ children }) => <h2 className="text-2xl font-semibold mb-4 mt-6 text-on-surface pb-1 border-b border-surface-variant">{children}</h2>,

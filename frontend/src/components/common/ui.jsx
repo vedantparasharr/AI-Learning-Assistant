@@ -1,20 +1,20 @@
 import { Link } from "react-router-dom";
 
 export const PageShell = ({ title, description, actions, breadcrumbs, children }) => (
-  <div className="space-y-lg">
-    <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-      <div className="space-y-xs">
-        {breadcrumbs ? <div className="mb-4">{breadcrumbs}</div> : null}
-        <h1 className="font-h1 text-h1 text-on-surface mb-xs">
+  <div className="flex flex-col gap-xl">
+    <div className="flex flex-col gap-md lg:flex-row lg:items-end lg:justify-between">
+      <div className="flex flex-col gap-xs flex-1 min-w-0">
+        {breadcrumbs ? <div className="mb-md">{breadcrumbs}</div> : null}
+        <h1 className="font-h1 text-h2 md:text-h1 text-on-surface tracking-tight break-words lg:max-w-[60%]">
           {title}
         </h1>
         {description ? (
-          <p className="font-body-md text-body-md font-medium text-on-surface-variant">
+          <p className="font-body-md text-body-md text-on-surface-variant max-w-[65ch]">
             {description}
           </p>
         ) : null}
       </div>
-      {actions ? <div className="flex w-full flex-wrap gap-3 lg:w-auto">{actions}</div> : null}
+      {actions ? <div className="flex w-full shrink-0 flex-wrap items-center gap-md lg:w-auto lg:justify-end">{actions}</div> : null}
     </div>
     {children}
   </div>
@@ -22,18 +22,18 @@ export const PageShell = ({ title, description, actions, breadcrumbs, children }
 
 export const SectionCard = ({ title, description, action, children, className = "" }) => (
   <section
-    className={`overflow-hidden rounded-xl border border-outline-variant/60 bg-surface-container-lowest p-lg ${className}`.trim()}
+    className={`flex flex-col gap-lg overflow-hidden rounded-xl border border-outline-variant/60 bg-surface-container-lowest p-lg shadow-sm ${className}`.trim()}
   >
     {(title || description || action) && (
-      <div className="mb-md flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div>
+      <div className="flex flex-col gap-md sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex flex-col gap-xs">
           {title ? (
-            <h2 className="font-h3 text-h3 text-on-background">
+            <h2 className="font-h3 text-h3 text-on-background tracking-tight">
               {title}
             </h2>
           ) : null}
           {description ? (
-            <p className="mt-xs font-body-sm text-body-sm text-on-surface-variant">{description}</p>
+            <p className="font-body-sm text-body-sm text-on-surface-variant max-w-[65ch]">{description}</p>
           ) : null}
         </div>
         {action ? <div className="shrink-0">{action}</div> : null}
@@ -78,13 +78,13 @@ export const EmptyState = ({
   compact = false,
 }) => (
   <div
-    className={`rounded-xl border border-dashed border-outline-variant bg-surface-container-low text-center ${compact ? "p-lg" : "p-xl"}`}
+    className={`flex flex-col items-center justify-center rounded-xl border border-dashed border-outline-variant bg-surface-container-low text-center ${compact ? "p-lg min-h-[200px]" : "p-xl min-h-[320px]"}`}
   >
-    <h3 className="font-h3 text-h3 text-on-background">{title}</h3>
-    <p className="mx-auto mt-xs max-w-2xl font-body-sm text-body-sm text-on-surface-variant">
+    <h3 className="font-h3 text-h3 text-on-background tracking-tight">{title}</h3>
+    <p className="mt-sm max-w-[65ch] font-body-sm text-body-sm text-on-surface-variant">
       {description}
     </p>
-    {action ? <div className="mt-4 flex justify-center">{action}</div> : null}
+    {action ? <div className="mt-lg flex justify-center">{action}</div> : null}
   </div>
 );
 
@@ -170,7 +170,7 @@ export const IconButton = ({
   
   return (
     <button
-      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-all focus-visible:outline-none focus-visible:ring-2 disabled:opacity-50 disabled:cursor-not-allowed ${variants[variant]} ${className}`.trim()}
+      className={`relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-all focus-visible:outline-none focus-visible:ring-2 disabled:opacity-50 disabled:cursor-not-allowed before:absolute before:-inset-2 before:content-[''] ${variants[variant]} ${className}`.trim()}
       {...props}
     >
       {icon && <span className="material-symbols-outlined text-[20px]">{icon}</span>}
@@ -203,7 +203,7 @@ export const Input = ({
       <div className="relative">
         {icon && (
           <span
-            className="material-symbols-outlined pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[20px] text-on-surface-variant"
+            className="material-symbols-outlined pointer-events-none absolute left-md top-1/2 -translate-y-1/2 text-[20px] text-on-surface-variant"
             aria-hidden="true"
           >
             {icon}
@@ -211,7 +211,7 @@ export const Input = ({
         )}
         <input
           id={inputId}
-          className={`text-xs block w-full py-2.5 bg-surface-container-lowest border rounded-lg font-body-md text-body-md text-on-surface placeholder:text-on-surface-variant outline-none transition-colors focus:ring-2 ${icon ? "pl-10 pr-4" : "px-sm"
+          className={`min-h-[44px] block w-full py-2 bg-surface-container-lowest border rounded-lg font-body-md text-[16px] md:text-body-md text-on-surface placeholder:text-on-surface-variant outline-none transition-colors focus:ring-2 ${icon ? "pl-11 pr-4" : "px-md"
             } ${error
               ? "border-error focus:border-error focus:ring-error/20"
               : "border-outline-variant/60 focus:border-primary focus:ring-primary/20"
@@ -250,7 +250,7 @@ export const Textarea = ({
       )}
       <textarea
         id={inputId}
-        className={`block w-full px-sm py-2.5 bg-surface-container-lowest border rounded-lg font-body-md text-body-md text-on-surface placeholder:text-on-surface-variant/60 outline-none transition-colors focus:ring-2 resize-y min-h-[100px] ${error
+        className={`block w-full px-sm py-2.5 bg-surface-container-lowest border rounded-lg font-body-md text-[16px] md:text-body-md text-on-surface placeholder:text-on-surface-variant/60 outline-none transition-colors focus:ring-2 resize-y min-h-[100px] ${error
             ? "border-error focus:border-error focus:ring-error/20"
             : "border-outline-variant/60 focus:border-primary focus:ring-primary/20"
           } ${className}`.trim()}

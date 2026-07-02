@@ -1,11 +1,11 @@
 import StudyPlan from "../models/StudyPlan.js";
 import TopicContent from "../models/TopicContent.js";
 import Flashcard from "../models/Flashcard.js";
-import { generateTopicNotes, extractFlashcardsFromNotes } from "./geminiService.js";
+import { generateTopicNotes, generateTopicNotesStream, extractFlashcardsFromNotes } from "./geminiService.js";
 import { getTopTopicVideos } from "./youtubeService.js";
 import { syncTopicCardsForUser } from "./flashcardService.js";
 
-const findTopicInPlan = async (userId, topicKey) => {
+export const findTopicInPlan = async (userId, topicKey) => {
   const studyPlan = await StudyPlan.findOne({
     userId,
     "topics.topic_key": topicKey,
@@ -96,41 +96,18 @@ export const getOrGenerateTopicContentService = async (userId, topicKey) => {
   let cache = lockState.cache;
 
   if (lockState.type === "locked") {
-    const [videoResult, notesResult] = await Promise.allSettled([
-      getTopTopicVideos(topic.name, studyPlan.subjectName),
-      generateTopicNotes({ subjectName: studyPlan.subjectName, topicName: topic.name }),
-    ]);
-
-    if (notesResult.status !== "fulfilled") {
-      await TopicContent.updateOne({ topic_key: topicKey }, { status: "failed" });
-      const error = new Error("Failed to generate topic notes");
-      error.statusCode = 500;
-      throw error;
-    }
-
-    const rankedVideos = videoResult.status === "fulfilled" ? videoResult.value : [];
-    let flashcards = [];
-    try {
-      flashcards = await extractFlashcardsFromNotes({
-        subjectName: studyPlan.subjectName,
-        topicName: topic.name,
-        notes: notesResult.value,
-      });
-    } catch (err) {
-      console.error("Flashcard extraction failed:", err.message);
-    }
-
+    // Save cache immediately WITHOUT notes or videos to unblock the frontend and let it stream
     cache = await TopicContent.findOneAndUpdate(
       { topic_key: topicKey },
       {
         subject: studyPlan.subjectName,
-        video: rankedVideos[0] || null,
-        fallback_videos: rankedVideos.slice(1, 3),
-        notes: notesResult.value,
-        flashcards,
+        video: null,
+        fallback_videos: [],
+        notes: "",
+        flashcards: [],
         status: "ready",
       },
-      { new: true }
+      { returnDocument: 'after' }
     );
   }
 
@@ -171,7 +148,7 @@ export const markTopicCompletedService = async (userId, topicKey, completionStat
   const plan = await StudyPlan.findOneAndUpdate(
     { userId, "topics.topic_key": topicKey },
     { $set: { "topics.$.completionStatus": completionStatus } },
-    { new: true }
+    { returnDocument: 'after' }
   );
 
   if (!plan) {
@@ -188,4 +165,102 @@ export const markTopicCompletedService = async (userId, topicKey, completionStat
     completionStatus,
     progressPercentage,
   };
+};
+
+export const streamTopicContentService = async (req, res) => {
+  const { topicKey } = req.params;
+  const userId = req.user._id;
+
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Connection", "keep-alive");
+  res.flushHeaders();
+
+  const sendEvent = (type, data) => {
+    res.write(`data: ${JSON.stringify({ type, ...data })}\n\n`);
+  };
+
+  try {
+    const topicContext = await findTopicInPlan(userId, topicKey);
+    if (!topicContext) {
+      sendEvent("error", { message: "Topic not found in the user's study plan" });
+      res.end();
+      return;
+    }
+
+    const { studyPlan, topic } = topicContext;
+    
+    // Check if it's already generated completely
+    const cache = await TopicContent.findOne({ topic_key: topicKey });
+    if (cache && cache.notes && cache.video) {
+      sendEvent("video", { curatedVideos: buildCuratedVideos(cache) });
+      sendEvent("chunk", { text: cache.notes });
+      sendEvent("done", {});
+      res.end();
+      return;
+    }
+
+    // Start video fetching in background
+    let rankedVideos = [];
+    let videoPromise = getTopTopicVideos(topic.name, studyPlan.subjectName).then((videos) => {
+      rankedVideos = videos;
+      const curatedVideos = buildCuratedVideos({ video: videos[0] || null, fallback_videos: videos.slice(1, 3) });
+      sendEvent("video", { curatedVideos });
+    }).catch(err => {
+      console.error("Video fetching failed during stream:", err);
+    });
+
+    let fullNotes = "";
+    
+    const stream = await generateTopicNotesStream({ subjectName: studyPlan.subjectName, topicName: topic.name });
+    
+    for await (const textChunk of stream) {
+      fullNotes += textChunk;
+      sendEvent("chunk", { text: textChunk });
+    }
+
+    await videoPromise; // Ensure video promise completed before saving
+
+    const updatedCache = await TopicContent.findOneAndUpdate(
+      { topic_key: topicKey },
+      {
+        subject: studyPlan.subjectName,
+        video: rankedVideos[0] || null,
+        fallback_videos: rankedVideos.slice(1, 3),
+        notes: fullNotes,
+        status: "ready",
+      },
+      { returnDocument: 'after' }
+    );
+
+    sendEvent("done", {});
+    res.end();
+
+    // Kick off flashcards background process
+    (async () => {
+      try {
+        const flashcards = await extractFlashcardsFromNotes({
+          subjectName: studyPlan.subjectName,
+          topicName: topic.name,
+          notes: fullNotes,
+        });
+        const finalCache = await TopicContent.findOneAndUpdate(
+          { topic_key: topicKey },
+          { flashcards },
+          { returnDocument: 'after' }
+        );
+        await syncTopicCardsForUser({
+          userId,
+          topicKey,
+          cacheFlashcards: finalCache.flashcards || [],
+        });
+      } catch (err) {
+        console.error("Flashcard extraction failed in background after stream:", err.message);
+      }
+    })();
+  } catch (error) {
+    console.error("Streaming error:", error);
+    sendEvent("error", { message: "Streaming failed" });
+    res.end();
+  }
 };

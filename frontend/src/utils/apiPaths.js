@@ -26,6 +26,7 @@ export const API_PATHS = {
 
   TOPICS: {
     GENERATE: (topicKey) => `/api/topics/${topicKey}/generate`,
+    STREAM: (topicKey) => `/api/topics/${topicKey}/stream`,
     COMPLETE: (topicKey) => `/api/topics/${topicKey}/complete`,
   },
 

@@ -1,7 +1,7 @@
 import express from "express";
 import protect from "../middleware/auth.js";
 import validateRequest from "../middleware/validateRequest.js";
-import { generateTopicContent, markTopicCompleted } from "../controllers/topicController.js";
+import { generateTopicContent, streamTopicContent, markTopicCompleted } from "../controllers/topicController.js";
 import { topicKeyParamValidation } from "../validators/flashcardValidators.js";
 
 const router = express.Router();
@@ -13,6 +13,13 @@ router.post(
   topicKeyParamValidation,
   validateRequest,
   generateTopicContent
+);
+
+router.get(
+  "/:topicKey/stream",
+  topicKeyParamValidation,
+  validateRequest,
+  streamTopicContent
 );
 
 router.patch(

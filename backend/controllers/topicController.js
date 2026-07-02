@@ -28,6 +28,17 @@ export const generateTopicContent = async (req, res, next) => {
   }
 };
 
+// @desc Stream topic content (videos and notes)
+// @route GET api/topics/:topicKey/stream
+// @access private
+export const streamTopicContent = async (req, res, next) => {
+  try {
+    await topicService.streamTopicContentService(req, res);
+  } catch (error) {
+    next(error);
+  }
+};
+
 // @desc Mark topic completed
 // @route PATCH api/topics/:topicKey/complete
 // @access private

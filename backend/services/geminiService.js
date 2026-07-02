@@ -12,7 +12,7 @@ if (!keys.length) {
 const aiClients = keys.map(apiKey => new GoogleGenAI({ apiKey }));
 let i = 0;
 const getAi = () => aiClients[i++ % aiClients.length];
-const MODEL = "gemini-2.5-flash-lite";
+const MODEL = "gemini-2.5-flash";
 
 const jsonConfig = (schema) => ({
   responseMimeType: "application/json",
@@ -182,15 +182,17 @@ Rules:
 };
 
 export const generateTopicNotes = async ({ subjectName, topicName }) => {
-  const prompt = `You are a senior engineer explaining to a fellow developer.
+  const prompt = `Write clean study notes for: "${topicName}" (${subjectName}).
 
-Write exam-oriented study notes for: "${topicName}" (${subjectName})
-
-- Get straight to the point. No motivational openers, no "why this matters" preamble.
+- You decide the best way to structure the notes based on the topic.
+- If it is an academic or theoretical topic, make the notes exam-oriented.
+- If it is a practical skill or tool, structure the notes for someone learning that skill.
+- Above all, the notes must be completely self-explanatory, organic, and straightforward.
+- Do not force rigid or repetitive structures (like putting a "Core Concepts" heading in every note).
+- Get straight to the point. No motivational openers, filler text, or AI disclaimers.
 - Use examples and code snippets where they make things clearer.
-- Use markdown: headings, bold for key terms, code blocks for code. Keep it scannable.
-- Write like you're explaining to someone who needs to pass an exam tomorrow, not someone learning from scratch.
-- No filler. No "great question" energy. No AI disclaimer at the end.`;
+- Format mathematical equations and formulas using LaTeX syntax (wrap inline math with $ and block math with $$).
+- Use basic markdown for scannability, but avoid over-structuring.`;
 
   try {
     const response = await getAi().models.generateContent({
@@ -202,6 +204,37 @@ Write exam-oriented study notes for: "${topicName}" (${subjectName})
   } catch (error) {
     console.error("Gemini API error generating notes:", error);
     throw new Error("Failed to generate topic notes");
+  }
+};
+
+export const generateTopicNotesStream = async function* ({ subjectName, topicName }) {
+  const prompt = `Write clean study notes for: "${topicName}" (${subjectName}).
+
+- You decide the best way to structure the notes based on the topic.
+- If it is an academic or theoretical topic, make the notes exam-oriented.
+- If it is a practical skill or tool, structure the notes for someone learning that skill.
+- Above all, the notes must be completely self-explanatory, organic, and straightforward.
+- Do not force rigid or repetitive structures (like putting a "Core Concepts" heading in every note).
+- Get straight to the point. No motivational openers, filler text, or AI disclaimers.
+- Use examples and code snippets where they make things clearer.
+- Format mathematical equations and formulas using LaTeX syntax (wrap inline math with $ and block math with $$).
+- Use basic markdown for scannability, but avoid over-structuring.`;
+
+  try {
+    const responseStream = await getAi().models.generateContentStream({
+      model: MODEL,
+      contents: prompt,
+      config: { maxOutputTokens: 8192 }
+    });
+
+    for await (const chunk of responseStream) {
+      if (chunk.text) {
+        yield chunk.text;
+      }
+    }
+  } catch (error) {
+    console.error("Gemini API error streaming notes:", error);
+    throw new Error("Failed to stream topic notes");
   }
 };
 

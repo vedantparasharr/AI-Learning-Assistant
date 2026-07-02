@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import studyPlanService from "../../services/studyPlanService";
 import topicService from "../../services/topicService";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { PageShell } from "../../components/common/ui";
+import { PageShell, PrimaryButton, SecondaryButton } from "../../components/common/ui";
 
 const SyllabusPage = () => {
   const { planId } = useParams();
@@ -70,6 +70,23 @@ const SyllabusPage = () => {
     toggleMutation.mutate({ topicKey, nextStatus });
   };
 
+  const handleNavigateToTopic = (e, topic) => {
+    e.stopPropagation();
+    if (topic.completionStatus === "pending") {
+      queryClient.setQueryData(['studyPlan', planId], (old) => {
+        if (!old) return old;
+        return {
+          ...old,
+          topics: old.topics.map((t) =>
+            t.topic_key === topic.topic_key ? { ...t, completionStatus: "in_progress" } : t
+          ),
+        };
+      });
+    }
+    navigate(`/study/${topic.topic_key}`);
+  };
+
+
   const modules = useMemo(() => plan?.topics || [], [plan]);
 
   if (loading) {
@@ -123,12 +140,12 @@ const SyllabusPage = () => {
     <div className="max-w-container-max mx-auto pb-lg">
         <PageShell
           breadcrumbs={
-            <nav className="flex items-center gap-2 text-on-surface-variant font-label-sm text-label-sm uppercase tracking-wider">
+            <nav className="flex flex-wrap items-center gap-2 text-on-surface-variant font-label-sm text-label-sm uppercase tracking-wider">
               <Link to="/plans" className="hover:text-primary transition-colors">
                 Study Plans
               </Link>
               <span className="material-symbols-outlined text-[14px]">chevron_right</span>
-              <span className="text-primary font-semibold">{plan.subjectName}</span>
+              <span className="text-primary font-semibold line-clamp-1 max-w-full break-all sm:break-normal">{plan.subjectName}</span>
             </nav>
           }
           title={plan.subjectName}
@@ -170,8 +187,8 @@ const SyllabusPage = () => {
           {modules.map((topic, index) => (
             <article
               key={topic.topic_key}
-              className="bg-surface-container-lowest rounded-xl p-4 border border-outline-variant/60 hover:shadow-sm transition-all flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between group cursor-pointer"
-              onClick={() => navigate(`/study/${topic.topic_key}`)}
+              className="bg-surface-container-lowest rounded-xl p-4 border border-outline-variant/60 hover:shadow-sm transition-all flex items-center justify-between group cursor-pointer"
+              onClick={(e) => handleNavigateToTopic(e, topic)}
             >
               <div className="flex items-center gap-3 min-w-0 flex-1">
                 <button
@@ -193,12 +210,12 @@ const SyllabusPage = () => {
                 </button>
 
                 <div className="min-w-0 flex-1">
-                  <h3 className={`font-semibold text-on-background group-hover:text-primary transition-colors ${
+                  <h3 className={`font-semibold text-on-background group-hover:text-primary transition-colors truncate ${
                     topic.completionStatus === "completed" ? "line-through text-on-surface-variant/60" : ""
                   }`}>
                     {topic.name}
                   </h3>
-                  <div className="flex items-center gap-2 mt-0.5 text-xs text-on-surface-variant">
+                  <div className="flex items-center gap-2 mt-0.5 text-xs text-on-surface-variant flex-wrap">
                     <span>Module {index + 1}</span>
                     <span>•</span>
                     <span>{topic.estimated_hours || 1} hrs est.</span>
@@ -215,31 +232,22 @@ const SyllabusPage = () => {
                 </div>
               </div>
 
-              <div className="flex items-center gap-4 shrink-0 w-full sm:w-auto">
+              {/* Mobile Indicator */}
+              <span className="material-symbols-outlined text-on-surface-variant shrink-0 sm:hidden ml-2">chevron_right</span>
+
+              {/* Desktop Buttons */}
+              <div className="hidden sm:flex items-center gap-4 shrink-0 pl-4">
                 <div className="flex items-center gap-2 shrink-0">
-                  <Link
-                    to={`/study/${topic.topic_key}`}
-                    onClick={(e) => e.stopPropagation()}
-                    className={`inline-flex h-9 items-center justify-center gap-1 rounded-lg px-3 py-1 font-label-md text-label-md transition-colors ${
-                      topic.completionStatus === "completed"
-                        ? "border border-outline-variant bg-surface-container-lowest text-on-surface hover:bg-surface-container-low"
-                        : "bg-primary text-on-primary hover:opacity-80 transition-opacity"
-                    }`}
-                  >
-                    {topic.completionStatus === "completed" ? (
-                      <>Review</>
-                    ) : topic.completionStatus === "in_progress" ? (
-                      <>
-                        Resume
-                        <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
-                      </>
-                    ) : (
-                      <>
-                        Start
-                        <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
-                      </>
-                    )}
-                  </Link>
+                  {topic.completionStatus === "completed" ? (
+                    <SecondaryButton onClick={(e) => handleNavigateToTopic(e, topic)} className="!h-9 !min-h-[36px] !px-4 !py-1 text-sm">
+                      Review
+                    </SecondaryButton>
+                  ) : (
+                    <PrimaryButton onClick={(e) => handleNavigateToTopic(e, topic)} className="!h-9 !min-h-[36px] !px-4 !py-1 text-sm gap-1">
+                      {topic.completionStatus === "in_progress" ? "Resume" : "Start"}
+                      <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+                    </PrimaryButton>
+                  )}
                 </div>
               </div>
             </article>

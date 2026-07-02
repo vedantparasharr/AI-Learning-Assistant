@@ -511,9 +511,9 @@ export default function StudyPlanBuilderPage() {
               ) : (
                 <div className="overflow-hidden rounded-xl border border-outline-variant/40 bg-surface-container-lowest shadow-sm">
                   {/* Table Header */}
-                  <div className="hidden md:grid grid-cols-[1fr_160px_60px] gap-4 bg-surface-container-low/50 px-6 py-3 border-b border-outline-variant/40">
-                    <span className="font-label-sm text-label-sm text-on-surface-variant tracking-wider uppercase">Topic Name</span>
-                    <span className="font-label-sm text-label-sm text-on-surface-variant tracking-wider uppercase">Est. Hours</span>
+                  <div className="hidden md:grid grid-cols-[1fr_160px_60px] gap-4 bg-surface-container px-6 py-3 border-b border-outline-variant/40">
+                    <span className="font-label-sm text-label-sm text-on-surface font-semibold tracking-wider uppercase">Topic Name</span>
+                    <span className="font-label-sm text-label-sm text-on-surface font-semibold tracking-wider uppercase">Est. Hours</span>
                     <span></span>
                   </div>
 
@@ -582,7 +582,7 @@ export default function StudyPlanBuilderPage() {
                     onClick={() => {
                       setStep(1);
                     }}
-                    className="rounded-full px-6 bg-transparent border-transparent text-on-surface-variant hover:text-on-surface shadow-none"
+                    className="rounded-full h-12 px-6 text-[15px] bg-transparent border-transparent text-on-surface-variant hover:text-on-surface shadow-none"
                   >
                     Back to source
                   </SecondaryButton>
