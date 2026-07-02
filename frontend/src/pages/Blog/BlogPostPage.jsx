@@ -1,6 +1,6 @@
 import { useParams, Link, Navigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import PublicPageLayout from "../../components/common/PublicPageLayout";
+import PublicPageLayout, { AdUnit } from "../../components/common/PublicPageLayout";
 import { getPostBySlug, blogPosts } from "./blogPosts";
 
 // Renders markdown-like content (headings, paragraphs, bold)
@@ -71,6 +71,16 @@ export default function BlogPostPage() {
         <meta property="og:description" content={post.description} />
         <meta property="og:type" content="article" />
         <meta property="og:url" content={`https://www.distillai.tech/blog/${post.slug}`} />
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Article",
+          "headline": post.title,
+          "description": post.description,
+          "datePublished": post.date,
+          "author": { "@type": "Organization", "name": "DistillAI", "url": "https://www.distillai.tech/about" },
+          "publisher": { "@type": "Organization", "name": "DistillAI", "url": "https://www.distillai.tech" },
+          "mainEntityOfPage": { "@type": "WebPage", "@id": `https://www.distillai.tech/blog/${post.slug}` }
+        })}</script>
       </Helmet>
 
       <div className="max-w-[720px] mx-auto px-6 py-[60px]">
@@ -100,12 +110,28 @@ export default function BlogPostPage() {
           {post.description}
         </p>
 
+        {/* Author byline */}
+        <div className="flex items-center gap-3 mb-8">
+          <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+            <span className="text-[13px] font-semibold text-primary">D</span>
+          </div>
+          <div>
+            <Link to="/about" className="text-[13px] font-medium text-on-background hover:text-primary transition-colors">
+              {post.author || "DistillAI Team"}
+            </Link>
+            <div className="text-[12px] text-on-surface-variant">{post.date} · {post.readTime}</div>
+          </div>
+        </div>
+
         <hr className="border-outline-variant mb-8" />
 
-        {/* Article body */}
+        {/* Article body with mid-article ad */}
         <article className="prose-custom">
           {renderContent(post.content)}
         </article>
+
+        {/* Mid-article ad unit */}
+        <AdUnit slot="auto" />
 
         <hr className="border-outline-variant mt-12 mb-10" />
 

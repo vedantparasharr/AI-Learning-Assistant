@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 
-  <!-- Landing page -->
   <url>
     <loc>https://www.distillai.tech/</loc>
     <lastmod>2026-07-02</lastmod>
@@ -9,63 +8,41 @@
     <priority>1.0</priority>
   </url>
 
-  <!-- Blog index -->
   <url>
     <loc>https://www.distillai.tech/blog</loc>
-    <lastmod>2026-07-02</lastmod>
+    <lastmod>2026-07-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
 
-  <!-- Blog posts -->
-  <url>
-    <loc>https://www.distillai.tech/blog/what-is-spaced-repetition</loc>
-    <lastmod>2026-06-15</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.distillai.tech/blog/active-recall-vs-passive-reading</loc>
-    <lastmod>2026-06-22</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.distillai.tech/blog/how-to-study-for-exams</loc>
-    <lastmod>2026-06-28</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.distillai.tech/blog/fsrs-algorithm-explained</loc>
-    <lastmod>2026-07-01</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.distillai.tech/blog/ai-study-plan-guide</loc>
-    <lastmod>2026-07-02</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
+  <url><loc>https://www.distillai.tech/blog/what-is-spaced-repetition</loc><lastmod>2026-06-15</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://www.distillai.tech/blog/active-recall-vs-passive-reading</loc><lastmod>2026-06-22</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://www.distillai.tech/blog/how-to-study-for-exams</loc><lastmod>2026-06-28</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://www.distillai.tech/blog/fsrs-algorithm-explained</loc><lastmod>2026-07-01</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://www.distillai.tech/blog/ai-study-plan-guide</loc><lastmod>2026-07-02</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://www.distillai.tech/blog/why-you-forget-everything-you-study</loc><lastmod>2026-07-03</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://www.distillai.tech/blog/sleep-and-memory-learning</loc><lastmod>2026-07-04</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://www.distillai.tech/blog/exam-anxiety-how-to-overcome</loc><lastmod>2026-07-05</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://www.distillai.tech/blog/note-taking-methods-compared</loc><lastmod>2026-07-06</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://www.distillai.tech/blog/pomodoro-technique-does-it-work</loc><lastmod>2026-07-07</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://www.distillai.tech/blog/how-to-create-effective-flashcards</loc><lastmod>2026-07-08</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://www.distillai.tech/blog/study-environment-does-location-matter</loc><lastmod>2026-07-09</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://www.distillai.tech/blog/study-habits-of-top-students</loc><lastmod>2026-07-10</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://www.distillai.tech/blog/how-to-prepare-for-university-exams</loc><lastmod>2026-07-11</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://www.distillai.tech/blog/interleaving-blocked-practice-difference</loc><lastmod>2026-07-12</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
 
-  <!-- About -->
   <url>
     <loc>https://www.distillai.tech/about</loc>
-    <lastmod>2026-07-02</lastmod>
+    <lastmod>2026-07-12</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
-
-  <!-- Contact -->
   <url>
     <loc>https://www.distillai.tech/contact</loc>
     <lastmod>2026-07-02</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.6</priority>
   </url>
-
-  <!-- Legal -->
   <url>
     <loc>https://www.distillai.tech/privacy-policy</loc>
     <lastmod>2026-07-02</lastmod>

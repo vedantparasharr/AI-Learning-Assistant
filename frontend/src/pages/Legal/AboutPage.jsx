@@ -132,7 +132,61 @@ export default function AboutPage() {
             </svg>
           </Link>
         </div>
+
+        <hr className="border-outline-variant my-16" />
+
+        {/* FAQ Section */}
+        <div className="max-w-[720px]">
+          <div className="font-mono text-[11px] font-medium tracking-widest uppercase text-on-surface-variant mb-3">FAQ</div>
+          <h2 className="text-[clamp(22px,3vw,32px)] font-semibold tracking-tight text-on-background mb-10">
+            Frequently asked questions
+          </h2>
+
+          <div className="space-y-8">
+            {[
+              {
+                q: "Is DistillAI free to use?",
+                a: "Yes. DistillAI is free to start with no credit card required. You can create a study plan, generate flashcards, and begin your daily review sessions immediately after signing up."
+              },
+              {
+                q: "What subjects does DistillAI support?",
+                a: "DistillAI supports any text-based subject — including medicine, law, engineering, history, languages, computer science, business, and more. If it can be written in a syllabus, DistillAI can turn it into a study plan."
+              },
+              {
+                q: "How does the spaced repetition system work?",
+                a: "DistillAI uses the FSRS (Free Spaced Repetition Scheduler) algorithm — the most accurate open-source memory scheduling algorithm available. Each time you review a flashcard, the algorithm adjusts the next review date based on how well you recalled it. Cards you know well appear less often; cards you struggle with appear more often. Over time, this builds deep, lasting memory with the minimum amount of study time."
+              },
+              {
+                q: "How is DistillAI different from Anki?",
+                a: "Anki is a powerful tool, but it requires you to create all your own flashcards manually and schedule your own study time. DistillAI automatically generates flashcards from your syllabus and builds you a complete daily study plan — so you can focus on learning rather than planning. We also use FSRS, the same modern algorithm that Anki now uses."
+              },
+              {
+                q: "How long does it take to set up a study plan?",
+                a: "About two minutes. You paste or upload your syllabus, select your exam date, and DistillAI generates your complete study plan and initial flashcard deck. You can start your first review session immediately."
+              },
+              {
+                q: "Is my data private and secure?",
+                a: "Yes. Your study content is private to your account. We use HTTPS encryption, bcrypt password hashing, and HTTP-only authentication cookies. We do not sell your personal data. See our Privacy Policy for full details."
+              },
+              {
+                q: "Can I use DistillAI on my phone?",
+                a: "Yes. DistillAI is a web application that works on any device with a browser — desktop, tablet, or mobile. No app download is required."
+              },
+              {
+                q: "What if I miss a day of studying?",
+                a: "Your review cards stay in the queue and the algorithm accounts for the delay. Missing one day is not catastrophic — the system adjusts. That said, consistent daily review (even just 10–15 minutes) produces significantly better results than irregular longer sessions."
+              }
+            ].map((item, i) => (
+              <div key={i} className="border-b border-outline-variant pb-8 last:border-0 last:pb-0">
+                <h3 className="text-[16px] font-semibold text-on-background mb-2">{item.q}</h3>
+                <p className="text-[14px] text-on-surface-variant leading-relaxed">{item.a}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
       </div>
     </PublicPageLayout>
+
   );
 }
