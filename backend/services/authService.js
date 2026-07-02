@@ -137,7 +137,7 @@ export const resendOtp = async ({ email }) => {
   await issueOtpForUser(user);
 };
 
-export const updateUserProfile = async (userId, { username, email, profileImage }) => {
+export const updateUserProfile = async (userId, { username, email }) => {
   const user = await User.findById(userId);
   if (!user) {
     const error = new Error("User not found");
@@ -165,7 +165,6 @@ export const updateUserProfile = async (userId, { username, email, profileImage 
 
   if (username) user.username = username;
   if (email) user.email = email;
-  if (profileImage) user.profileImage = profileImage;
   await user.save();
   return user;
 };

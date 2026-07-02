@@ -107,7 +107,7 @@ const helpSections = [
       {
         question: "Profile changes are not saving",
         answer:
-          "Check required fields, then save again. Profile photos must be under 2MB before they can be saved.",
+          "Check required fields, then save again.",
       },
       {
         question: "I need to change my password",

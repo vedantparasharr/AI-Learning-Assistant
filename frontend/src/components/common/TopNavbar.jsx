@@ -30,10 +30,6 @@ export default function TopNavbar() {
     [location.search],
   );
 
-  const avatarSrc = useMemo(
-    () => user?.profileImage || "https://lh3.googleusercontent.com/aida-public/AB6AXuACKlPpmyUYB3rwzheva3r8QY47_0nncz_fq35yx19cpxhDn8n_dbi3L4asRO2PIRZcm5wlHF9nNdG3WmlWYLn7lApV_4M4pEzAV6EGSDxBLw9x_Z4m1Ba5cCuE1-f0vZ2FgRtp-BY1xhyHU3YIE5ITQ6OdFnJNAFlrBW7GMmAoWfilKXRbD7oMEfrdYVoUKLGO-xQugAgxAbsCEMF4EMsb3Y6-16H6quqwTJ7uLGanNyKsR7-NzyhCRCKbeC4PhB1OZcFtzvi1nYfw",
-    [user?.profileImage],
-  );
 
   const handleSearchSubmit = (event) => {
     event.preventDefault();
@@ -88,9 +84,9 @@ export default function TopNavbar() {
         <Link
           to="/profile"
           aria-label="Open profile"
-          className="h-10 w-10 overflow-hidden rounded-full border border-outline-variant bg-surface-container-low transition-colors hover:border-primary/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
+          className="h-10 w-10 flex items-center justify-center overflow-hidden rounded-full border border-outline-variant bg-primary-container text-on-primary-container font-bold text-lg transition-colors hover:border-primary/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
         >
-          <img src={avatarSrc} alt="profile" className="w-full h-full object-cover" />
+          {(user?.username || "?").slice(0, 1).toUpperCase()}
         </Link>
       </div>
     </header>

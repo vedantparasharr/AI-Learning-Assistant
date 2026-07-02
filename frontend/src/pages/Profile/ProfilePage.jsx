@@ -10,7 +10,6 @@ const ProfilePage = () => {
   const [profileForm, setProfileForm] = useState({
     username: "",
     email: "",
-    profileImage: "",
   });
   const [passwordForm, setPasswordForm] = useState({
     currentPassword: "",
@@ -25,29 +24,10 @@ const ProfilePage = () => {
     setProfileForm({
       username: user?.username || "",
       email: user?.email || "",
-      profileImage: user?.profileImage || "",
     });
   }, [user]);
 
-  const handleFileChange = (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
 
-    if (file.size > 2 * 1024 * 1024) {
-      toast.error("Profile photo must be under 2MB");
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setProfileForm((current) => ({
-        ...current,
-        profileImage: reader.result,
-      }));
-      toast.success("Photo uploaded. Save changes to persist.");
-    };
-    reader.readAsDataURL(file);
-  };
 
 
 
@@ -119,41 +99,11 @@ const ProfilePage = () => {
             </h2>
             <div className="flex flex-col sm:flex-row gap-gutter items-start sm:items-center mb-md">
               <div className="relative group">
-                {profileForm.profileImage ? (
-                  <img
-                    alt="Profile Picture"
-                    className="w-24 h-24 rounded-full object-cover border border-outline-variant/30 shadow-sm"
-                    src={profileForm.profileImage}
-                  />
-                ) : (
-                  <div className="w-24 h-24 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-bold text-3xl border border-outline-variant/30 select-none shadow-sm">
-                    {(profileForm.username || user?.username || "?").slice(0, 1).toUpperCase()}
-                  </div>
-                )}
+                <div className="w-24 h-24 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-bold text-3xl border border-outline-variant/30 select-none shadow-sm">
+                  {(profileForm.username || user?.username || "?").slice(0, 1).toUpperCase()}
+                </div>
               </div>
               <div className="flex-1 w-full space-y-md">
-                <div className="flex flex-wrap gap-sm items-center">
-                  <label className="cursor-pointer border border-outline-variant bg-surface-container-lowest hover:bg-surface-container-low text-on-surface font-label-md text-label-md px-4 py-2.5 rounded-lg transition-colors inline-flex items-center gap-1.5">
-                    <span className="material-symbols-outlined text-[16px]">upload</span>
-                    Choose Photo
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={handleFileChange}
-                    />
-                  </label>
-                  {profileForm.profileImage && (
-                    <button
-                      type="button"
-                      onClick={() => setProfileForm((current) => ({ ...current, profileImage: "" }))}
-                      className="border border-error/50 text-error font-label-md text-label-md px-4 py-2.5 rounded-lg hover:bg-error-container hover:text-error transition-colors"
-                    >
-                      Remove Photo
-                    </button>
-                  )}
-                </div>
-
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-md pt-sm">
                   <Input
                     type="text"
