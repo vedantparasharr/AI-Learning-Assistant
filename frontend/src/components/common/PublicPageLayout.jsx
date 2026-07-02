@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { useState } from "react";
 import { useTheme } from "../../context/ThemeContext";
 import Logo from "./Logo";
-import CookieConsent from "./CookieConsent";
+import ConsentBanner from "./ConsentBanner";
 
 // Responsive AdSense ad unit — only renders on public content pages
 function AdUnit({ slot = "auto", format = "auto" }) {
@@ -142,8 +142,8 @@ export default function PublicPageLayout({ children }) {
         </div>
       </footer>
 
-      {/* Cookie consent banner — gates AdSense loading behind user consent */}
-      <CookieConsent />
+      {/* Consent banner — gates AdSense loading behind user consent */}
+      <ConsentBanner />
     </div>
   );
 }

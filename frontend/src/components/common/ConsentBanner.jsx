@@ -1,11 +1,11 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 
-export default function CookieConsent() {
+export default function ConsentBanner() {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    const consent = localStorage.getItem("cookie_consent");
+    const consent = localStorage.getItem("ads_consent");
     if (!consent) {
       // Small delay so it doesn't flash on first paint
       const t = setTimeout(() => setVisible(true), 1200);
@@ -28,13 +28,13 @@ export default function CookieConsent() {
   }
 
   function handleAccept() {
-    localStorage.setItem("cookie_consent", "accepted");
+    localStorage.setItem("ads_consent", "accepted");
     setVisible(false);
     injectAdSense();
   }
 
   function handleDecline() {
-    localStorage.setItem("cookie_consent", "declined");
+    localStorage.setItem("ads_consent", "declined");
     setVisible(false);
   }
 
