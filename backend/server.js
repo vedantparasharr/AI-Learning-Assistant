@@ -47,6 +47,11 @@ app.use("/api/topics", topicRoutes);
 app.use("/api/flashcards", flashcardRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 
+// Health check route for UptimeRobot and Render
+app.get("/", (req, res) => {
+  res.status(200).json({ success: true, message: "DistillAI API is running" });
+});
+
 app.use((req, res) => {
   res.status(404).json({
     success: false,
