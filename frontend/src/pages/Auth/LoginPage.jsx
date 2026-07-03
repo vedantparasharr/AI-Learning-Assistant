@@ -24,6 +24,12 @@ const LoginPage = () => {
       navigate(returnTo, { replace: true });
     },
     onError: (error) => {
+      if (error.statusCode === 403 && error.error?.includes("Email not verified")) {
+        toast.error("Please verify your email first.");
+        const verifyUrl = new URLSearchParams({ email: form.email, returnTo }).toString();
+        navigate(`/verify-email?${verifyUrl}`, { replace: true });
+        return;
+      }
       toast.error(error.error || error.message || "Unable to log in");
     }
   });
