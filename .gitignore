@@ -16,4 +16,12 @@ logs
 Thumbs.db
 
 # Uploads
-backend/uploads
+backend/uploads
+
+.agents
+.claude
+.codex
+.cursor
+.gemini
+.github
+.impeccable
