@@ -1,136 +1,206 @@
-# DistillLearn - AI-Powered Spaced Repetition Platform
+# DistillLearn
 
 [![React](https://img.shields.io/badge/React-19-blue.svg)](https://react.dev/)
 [![Node.js](https://img.shields.io/badge/Node.js-Express_5-green.svg)](https://nodejs.org/)
 [![MongoDB](https://img.shields.io/badge/MongoDB-Mongoose-brightgreen.svg)](https://www.mongodb.com/)
-[![ts-fsrs](https://img.shields.io/badge/Spaced_Repetition-FSRS-orange.svg)](https://github.com/open-spaced-repetition/ts-fsrs)
-[![Google Gemini](https://img.shields.io/badge/AI-Google_Gemini-blueviolet.svg)](https://ai.google.dev/)
-
-DistillLearn is a high-performance, strictly professional learning environment that bridges the gap between passive reading and active recall. By leveraging Google Gemini's advanced generative AI and the scientifically proven FSRS (Free Spaced Repetition Scheduler) algorithm, DistillLearn transforms dense study materials into actionable, structured learning paths with zero friction.
-
-## 🚀 The Core Philosophy
-
-Most learning applications suffer from two critical flaws: they force you to manually create every single flashcard (excessive friction), or they use primitive "box-style" scheduling (inefficient review times). Furthermore, many platforms are plagued by distracting gamification and busy UIs.
-
-**DistillLearn solves these problems by focusing on three pillars:**
-1. **Intelligent Ingestion:** It uses AI to **distill** your PDFs, raw notes, or simple prompts into logical topics and starter flashcards automatically.
-2. **Mathematical Optimization:** It implements the modern gold-standard **FSRS algorithm** to schedule your reviews at the mathematically optimal time, maximizing long-term memory retention.
-3. **The "Scholar's Workbench" Design:** A strictly minimalist, expert-focused UI with deep indigos, cool alabasters, and muted teals. We prioritize contrast, readability (65–75ch line limits), and low cognitive overhead. No distractions, just study.
+[![Gemini](https://img.shields.io/badge/AI-Gemini_2.5_Flash-blueviolet.svg)](https://ai.google.dev/)
+[![FSRS](https://img.shields.io/badge/Spaced_Repetition-ts--fsrs-orange.svg)](https://github.com/open-spaced-repetition/ts-fsrs)
 
 ---
 
-## 🛠️ Complete Technology Stack
+## The Problem That Started This
 
-### Frontend (The Workspace)
-- **Framework:** React 19 & Vite for lightning-fast HMR and optimized builds.
-- **Styling:** Tailwind CSS integrated with a custom-defined design system (`DESIGN.md`).
-- **Routing:** React Router 7.
-- **State & Data Fetching:** `@tanstack/react-query` (v5) combined with standard React Hooks.
-- **Markdown & Math:** `react-markdown`, `katex`, `rehype-katex`, and `remark-math` for precise rendering of technical notes.
-- **UI Components:** Custom flat-by-default architecture, strict WCAG AA adherence.
+Before exams, I had three tabs open at all times: ChatGPT for notes, YouTube for video explanations, and whatever note-taking tool I was using that week. Switching between them constantly broke focus. Half the time the YouTube video was bad, ChatGPT gave me a wall of text with no structure, and by the time I understood a topic I had already forgotten the previous one.
 
-### Backend (The Engine)
-- **Server:** Node.js powered by the modern Express 5 framework.
-- **Database:** MongoDB via Mongoose, utilizing advanced aggregation pipelines for high-performance dashboard statistics.
-- **Authentication:** JWT (JSON Web Tokens) with secure HTTP-only cookies and bcrypt password hashing.
-- **AI Integration:** `@google/genai` (Google Gemini SDK) for intelligent text distillation and structured JSON generation.
-- **Algorithms:** `ts-fsrs` (Free Spaced Repetition Scheduler v5) to handle the complex review scheduling math.
-- **File Handling:** `multer` for secure uploads and `pdf-parse` for stateless document extraction.
-- **Video Curation:** `yt-search` combined with a custom scoring engine to fetch top educational content.
+**DistillLearn collapses all of that into one page.**
+
+For every topic in your study plan, you get:
+- **AI-generated study notes** — streamed live to the page as they're written, structured to the topic's actual nature (exam-focused for theory, skill-focused for practical subjects).
+- **Curated YouTube embeds** — fetched and ranked automatically, embedded directly so you never leave the page.
+- **Flashcards** — extracted from the notes themselves and scheduled via the FSRS algorithm.
+
+You study, watch, and review in a single focused workspace.
 
 ---
 
-## ✨ Deep-Dive Features
+## How It Works
 
-### 1. Multi-Source Study Plan Generation
-You can generate complete study plans from three distinct sources:
-- **PDF Uploads:** The system performs stateless PDF processing with smart truncation to prevent payload bloating, ensuring the AI strictly focuses on the document's core context.
-- **Raw Syllabus Text:** Paste any syllabus, and the AI parses it into a logical curriculum.
-- **AI Prompts:** Simply ask to learn "Quantum Mechanics," and Gemini maps out a structured path.
+### 1. Create a Study Plan
 
-### 2. Smart Video Curation & Scoring
-Instead of generic YouTube results, DistillLearn employs a sophisticated **Video Scoring Engine** (`videoScoring.js`). It cross-references topic keywords with video metadata (view count, duration, trusted educational channels) to ensure only the highest-quality, most relevant explanations accompany your study material.
+Feed DistillLearn your material in any of three ways:
 
-### 3. FSRS-Driven Active Recall
-The core of the platform is the review system. Users interact with study cards using the standard "Again, Hard, Good, Easy" rating matrix. Behind the scenes, the `ts-fsrs` engine calculates the precise interval for the next review based on the latest memory science, drastically reducing study time while increasing retention.
+| Source | What you provide | How it's processed |
+|---|---|---|
+| **PDF** | Upload a PDF (syllabus, notes, textbook chapter) | `pdf-parse` extracts text → Gemini parses it into discrete topics |
+| **Syllabus text** | Paste raw outline or syllabus text | Gemini extracts clean, searchable topic names |
+| **AI Prompt** | Describe what you want to learn | Gemini generates a progressive 8–18 topic roadmap from fundamentals up |
 
-### 4. High-Performance Analytics Dashboard
-A data-driven overview of your learning journey:
-- **GitHub-Style Heatmap:** Visually track your daily review activity.
-- **Streak & Load Tracking:** Aggregations happen entirely at the database level, ensuring the app scales effortlessly as your review history grows.
-- **Prioritized Queue:** The dashboard always highlights exactly what you need to study *today*.
+Gemini (`gemini-2.5-flash`) returns structured JSON for each topic: a name and a realistic study-hours estimate.
 
-### 5. Interactive Syllabus Builder
-Before committing to a learning path, you can review and edit AI-generated topics, adjust estimated study hours, and manually curate the roadmap. This guarantees the AI acts as an assistant, not a dictator.
+### 2. Review and Edit Topics in the Syllabus Builder
+
+Before committing, you see every AI-generated topic. Add, remove, rename, or adjust estimated hours. Only after you confirm does the plan get saved and starter flashcards get created.
+
+### 3. Study a Topic — Everything on One Page
+
+When you open a topic, a single two-column workspace loads:
+
+**Left column — Study Notes (8/12 width)**
+- If notes haven't been generated yet, the backend immediately initiates a **Server-Sent Events (SSE) stream**.
+- Notes are written by Gemini and rendered token-by-token using `react-markdown` with full support for LaTeX math (`$` inline, `$$` block via KaTeX), syntax-highlighted code blocks, GFM tables, and blockquotes.
+- State updates are throttled to 50ms for smooth rendering without CPU spikes.
+- Once the stream completes, notes are persisted to MongoDB so subsequent visits are instant.
+
+**Right column — Video Explanations & Mastery (4/12 width)**
+- Video fetching runs **in parallel** with note generation using `yt-search`.
+- The Video Scoring Engine ranks results by: trusted channel match (+2 pts: Neso Academy, Khan Academy, MIT OCW, CrashCourse, Gate Smashers), title relevance (+1 pt), then by view count as a tiebreaker.
+- Top 3 videos are embedded as iframes — no tab switching required.
+- A retention rate bar shows your FSRS mastery progress for this specific topic.
+
+### 4. Flashcard Review (FSRS)
+
+After generating notes, Gemini runs a second pass to extract up to 10 high-value flashcards from the content. These are merged with the 2 "starter" cards created when the plan was first saved.
+
+Reviews use the **ts-fsrs v5** scheduler with the standard four-button rating system:
+- **Again** — forgotten, restart interval
+- **Hard** — remembered with effort
+- **Good** — clean recall
+- **Easy** — effortless
+
+The scheduler calculates the exact next review date based on each card's stability and difficulty parameters — not a fixed box system.
+
+Every review is logged to a `ReviewLog` collection, enabling the dashboard to compute streaks, retention trends, and heatmaps without client-side calculations.
+
+### 5. Dashboard
+
+The dashboard gives you a truthful picture of your learning:
+
+- **Due today** count and trend vs. yesterday
+- **Current streak** and longest streak (calculated from `ReviewLog` dates)
+- **Retention rate** overall and week-over-week delta
+- **GitHub-style heatmap** — shows review intensity by day, click any day to see which topics you reviewed
+- **Per-subject breakdowns** — due cards and progress percentage for each study plan
 
 ---
 
-## 🏗️ Technical Architecture Highlights
+## Tech Stack
 
-- **Stateless Document Processing:** PDFs are parsed in memory and discarded. Text is intelligently chunked before being sent to the Gemini API, maintaining low overhead and fast response times.
-- **Advanced Aggregation Pipelines:** The MongoDB backend handles complex queries (like calculating current streaks and daily loads) natively in the database, minimizing server memory usage.
-- **Custom Design Tokens:** The frontend uses a deeply customized Tailwind config mapping to the "Scholar's Workbench" design philosophy—Primary: Deep Indigo (`#1a146b`), Neutral: Cool Alabaster (`#f8f9ff`).
-- **Secure by Default:** Features robust input validation (`express-validator`), secure cookie handling, and CORS restrictions.
+### Frontend
+| Layer | Tech |
+|---|---|
+| Framework | React 19 + Vite |
+| Routing | React Router 7 |
+| Data fetching | TanStack Query v5 |
+| Styling | Tailwind CSS v3 (custom design tokens) |
+| Markdown | `react-markdown` + `remark-gfm` + `remark-math` |
+| Math | KaTeX via `rehype-katex` |
+| Code highlighting | `react-syntax-highlighter` (vscDarkPlus theme) |
+| HTTP client | Axios |
+| Toasts | `react-hot-toast` |
+| Analytics | `@vercel/analytics` |
+
+### Backend
+| Layer | Tech |
+|---|---|
+| Runtime | Node.js (ES Modules) |
+| Framework | Express 5 |
+| Database | MongoDB via Mongoose |
+| Auth | JWT (HTTP-only cookies) + bcrypt |
+| AI | `@google/genai` — Gemini 2.5 Flash |
+| FSRS | `ts-fsrs` v5 |
+| YouTube | `yt-search` + custom scoring engine |
+| PDF | `pdf-parse` |
+| File uploads | Multer |
+| Validation | `express-validator` |
+
+### Database Models
+
+| Model | Purpose |
+|---|---|
+| `User` | Auth, OTP email verification |
+| `StudyPlan` | Subject, topics array, exam date, source type |
+| `TopicContent` | Cached notes, video, flashcards per topic key |
+| `Flashcard` | Per-user FSRS card state (stability, difficulty, due date, etc.) |
+| `ReviewLog` | Immutable log of every review for analytics |
 
 ---
 
-## 🏃 Getting Started (Local Development)
+## Architecture Notes
+
+**Topic keys** are deterministic slugs (`subjectName:topicName` normalized), shared between `StudyPlan.topics`, `TopicContent`, and `Flashcard` records. This allows topic content to be cached globally (one generation serves all users who study the same topic) while flashcard progress remains per-user.
+
+**Content generation flow:**
+1. First request → backend acquires a DB lock (`status: generating`), immediately sets cache to `ready` with empty notes to unblock the frontend.
+2. Frontend detects empty notes → opens SSE stream.
+3. Notes stream in; video fetching runs in parallel; both saved to MongoDB on completion.
+4. Flashcard extraction from notes runs as a fire-and-forget background task after the stream ends.
+
+**Multi-key Gemini support:** `GEMINI_API_KEYS` accepts a comma-separated list of API keys. The backend round-robins requests across them to stay under per-key rate limits.
+
+---
+
+## Getting Started
 
 ### Prerequisites
-- Node.js v18+ (v20+ recommended)
-- A running MongoDB instance (local or Atlas)
-- Google Gemini API Key
 
-### Installation
+- Node.js v18+
+- MongoDB (local or Atlas)
+- Google Gemini API key
 
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/yourusername/distilllearn.git
-   cd distilllearn
-   ```
+### Setup
 
-2. **Backend Setup:**
-   ```bash
-   cd backend
-   npm install
-   ```
-   Create a `.env` file in the `backend` directory:
-   ```env
-   PORT=5000
-   MONGO_URI=your_mongodb_connection_string
-   JWT_SECRET=your_super_secret_jwt_key
-   GEMINI_API_KEY=your_gemini_api_key
-   NODE_ENV=development
-   FRONTEND_URL=http://localhost:5173
-   ```
-   Start the backend server:
-   ```bash
-   npm run dev
-   ```
+```bash
+git clone https://github.com/yourusername/distilllearn.git
+cd distilllearn
+```
 
-3. **Frontend Setup:**
-   ```bash
-   cd ../frontend
-   npm install
-   ```
-   Create a `.env` file in the `frontend` directory:
-   ```env
-   VITE_API_URL=http://localhost:5000/api
-   ```
-   Start the development server:
-   ```bash
-   npm run dev
-   ```
+**Backend:**
+```bash
+cd backend
+npm install
+```
+
+Create `backend/.env`:
+```env
+PORT=5000
+MONGO_URI=your_mongodb_connection_string
+JWT_SECRET=your_jwt_secret
+GEMINI_API_KEY=your_gemini_api_key
+# Optional: comma-separated for round-robin load balancing
+# GEMINI_API_KEYS=key1,key2,key3
+NODE_ENV=development
+FRONTEND_URL=http://localhost:5173
+```
+
+```bash
+npm run dev
+```
+
+**Frontend:**
+```bash
+cd ../frontend
+npm install
+```
+
+Create `frontend/.env`:
+```env
+VITE_API_URL=http://localhost:5000/api
+```
+
+```bash
+npm run dev
+```
+
+---
+
+## Roadmap
+
+- [ ] Stripe integration for Pro tier
+- [ ] User credit system for AI usage
+- [ ] RAG: PDF-to-notes with source citations
+- [ ] React Native mobile app
+- [ ] Public plan sharing and community library
 
 ---
 
-## 📈 Roadmap (SaaS-Ready)
-
-- [ ] **Pro Subscriptions:** Integration with Stripe/Lemon Squeezy for premium tiers.
-- [ ] **Credit System:** Granular tracking of AI compute usage per user.
-- [ ] **RAG Implementation:** Direct PDF-to-Notes generation using advanced Retrieval-Augmented Generation.
-- [ ] **Mobile App:** A React Native companion app for reviewing on the go.
-- [ ] **Collaborative Hub:** One-click sharing and cloning of community-created study plans.
-
----
-*DistillLearn — Built for scholars who value their time.*
+*Built to stop switching tabs during exam prep.*
