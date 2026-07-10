@@ -56,6 +56,15 @@ const studyPlanSchema = new mongoose.Schema(
       type: [studyPlanTopicSchema],
       default: [],
     },
+    shareSlug: {
+      type: String,
+      default: null,
+      index: { unique: true, sparse: true },
+    },
+    isShared: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true },
 );

@@ -22,6 +22,7 @@ const TopicStudyPage = () => {
 	const [isStreaming, setIsStreaming] = useState(false);
 	const [streamError, setStreamError] = useState(null);
 	const streamInitiatedRef = useRef(false);
+	const [mobileTab, setMobileTab] = useState("notes");
 
 	const { data: payload, isLoading: loading, error: queryError } = useQuery({
 		queryKey: ['topicContent', topicKey],
@@ -299,8 +300,33 @@ const TopicStudyPage = () => {
 					}
 				>
 
+					<div className="flex lg:hidden bg-surface-container-lowest border border-outline-variant/60 p-1 rounded-lg mb-4 w-full">
+						<button
+							type="button"
+							onClick={() => setMobileTab("notes")}
+							className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${
+								mobileTab === "notes"
+									? "bg-primary text-on-primary shadow-sm"
+									: "text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low"
+							}`}
+						>
+							Study Notes
+						</button>
+						<button
+							type="button"
+							onClick={() => setMobileTab("videos")}
+							className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${
+								mobileTab === "videos"
+									? "bg-primary text-on-primary shadow-sm"
+									: "text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low"
+							}`}
+						>
+							Videos & Mastery
+						</button>
+					</div>
+
 					<div className="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
-						<div className="lg:col-span-8 flex flex-col gap-gutter">
+						<div className={`lg:col-span-8 flex-col gap-gutter ${mobileTab === "notes" ? "flex" : "hidden lg:flex"}`}>
 							<div className="bg-surface-container-lowest rounded-xl border border-outline-variant/60 p-4 md:p-6 lg:p-10 h-full">
 								<div className="flex items-center gap-3 mb-6 md:mb-8 pb-4 border-b border-surface-variant">
 									<div className="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-primary">
@@ -400,7 +426,7 @@ const TopicStudyPage = () => {
 							</div>
 						</div>
 
-						<div className="lg:col-span-4 flex flex-col gap-gutter">
+						<div className={`lg:col-span-4 flex-col gap-gutter ${mobileTab === "videos" ? "flex" : "hidden lg:flex"}`}>
 							<div className="bg-surface-container-lowest rounded-xl border border-outline-variant/60 p-6">
 								<div className="flex items-center justify-between mb-4">
 									<h3 className="font-h3 text-h3 text-on-surface text-lg">Topic Mastery</h3>

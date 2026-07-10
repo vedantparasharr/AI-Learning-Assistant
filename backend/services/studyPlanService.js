@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import StudyPlan from "../models/StudyPlan.js";
 import Flashcard from "../models/Flashcard.js";
 import { extractTextFromPDF } from "./pdfService.js";
@@ -191,4 +192,63 @@ export const deleteStudyPlanService = async (userId, planId) => {
   ]);
 
   return String(planId);
+};
+
+// Generate (or return existing) share link for a plan the user owns
+export const shareStudyPlanService = async (userId, planId) => {
+  const plan = await StudyPlan.findOne({ _id: planId, userId });
+  if (!plan) {
+    const error = new Error("Study plan not found");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  if (!plan.shareSlug) {
+    plan.shareSlug = crypto.randomBytes(8).toString("hex"); // 16-char hex slug
+  }
+  plan.isShared = true;
+  await plan.save();
+
+  return plan.shareSlug;
+};
+
+// Fetch a publicly shared plan by its slug (no auth required)
+export const getSharedStudyPlanService = async (shareSlug) => {
+  const plan = await StudyPlan.findOne({ shareSlug, isShared: true }).select(
+    "-userId -sourceText"
+  );
+  if (!plan) {
+    const error = new Error("Shared plan not found");
+    error.statusCode = 404;
+    throw error;
+  }
+  return plan;
+};
+
+// Clone a shared plan into the requesting user's account
+export const cloneSharedStudyPlanService = async (userId, shareSlug) => {
+  const source = await StudyPlan.findOne({ shareSlug, isShared: true });
+  if (!source) {
+    const error = new Error("Shared plan not found");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const clonedTopics = source.topics.map((t) => ({
+    topic_key: t.topic_key,
+    name: t.name,
+    estimated_hours: t.estimated_hours,
+    completionStatus: "pending",
+  }));
+
+  const newPlan = await StudyPlan.create({
+    userId,
+    subjectName: source.subjectName,
+    examDate: source.examDate,
+    sourceType: source.sourceType,
+    sourceText: "",
+    topics: clonedTopics,
+  });
+
+  return newPlan;
 };

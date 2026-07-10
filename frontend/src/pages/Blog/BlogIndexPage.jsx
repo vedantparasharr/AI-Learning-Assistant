@@ -7,7 +7,7 @@ export default function BlogIndexPage() {
   return (
     <PublicPageLayout>
       <Helmet>
-        <title>Blog — Study Science & Learning Techniques | DistillAI</title>
+        <title>Blog - Study Science & Learning Techniques | DistillAI</title>
         <meta name="description" content="Science-backed articles on spaced repetition, active recall, exam preparation, and how to study effectively. Learn the research behind DistillAI." />
       </Helmet>
 

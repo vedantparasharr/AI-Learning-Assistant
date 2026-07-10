@@ -105,3 +105,67 @@ export const deleteStudyPlan = async (req, res, next) => {
     next(error);
   }
 };
+
+// @desc  Generate (or return) a shareable link for a plan
+// @route POST /api/study-plan/:planId/share
+// @access private
+export const shareStudyPlan = async (req, res, next) => {
+  try {
+    const { planId } = req.params;
+    const shareSlug = await studyPlanService.shareStudyPlanService(req.user._id, planId);
+
+    const frontendOrigin =
+      process.env.FRONTEND_URL ||
+      (process.env.NODE_ENV === "production"
+        ? "https://distilllearn.vercel.app"
+        : "http://localhost:5173");
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        shareSlug,
+        shareUrl: `${frontendOrigin}/shared/${shareSlug}`,
+      },
+      statusCode: 200,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc  Get a publicly shared study plan by slug
+// @route GET /api/study-plan/shared/:slug
+// @access public
+export const getSharedStudyPlan = async (req, res, next) => {
+  try {
+    const { slug } = req.params;
+    const plan = await studyPlanService.getSharedStudyPlanService(slug);
+
+    return res.status(200).json({
+      success: true,
+      data: plan,
+      statusCode: 200,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc  Clone a shared plan into the requesting user's account
+// @route POST /api/study-plan/shared/:slug/clone
+// @access private
+export const cloneSharedStudyPlan = async (req, res, next) => {
+  try {
+    const { slug } = req.params;
+    const newPlan = await studyPlanService.cloneSharedStudyPlanService(req.user._id, slug);
+
+    return res.status(201).json({
+      success: true,
+      data: { planId: String(newPlan._id), subjectName: newPlan.subjectName },
+      message: "Plan cloned successfully",
+      statusCode: 201,
+    });
+  } catch (error) {
+    next(error);
+  }
+};

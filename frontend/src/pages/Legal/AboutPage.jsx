@@ -6,7 +6,7 @@ export default function AboutPage() {
   return (
     <PublicPageLayout>
       <Helmet>
-        <title>About DistillAI — AI-Powered Study Planning</title>
+        <title>About DistillAI - AI-Powered Study Planning</title>
         <meta name="description" content="Learn about DistillAI, the AI-powered study planner that uses spaced repetition and active recall to help students study less and remember more." />
       </Helmet>
 

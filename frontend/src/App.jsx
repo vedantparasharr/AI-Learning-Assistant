@@ -30,6 +30,7 @@ import PrivacyPolicyPage from "./pages/Legal/PrivacyPolicyPage";
 import TermsOfServicePage from "./pages/Legal/TermsOfServicePage";
 import AboutPage from "./pages/Legal/AboutPage";
 import ContactPage from "./pages/Legal/ContactPage";
+import SharedPlanPage from "./pages/Shared/SharedPlanPage";
 
 const App = () => {
   const { isAuthenticated, loading } = useAuth();
@@ -106,6 +107,7 @@ const App = () => {
         <Route path="/terms-of-service" element={<TermsOfServicePage />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/contact" element={<ContactPage />} />
+        <Route path="/shared/:slug" element={<SharedPlanPage />} />
 
         <Route path="*" element={<NotFoundPage />} />
       </Routes>

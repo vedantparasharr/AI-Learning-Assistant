@@ -8,6 +8,9 @@ import {
   getStudyPlanOverview,
   getStudyPlans,
   parseStudyPlan,
+  shareStudyPlan,
+  getSharedStudyPlan,
+  cloneSharedStudyPlan,
 } from "../controllers/studyPlanController.js";
 import {
   createStudyPlanValidation,
@@ -16,11 +19,18 @@ import {
 
 const router = express.Router();
 
+// ── Public routes (no auth required) ──────────────────────────────────────────
+// Must be declared before protect middleware and before /:planId catch-all
+router.get("/shared/:slug", getSharedStudyPlan);
+
+// ── Protected routes ───────────────────────────────────────────────────────────
 router.use(protect);
 
 router.get("/", getStudyPlans);
 router.get("/:planId", getStudyPlanOverview);
 router.delete("/:planId", deleteStudyPlan);
+router.post("/:planId/share", shareStudyPlan);
+router.post("/shared/:slug/clone", cloneSharedStudyPlan);
 router.post(
   "/parse",
   upload.single("file"),

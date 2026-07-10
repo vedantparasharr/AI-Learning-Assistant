@@ -136,7 +136,7 @@ const DashboardPage = () => {
           </>
         }
       >
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-gutter">
 
           {/* CARDS DUE (Interactive link to review) */}
           <Link
