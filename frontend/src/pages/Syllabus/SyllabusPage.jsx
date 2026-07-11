@@ -1,5 +1,6 @@
-﻿import { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 import studyPlanService from "../../services/studyPlanService";
 import topicService from "../../services/topicService";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -9,6 +10,7 @@ const SyllabusPage = () => {
   const { planId } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   const [copied, setCopied] = useState(false);
 
@@ -167,6 +169,30 @@ const SyllabusPage = () => {
     </button>
   );
 
+  const actionButtons = (
+    <div className="flex items-center gap-2">
+      {user?.email === "iemvedant@gmail.com" && (
+        <button
+          onClick={async () => {
+            if (!plan?.topics) return;
+            for (const topic of plan.topics) {
+              try {
+                await topicService.generateTopicContent(topic.topic_key);
+              } catch (err) {
+                console.error(err);
+              }
+            }
+            alert("All topics rendered!");
+          }}
+          className="inline-flex items-center gap-2 rounded-lg border border-outline-variant bg-surface-container-lowest px-4 py-2 text-sm font-medium text-on-surface shadow-sm transition hover:bg-surface-container hover:border-outline focus:outline-none focus:ring-2 focus:ring-primary/20"
+        >
+          Render All
+        </button>
+      )}
+      {shareButton}
+    </div>
+  );
+
   return (
     <div className="max-w-container-max mx-auto pb-lg">
       <PageShell
@@ -186,7 +212,7 @@ const SyllabusPage = () => {
           plan.description ||
           "Review and progress through curriculum modules to hit your learning goals."
         }
-        actions={shareButton}
+        actions={actionButtons}
       >
         <div className="bg-surface-container-lowest p-5 rounded-xl border border-outline-variant/60 max-w-3xl">
           <div className="flex justify-between items-end mb-4">
