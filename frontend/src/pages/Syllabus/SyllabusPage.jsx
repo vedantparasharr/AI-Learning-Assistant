@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import studyPlanService from "../../services/studyPlanService";
 import topicService from "../../services/topicService";
+import { API_PATHS, BASE_URL } from "../../utils/apiPaths";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { PageShell, PrimaryButton, SecondaryButton } from "../../components/common/ui";
 
@@ -13,6 +14,8 @@ const SyllabusPage = () => {
   const { user } = useAuth();
 
   const [copied, setCopied] = useState(false);
+  const [isRenderingAll, setIsRenderingAll] = useState(false);
+  const [renderProgress, setRenderProgress] = useState({ current: 0, total: 0 });
 
   const { data: plan, isLoading: loading, error: queryError } = useQuery({
     queryKey: ["studyPlan", planId],
@@ -173,20 +176,47 @@ const SyllabusPage = () => {
     <div className="flex items-center gap-2">
       {user?.email === "iemvedant@gmail.com" && (
         <button
+          disabled={isRenderingAll}
           onClick={async () => {
             if (!plan?.topics) return;
-            for (const topic of plan.topics) {
+            setIsRenderingAll(true);
+            setRenderProgress({ current: 0, total: plan.topics.length });
+            for (let i = 0; i < plan.topics.length; i++) {
+              const topic = plan.topics[i];
+              setRenderProgress({ current: i + 1, total: plan.topics.length });
               try {
+                // Pre-warm the cache lock
                 await topicService.generateTopicContent(topic.topic_key);
+                
+                // Fetch full stream to actually generate and wait for it to finish
+                const url = (BASE_URL || "") + API_PATHS.TOPICS.STREAM(topic.topic_key);
+                const response = await fetch(url, { credentials: "include" });
+                
+                if (response.body) {
+                  const reader = response.body.getReader();
+                  let done = false;
+                  while (!done) {
+                    const { done: doneReading } = await reader.read();
+                    done = doneReading;
+                  }
+                }
               } catch (err) {
-                console.error(err);
+                console.error("Failed to generate", topic.topic_key, err);
               }
             }
+            setIsRenderingAll(false);
             alert("All topics rendered!");
           }}
-          className="inline-flex items-center gap-2 rounded-lg border border-outline-variant bg-surface-container-lowest px-4 py-2 text-sm font-medium text-on-surface shadow-sm transition hover:bg-surface-container hover:border-outline focus:outline-none focus:ring-2 focus:ring-primary/20"
+          className="inline-flex items-center gap-2 rounded-lg border border-outline-variant bg-surface-container-lowest px-4 py-2 text-sm font-medium text-on-surface shadow-sm transition hover:bg-surface-container hover:border-outline focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-60"
         >
-          Render All
+          {isRenderingAll ? (
+            <>
+              <span className="h-4 w-4 animate-spin rounded-full border border-on-surface border-t-transparent" />
+              Rendering ({renderProgress.current}/{renderProgress.total})
+            </>
+          ) : (
+            "Render All"
+          )}
         </button>
       )}
       {shareButton}
